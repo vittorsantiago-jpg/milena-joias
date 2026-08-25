@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Milena Joias · Gestão de Pedidos</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --gold:#BF8920;--gold-h:#A37518;--gold-l:#DFB55A;--gold-f:#F7EED8;
+  --bg:#F7F5F0;--surface:#FFF;--s2:#F0ECE4;--s3:#E4DFD4;
+  --text:#1C1A16;--t2:#6B6252;--t3:#9E9080;
+  --border:#E2DDD2;--border2:#CBC3B5;
+  --sh-sm:0 1px 3px rgba(28,26,22,.07),0 1px 2px rgba(28,26,22,.04);
+  --sh:0 4px 14px rgba(28,26,22,.09),0 2px 5px rgba(28,26,22,.05);
+  --sh-lg:0 20px 56px rgba(28,26,22,.18),0 4px 12px rgba(28,26,22,.08);
+  --r:10px;--rs:6px;--rf:999px;
+  --blue:#2563EB;--blue-f:#EFF6FF;
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --gold:#D4A840;--gold-h:#C09030;--gold-l:#A07C28;--gold-f:#2C2414;
+  --bg:#141210;--surface:#1E1B17;--s2:#2A2620;--s3:#343028;
+  --text:#F0EAE0;--t2:#A89E90;--t3:#6E6458;
+  --border:#3A3428;--border2:#504840;
+  --blue:#3B82F6;--blue-f:#1E3A5F33;
+}}
+:root[data-theme="dark"]{
+  --gold:#D4A840;--gold-h:#C09030;--gold-l:#A07C28;--gold-f:#2C2414;
+  --bg:#141210;--surface:#1E1B17;--s2:#2A2620;--s3:#343028;
+  --text:#F0EAE0;--t2:#A89E90;--t3:#6E6458;
+  --border:#3A3428;--border2:#504840;
+  --blue:#3B82F6;--blue-f:#1E3A5F33;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;}
+
+/* ── Mode bar ── */
+.mode-bar{background:var(--text);padding:0 20px;display:flex;align-items:center;gap:0;height:38px;}
+.mode-bar-brand{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:rgba(255,255,255,.65);margin-right:18px;white-space:nowrap;}
+.mode-bar-brand strong{color:#fff;}
+.mode-tabs{display:flex;gap:3px;background:rgba(255,255,255,.1);border-radius:var(--rs);padding:3px;}
+.mtab{padding:4px 13px;border-radius:4px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:rgba(255,255,255,.5);background:transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.mtab.active{background:#fff;color:var(--text);}
+.mtab:not(.active):hover{color:#fff;background:rgba(255,255,255,.12);}
+.mode-hint{margin-left:auto;font-size:11px;color:rgba(255,255,255,.35);}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:background .14s,color .14s;white-space:nowrap;}
+.btn-gold{background:var(--gold);color:#fff;}.btn-gold:hover{background:var(--gold-h);}
+.btn-outline{background:transparent;color:var(--t2);border:1px solid var(--border);}.btn-outline:hover{background:var(--s2);color:var(--text);}
+.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{opacity:.9;}
+.btn-success{background:#1A7A5C;color:#fff;}
+
+/* ── Overlay / Modal ── */
+.overlay{position:fixed;inset:0;z-index:300;background:rgba(20,18,14,.55);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:14px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--border);animation:up .2s ease;}
+@keyframes up{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.modal{animation:none}}
+.modal-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;}
+.modal-close{flex-shrink:0;width:28px;height:28px;background:var(--s2);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--t3);transition:all .14s;}
+.modal-close:hover{background:var(--s3);color:var(--text);}
+.modal-body{padding:18px 20px;}
+.modal-foot{padding:12px 20px;border-top:1px solid var(--border);background:var(--s2);border-radius:0 0 14px 14px;display:flex;gap:8px;align-items:center;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:500;color:var(--text);}
+.modal-eyebrow{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);margin-bottom:4px;}
+
+/* ── Form elements ── */
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.fld label{font-size:11px;font-weight:500;color:var(--t2);}
+.fld input,.fld select,.fld textarea{padding:7px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .14s;}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--gold);}
+.fld textarea{resize:vertical;min-height:60px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;}
+
+/* ── Toggle tabs (form / doc) ── */
+.input-mode-toggle{display:flex;background:var(--s2);border-radius:var(--rs);padding:3px;margin-bottom:16px;gap:3px;}
+.im-tab{flex:1;padding:7px 10px;border-radius:5px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--t2);transition:all .14s;text-align:center;}
+.im-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm);}
+
+/* ── File drop zone ── */
+.drop-zone{
+  border:1.5px dashed var(--border);border-radius:var(--r);
+  padding:28px 20px;text-align:center;cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--blue);background:var(--blue-f);}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.drop-icon{width:36px;height:36px;background:var(--s2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--t2);}
+.drop-zone:hover .drop-icon,.drop-zone.drag .drop-icon{background:var(--blue-f);color:var(--blue);}
+.drop-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.drop-sub{font-size:11px;color:var(--t3);}
+.drop-types{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+.type-chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--rf);background:var(--s2);color:var(--t2);text-transform:uppercase;letter-spacing:.04em;}
+.uploaded-file{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);margin-top:8px;}
+.file-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;}
+.file-name{font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.file-size{font-size:11px;color:var(--t3);}
+.file-remove{background:none;border:none;cursor:pointer;color:var(--t3);padding:2px;display:flex;align-items:center;transition:color .14s;}
+.file-remove:hover{color:#C0392B;}
+
+/* ── Photo upload grid ── */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.photo-slot{
+  aspect-ratio:1;border:1.5px dashed var(--border);border-radius:var(--rs);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;overflow:hidden;transition:all .14s;
+  background:var(--s2);color:var(--t3);font-size:10px;text-align:center;gap:4px;
+}
+.photo-slot:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-f);}
+.photo-slot input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:calc(var(--rs) - 1px);}
+.photo-slot .rm-photo{position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,.6);border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;color:#fff;font-size:10px;z-index:2;}
+.photo-slot:has(img) .rm-photo{display:flex;}
+.photo-slot:has(img):hover .rm-photo{display:flex;}
+.photo-add-icon{width:28px;height:28px;background:var(--s3);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--t2);}
+.photo-slot:hover .photo-add-icon{background:var(--gold-f);color:var(--gold);}
+.photo-slot-main{grid-column:1/-1;aspect-ratio:auto;height:100px;flex-direction:row;gap:10px;padding:14px;}
+.photo-slot-main .photo-add-icon{width:36px;height:36px;}
+.photo-slot-main-text{text-align:left;}
+.photo-slot-main-text strong{font-size:12px;font-weight:600;color:var(--text);display:block;}
+.photo-slot-main-text span{font-size:11px;color:var(--t3);}
+
+/* ── Upload area (simple) ── */
+.upload-area{border:1.5px dashed var(--border);border-radius:var(--r);padding:18px;text-align:center;color:var(--t3);cursor:pointer;transition:all .14s;font-size:12px;position:relative;overflow:hidden;}
+.upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-area:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-f);}
+
+/* ══════════════════════════
+   PRODUCTION PANEL
+══════════════════════════ */
+.header{position:sticky;top:38px;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:16px;}
+.brand{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.brand-icon{width:28px;height:28px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.brand-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--text);}
+.brand-sub{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.dv{width:1px;height:26px;background:var(--border);}
+.header-kpis{display:flex;gap:5px;overflow-x:auto;}
+.kpi{display:flex;align-items:center;gap:5px;padding:3px 9px;background:var(--s2);border-radius:var(--rf);font-size:11px;color:var(--t2);white-space:nowrap;}
+.kpi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.kpi strong{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:10px;}
+.sw{position:relative;flex:0 0 250px;}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none;}
+.si{width:100%;padding:6px 10px 6px 29px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .14s;}
+.si::placeholder{color:var(--t3);}.si:focus{border-color:var(--gold);}
+.ftabs{display:flex;gap:3px;}
+.ftab{padding:5px 11px;border-radius:var(--rs);border:1px solid transparent;background:transparent;color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;}
+.ftab:hover{background:var(--s2);color:var(--text);}.ftab.active{background:var(--gold-f);color:var(--gold);border-color:var(--gold-l);}
+
+.board{padding:16px 20px 40px;overflow-x:auto;display:flex;gap:11px;min-height:calc(100vh - 156px);align-items:flex-start;}
+.col{flex-shrink:0;width:218px;display:flex;flex-direction:column;gap:6px;}
+.col-head{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);}
+.col-label{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--t2);}
+.col-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.col-cnt{font-size:11px;font-weight:600;color:var(--t3);background:var(--s2);padding:1px 6px;border-radius:var(--rf);font-variant-numeric:tabular-nums;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-left-width:3px;border-radius:var(--r);padding:10px;cursor:pointer;box-shadow:var(--sh-sm);transition:box-shadow .15s,transform .15s;}
+.card:hover{box-shadow:var(--sh);transform:translateY(-1px);}
+.card.is-new{border-top:2px solid var(--blue);}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.card-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);font-weight:500;}
+.card-qty{font-size:10px;font-weight:600;background:var(--s2);color:var(--t2);padding:2px 6px;border-radius:var(--rf);font-variant-numeric:tabular-nums;}
+.card-title{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:2px;}
+.card-desc{font-size:11px;color:var(--t2);line-height:1.4;}
+.card-client{font-size:10px;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:6px;border-top:1px solid var(--border);}
+.card-date{font-size:10px;color:var(--t3);}
+.card-ref{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);font-weight:500;}
+.card-attach{font-size:10px;color:var(--blue);display:flex;align-items:center;gap:3px;}
+.new-badge{font-size:9px;font-weight:700;background:var(--blue);color:#fff;padding:1px 5px;border-radius:var(--rf);text-transform:uppercase;letter-spacing:.04em;}
+
+.add-btn{display:flex;align-items:center;gap:5px;width:100%;padding:7px 9px;background:transparent;border:1px dashed var(--border);border-radius:var(--r);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;}
+.add-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-f);}
+
+/* ── Detail modal ── */
+.mbar{width:4px;flex-shrink:0;border-radius:4px;align-self:stretch;margin-top:2px;}
+.minfo{flex:1;min-width:0;}
+.mclient-sub{font-size:12px;color:var(--t2);margin-top:3px;}
+.spill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--rf);font-size:12px;font-weight:500;}
+.pipeline{display:flex;align-items:flex-start;gap:0;margin:14px 0;overflow-x:auto;}
+.pipe-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:50px;position:relative;font-size:9px;text-align:center;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;line-height:1.2;}
+.pipe-step:not(:last-child)::after{content:'';position:absolute;top:8px;left:calc(50% + 9px);right:calc(-50% + 9px);height:2px;background:var(--border);}
+.pipe-step.done::after{background:var(--gold-l);}
+.pipe-dot{width:17px;height:17px;border-radius:50%;background:var(--s2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;}
+.pipe-step.done .pipe-dot{background:var(--gold);border-color:var(--gold);}
+.pipe-step.done .pipe-dot::after{content:'';width:5px;height:3px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px);display:block;}
+.pipe-step.active .pipe-dot{border-color:var(--gold);background:var(--gold-f);box-shadow:0 0 0 3px var(--gold-f);}
+.pipe-step.active .pipe-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);display:block;}
+
+.mfields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.mf label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:3px;}
+.mf .val{font-size:13px;color:var(--text);}
+.mf.full{grid-column:1/-1;}
+
+/* Attachments in detail */
+.attach-list{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.attach-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);}
+.attach-icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.attach-name{font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.attach-type{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;}
+
+.photo-thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;}
+.photo-thumb{width:64px;height:64px;border-radius:var(--rs);object-fit:cover;border:1px solid var(--border);background:var(--s2);}
+
+.obs-note{padding:10px 12px;background:var(--gold-f);border:1px solid var(--gold-l);border-radius:var(--rs);font-size:12px;color:var(--t2);}
+.btn-adv{padding:6px 13px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;background:var(--gold);color:#fff;transition:background .14s;}
+.btn-adv:hover{background:var(--gold-h);}
+.btn-danger{background:transparent;border:1px solid var(--border);color:var(--t3);cursor:pointer;padding:6px 13px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;transition:all .14s;margin-left:auto;}
+.btn-danger:hover{border-color:#C0392B;color:#C0392B;}
+
+/* ══════════════════════════
+   CLIENT PORTAL
+══════════════════════════ */
+.client-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:38px;z-index:100;}
+.client-logo{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.client-dot{width:28px;height:28px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.client-logo-name{font-size:15px;font-weight:600;color:var(--text);}
+.client-logo-sub{font-size:10px;color:var(--t3);}
+.client-tag{margin-left:auto;font-size:10px;font-weight:500;background:var(--blue-f);color:var(--blue);border:1px solid rgba(37,99,235,.25);padding:3px 10px;border-radius:var(--rf);}
+
+.client-layout{max-width:900px;margin:0 auto;padding:24px 20px 60px;}
+.client-columns{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:flex-start;}
+@media(max-width:720px){.client-columns{grid-template-columns:1fr;}}
+
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh-sm);}
+.form-card-head{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.form-card-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.form-card-sub{font-size:12px;color:var(--t2);}
+.form-card-body{padding:16px 18px;}
+.form-card-foot{padding:10px 18px;border-top:1px solid var(--border);background:var(--s2);border-radius:0 0 var(--r) var(--r);display:flex;justify-content:flex-end;gap:8px;}
+
+.orders-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.orders-count{font-size:12px;color:var(--t3);background:var(--s2);padding:2px 8px;border-radius:var(--rf);font-variant-numeric:tabular-nums;}
+.order-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;box-shadow:var(--sh-sm);}
+.order-item-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:8px;}
+.order-item-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);}
+.order-item-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 9px;border-radius:var(--rf);}
+.order-item-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.order-item-detail{font-size:11px;color:var(--t2);}
+.order-item-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.order-item-date{font-size:10px;color:var(--t3);}
+.order-item-qty{font-size:10px;font-weight:500;color:var(--t2);}
+.mini-pipeline{display:flex;gap:3px;margin-top:8px;}
+.mini-step{flex:1;height:3px;border-radius:2px;background:var(--border);}
+.mini-step.done{background:var(--gold);}
+.mini-step.active{background:var(--gold-l);}
+.order-item-files{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
+.order-item-file-tag{font-size:10px;padding:2px 7px;border-radius:var(--rf);background:var(--s2);color:var(--t2);display:flex;align-items:center;gap:3px;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;}
+.empty-icon{font-size:30px;margin-bottom:10px;opacity:.5;}
+</style>
+</head>
+<body>
+
+<!-- ── Mode bar ── -->
+<div class="mode-bar">
+  <span class="mode-bar-brand"><strong>Milena Joias</strong> · Sistema</span>
+  <div class="mode-tabs">
+    <button class="mtab active" onclick="setView('milena',this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10.5" y="3" width="5" height="12" rx="1"/></svg>
+      Painel Milena Joias
+    </button>
+    <button class="mtab" onclick="setView('cliente',this)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Portal do Cliente
+    </button>
+  </div>
+  <span class="mode-hint">← alterne entre as visões</span>
+</div>
+
+<!-- ════════ VIEW: MILENA ════════ -->
+<div id="viewMilena">
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 2L11 6H13L8 14L3 6H5L8 2Z" fill="white" opacity=".9"/><path d="M5 6L8 14L3 6H5Z" fill="white" opacity=".45"/><path d="M11 6L8 14L13 6H11Z" fill="white" opacity=".45"/></svg></div>
+      <div><div class="brand-name">Milena Joias</div><div class="brand-sub">Produção · 2026</div></div>
+    </div>
+    <div class="dv"></div>
+    <div class="header-kpis" id="kpiBar"></div>
+    <div class="header-right">
+      <button class="btn btn-gold" onclick="openNew()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Pedido
+      </button>
+    </div>
+  </header>
+  <div class="toolbar">
+    <div class="sw">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="si" type="search" placeholder="Buscar pedido, cliente, produto…" id="searchInput" oninput="renderBoard()">
+    </div>
+    <div class="ftabs">
+      <button class="ftab active" onclick="setMonth('all',this)">Todos</button>
+      <button class="ftab" onclick="setMonth('02',this)">Fevereiro</button>
+      <button class="ftab" onclick="setMonth('08',this)">Agosto</button>
+    </div>
+  </div>
+  <div class="board" id="board"></div>
+</div>
+
+<!-- ════════ VIEW: CLIENTE ════════ -->
+<div id="viewCliente" style="display:none">
+  <header class="client-header">
+    <div class="client-logo">
+      <div class="client-dot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M6 2L3 6l9 13 9-13-3-4z"/><path d="M3 6h18"/></svg></div>
+      <div><div class="client-logo-name">Alvorada Supermercados</div><div class="client-logo-sub">Portal de Pedidos · Milena Joias</div></div>
+    </div>
+    <span class="client-tag">Cliente verificado</span>
+  </header>
+
+  <div class="client-layout">
+    <div class="client-columns">
+
+      <!-- ── Form ── -->
+      <div>
+        <div class="section-label" style="margin-bottom:10px">Novo pedido</div>
+        <div class="form-card">
+          <div class="form-card-head">
+            <div class="form-card-title">Adicionar pedido da loja</div>
+            <div class="form-card-sub">Preencha o formulário ou envie um documento — a Milena recebe automaticamente</div>
+          </div>
+          <div class="form-card-body">
+
+            <!-- Input mode toggle -->
+            <div class="input-mode-toggle">
+              <button class="im-tab active" onclick="setInputMode('form',this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h5"/></svg>
+                Preencher formulário
+              </button>
+              <button class="im-tab" onclick="setInputMode('doc',this)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Enviar documento
+              </button>
+            </div>
+
+            <!-- FORM mode -->
+            <div id="modeForm">
+              <div class="form-row">
+                <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cId"></div>
+                <div class="fld"><label>Data</label><input type="date" id="cDate"></div>
+              </div>
+              <div class="fld"><label>Nome do cliente final</label><input type="text" placeholder="Nome de quem comprou" id="cClientFinal"></div>
+              <div class="form-row">
+                <div class="fld"><label>Produto</label>
+                  <select id="cProd"><option>BROCHE</option><option>PIN</option><option>MEDALHA</option><option>OUTRO</option></select>
+                </div>
+                <div class="fld"><label>Material</label>
+                  <select id="cMat"><option>Ouro</option><option>Prata</option><option>Rose Gold</option><option>Prata Envelhecida</option><option>Colorido</option></select>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm, 5×5cm" id="cSize"></div>
+                <div class="fld"><label>Quantidade</label><input type="number" placeholder="0" min="1" id="cQty"></div>
+              </div>
+              <div class="fld"><label>Observações / detalhes do design</label><textarea placeholder="Tipo de fecho, cores específicas, variações…" id="cObs"></textarea></div>
+            </div>
+
+            <!-- DOC mode -->
+            <div id="modeDoc" style="display:none">
+              <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cIdDoc"></div>
+              <div class="drop-zone" id="mainDropZone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+                <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp" multiple onchange="handleFiles(this.files)">
+                <div class="drop-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="drop-title">Arraste os arquivos aqui</div>
+                <div class="drop-sub">ou clique para selecionar</div>
+                <div class="drop-types">
+                  <span class="type-chip">PDF</span>
+                  <span class="type-chip">Word</span>
+                  <span class="type-chip">Excel</span>
+                  <span class="type-chip">JPG/PNG</span>
+                </div>
+              </div>
+              <div id="uploadedFiles"></div>
+              <div class="fld" style="margin-top:4px"><label>Observações adicionais</label><textarea placeholder="Qualquer detalhe extra que não esteja no documento…" id="cObsDoc"></textarea></div>
+            </div>
+
+            <!-- ── Referências visuais (sempre visível) ── -->
+            <div style="margin-top:4px">
+              <div class="section-label" style="margin-bottom:8px">Referências visuais</div>
+
+              <!-- Foto do modelo -->
+              <div style="margin-bottom:10px">
+                <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Foto do modelo / produto de referência</div>
+                <div class="photo-slot photo-slot-main" onclick="triggerPhotoMain()" id="slotMain">
+                  <input type="file" id="fileMain" accept="image/*" style="display:none" onchange="previewMain(this)">
+                  <div class="photo-add-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+                  <div class="photo-slot-main-text"><strong>Adicionar foto do modelo</strong><span>JPG, PNG — foto do produto físico ou referência</span></div>
+                </div>
+              </div>
+
+              <!-- Fotos de referência -->
+              <div>
+                <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Fotos de referência do design (até 6)</div>
+                <div class="photo-grid" id="refGrid"></div>
+              </div>
+            </div>
+
+          </div>
+          <div class="form-card-foot">
+            <button class="btn btn-outline" onclick="clearForm()">Limpar</button>
+            <button class="btn btn-blue" id="submitBtn" onclick="submitClientOrder()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Enviar para Milena Joias
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Orders list ── -->
+      <div>
+        <div class="orders-panel-head">
+          <div class="section-label" style="margin-bottom:0">Meus pedidos</div>
+          <span class="orders-count" id="clientOrderCount">0 pedidos</span>
+        </div>
+        <div id="clientOrdersList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Detail Modal (Milena) ── -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="mbar" id="mBar"></div>
+      <div class="minfo">
+        <div class="modal-eyebrow" id="mNum"></div>
+        <div class="modal-title" id="mTitle"></div>
+        <div class="mclient-sub" id="mClient"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetail()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span class="spill" id="mPill"></span>
+        <span id="mNewBadge"></span>
+      </div>
+      <div class="pipeline" id="mPipeline"></div>
+      <div class="mfields" id="mFields"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-adv" id="mAdvBtn" onclick="advanceStatus()">Avançar status</button>
+      <button class="btn-danger" onclick="closeDetail()">Cancelar pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New Order Modal (Milena manual) ── -->
+<div class="overlay" id="newOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="minfo"><div class="modal-eyebrow">CADASTRO MANUAL</div><div class="modal-title">Novo Pedido</div></div>
+      <button class="modal-close" onclick="closeNew()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><div class="fld"><label>Nº Pedido</label><input type="text" placeholder="ex: 570990" id="mnId"></div><div class="fld"><label>Data</label><input type="date" id="mnDate"></div></div>
+      <div class="fld"><label>Cliente</label><input type="text" placeholder="Nome do cliente ou empresa" id="mnClient"></div>
+      <div class="form-row">
+        <div class="fld"><label>Produto</label><select id="mnProd"><option>BROCHE</option><option>PIN</option><option>MEDALHA</option></select></div>
+        <div class="fld"><label>Material</label><select id="mnMat"><option>Ouro</option><option>Prata</option><option>Rose Gold</option><option>Colorido</option></select></div>
+      </div>
+      <div class="form-row"><div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm" id="mnSize"></div><div class="fld"><label>Quantidade</label><input type="number" placeholder="0" id="mnQty"></div></div>
+      <div class="fld"><label>Observações</label><textarea placeholder="Detalhes do design, cores…" id="mnObs"></textarea></div>
+      <div class="upload-area">
+        <input type="file" accept="image/*,.pdf,.doc,.docx" multiple>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 6px;display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Adicionar arte / arquivos de referência
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeNew()">Cancelar</button>
+      <button class="btn btn-gold" onclick="saveNew()">Salvar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATUSES ──
+const STATUSES = [
+  {key:'recebido',  label:'Recebido',          short:'Recebido',  color:'#2563EB', bg:'#EFF6FF', dbg:'#1E3A5F'},
+  {key:'desenhando',label:'Desenhando',         short:'Desenho',   color:'#7C3AED', bg:'#F5F0FF', dbg:'#2E1A5A'},
+  {key:'fotolito',  label:'Fotolito',           short:'Fotolito',  color:'#9B5E00', bg:'#FFFBEB', dbg:'#3A2C10'},
+  {key:'aprovacao', label:'Em Aprovação',       short:'Aprovação', color:'#B87820', bg:'#FEF3D7', dbg:'#3A2C10'},
+  {key:'producao',  label:'Em Produção',        short:'Produção',  color:'#C03228', bg:'#FEEAE9', dbg:'#3A1812'},
+  {key:'grafica',   label:'Enviado p/ Gráfica', short:'Gráfica',   color:'#1A7A5C', bg:'#E2F5EE', dbg:'#102E22'},
+  {key:'cliente',   label:'Entregue',           short:'Entregue',  color:'#1A5E9A', bg:'#E1EFFC', dbg:'#0E2640'},
+  {key:'cancelado', label:'Cancelado',          short:'Cancelado', color:'#7A7268', bg:'#F0EDE9', dbg:'#2A2620'},
+];
+
+// ── ORDERS DATA ──
+let orders = [
+  {id:'141356',product:'Broche Comemorativo',detail:'20 Anos · Redondo 2.5cm · Com Resina',qty:66,date:'04/02/2026',month:'02',status:'grafica',ref:'REF 572',client:'Empresa ABC Ltda',obs:'3 variações: 5, 10 e 15 anos.',fromClient:false,files:[],photos:[]},
+  {id:'84287',product:'Broche de Logo',detail:'Prata · 2.5cm · 2 variações',qty:2,date:'04/02/2026',month:'02',status:'cliente',ref:'REF 573',client:'Pet Shop Central',obs:'',fromClient:false,files:[],photos:[]},
+  {id:'146630',product:'Broche Corporativo',detail:'Ouro · 4cm · Fecho borboleta',qty:19,date:'05/08/2026',month:'08',status:'grafica',ref:'REF 681',client:'Alvorada Supermercados',obs:'',fromClient:false,files:[],photos:[]},
+  {id:'537137',product:'Broche Floral',detail:'5×5cm · Design personalizado',qty:2,date:'05/08/2026',month:'08',status:'grafica',ref:'REF 684',client:'Dra. Natasha Toledo',obs:'',fromClient:false,files:[],photos:[]},
+  {id:'543111',product:'Broche Médico',detail:'Dourado · 4cm · Fecho borboleta',qty:1,date:'05/08/2026',month:'08',status:'producao',ref:'REF 686',client:'Clínica Saúde Mais',obs:'Urgente — evento 25/08.',fromClient:false,files:[],photos:[]},
+  {id:'543200',product:'Broche Aniversário',detail:'Prata envelhecida · 3cm · Redondo',qty:50,date:'10/08/2026',month:'08',status:'aprovacao',ref:'REF 690',client:'Escola Municipal Alfa',obs:'Aguardando aprovação da diretora.',fromClient:false,files:[],photos:[]},
+  {id:'551032',product:'Broche Formatura',detail:'Ouro · 3.5cm · Com pedra',qty:30,date:'12/08/2026',month:'08',status:'fotolito',ref:'REF 693',client:'Faculdade ProSaúde',obs:'Esmaltado azul.',fromClient:false,files:[{name:'briefing-formatura.docx',type:'docx',size:'84 KB'}],photos:[]},
+  {id:'558901',product:'Broche Corporativo',detail:'Prata · Logo empresa · 4cm',qty:100,date:'15/08/2026',month:'08',status:'desenhando',ref:'—',client:'Grupo Vitallis',obs:'Arte em PNG 300dpi recebida.',fromClient:false,files:[{name:'logo-vitallis.png',type:'img',size:'2.4 MB'}],photos:[]},
+  {id:'562144',product:'Broche Feminino',detail:'Rose gold · 2.5cm · Floral',qty:12,date:'18/08/2026',month:'08',status:'recebido',ref:'—',client:'Alvorada Supermercados',obs:'',fromClient:true,files:[{name:'pedido-562144.pdf',type:'pdf',size:'156 KB'}],photos:[]},
+  {id:'570889',product:'Broche Infantil',detail:'Colorido · 3cm · Festa temática',qty:80,date:'20/08/2026',month:'08',status:'recebido',ref:'—',client:'Buffet Encantado',obs:'Arte enviada em anexo.',fromClient:true,files:[{name:'referencia-tema.jpg',type:'img',size:'1.2 MB'},{name:'descricao-pedido.docx',type:'docx',size:'32 KB'}],photos:[]},
+];
+
+let currentMonth='all', currentId=null;
+let uploadedFiles=[], refPhotos=new Array(6).fill(null), modelPhoto=null;
+
+const getS = k => STATUSES.find(s=>s.key===k)||STATUSES[0];
+const isDark = () => {
+  const t=document.documentElement.getAttribute('data-theme');
+  return t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches);
+};
+
+// ── View switch ──
+function setView(v,btn){
+  document.getElementById('viewMilena').style.display=v==='milena'?'block':'none';
+  document.getElementById('viewCliente').style.display=v==='cliente'?'block':'none';
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(v==='cliente'){renderClientOrders();buildRefGrid();}
+}
+
+function setMonth(m,btn){
+  currentMonth=m;
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBoard();
+}
+
+// ── Board ──
+function filteredOrders(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  return orders.filter(o=>{
+    const mOk=currentMonth==='all'||o.month===currentMonth;
+    const qOk=!q||o.id.includes(q)||o.product.toLowerCase().includes(q)||o.client.toLowerCase().includes(q);
+    return mOk&&qOk;
+  });
+}
+
+function renderBoard(){
+  const visible=filteredOrders();
+  const cnts={};STATUSES.forEach(s=>cnts[s.key]=0);visible.forEach(o=>cnts[o.status]++);
+  document.getElementById('kpiBar').innerHTML=STATUSES.filter(s=>s.key!=='cancelado').map(s=>`
+    <div class="kpi"><span class="kpi-dot" style="background:${s.color}"></span><strong>${cnts[s.key]}</strong>${s.short}</div>`).join('');
+
+  document.getElementById('board').innerHTML=STATUSES.filter(s=>s.key!=='cancelado').map(st=>{
+    const col=visible.filter(o=>o.status===st.key);
+    return `<div class="col">
+      <div class="col-head">
+        <div class="col-label"><span class="col-pip" style="background:${st.color}"></span>${st.label}</div>
+        <span class="col-cnt">${col.length}</span>
+      </div>
+      ${col.map(o=>`
+        <div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${st.color}" onclick="openDetail('${o.id}')">
+          <div class="card-top">
+            <span class="card-num">#${o.id}</span>
+            <div style="display:flex;align-items:center;gap:4px">
+              ${o.fromClient?'<span class="new-badge">novo</span>':''}
+              <span class="card-qty">${o.qty} un</span>
+            </div>
+          </div>
+          <div class="card-title">${o.product}</div>
+          <div class="card-desc">${o.detail}</div>
+          <div class="card-client">${o.client}</div>
+          ${o.files&&o.files.length?`<div class="card-attach" style="margin-top:4px;font-size:10px;color:var(--blue);display:flex;align-items:center;gap:3px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            ${o.files.length} arquivo${o.files.length>1?'s':''}
+          </div>`:''}
+          <div class="card-foot">
+            <span class="card-date">${o.date}</span>
+            <span class="card-ref">${o.ref}</span>
+          </div>
+        </div>`).join('')}
+      <button class="add-btn" onclick="openNew()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Adicionar
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ── Detail modal ──
+function openDetail(id){
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  currentId=id;const s=getS(o.status);const dark=isDark();
+  document.getElementById('mBar').style.background=s.color;
+  document.getElementById('mNum').textContent=`Pedido #${o.id} · ${o.date}`;
+  document.getElementById('mTitle').textContent=o.product;
+  document.getElementById('mClient').textContent=o.client;
+  const pill=document.getElementById('mPill');
+  pill.style.cssText=`background:${dark?s.dbg+'55':s.bg};color:${s.color}`;
+  pill.innerHTML=`<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${s.color};margin-right:4px"></span>${s.label}`;
+  document.getElementById('mNewBadge').innerHTML=o.fromClient?'<span class="new-badge" style="font-size:10px;padding:2px 8px">via portal do cliente</span>':'';
+  const si=STATUSES.findIndex(x=>x.key===o.status);
+  document.getElementById('mPipeline').innerHTML=STATUSES.slice(0,7).map((st,i)=>{
+    const cls=i<si?'done':i===si?'active':'';
+    return `<div class="pipe-step ${cls}"><div class="pipe-dot"></div>${st.short}</div>`;
+  }).join('');
+
+  const fileIcons={pdf:'📄',docx:'📝',doc:'📝',img:'🖼',default:'📎'};
+  const filesHtml=o.files&&o.files.length?`
+    <div class="mf full">
+      <label>Arquivos anexados</label>
+      <div class="attach-list">
+        ${o.files.map(f=>`<div class="attach-item">
+          <div class="attach-icon" style="background:var(--s2)">${fileIcons[f.type]||fileIcons.default}</div>
+          <div style="flex:1;min-width:0"><div class="attach-name">${f.name}</div><div class="attach-type">${f.type.toUpperCase()} · ${f.size}</div></div>
+          <button style="background:none;border:none;cursor:pointer;color:var(--blue);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:500" onclick="alert('Em produção: abre o arquivo')">Ver</button>
+        </div>`).join('')}
+      </div>
+    </div>`:
+    `<div class="mf full img-slot" onclick="alert('Em produção: upload de arte finalizada')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>${o.status==='recebido'||o.status==='desenhando'?'Fazer upload da arte':'Ver arte / design'}</span>
+    </div>`;
+
+  document.getElementById('mFields').innerHTML=`
+    <div class="mf"><label>Produto</label><div class="val">${o.product}</div></div>
+    <div class="mf"><label>Quantidade</label><div class="val">${o.qty} unidades</div></div>
+    <div class="mf full"><label>Descrição</label><div class="val">${o.detail}</div></div>
+    <div class="mf"><label>Ref. Fotolito</label><div class="val" style="font-family:'DM Mono',monospace;color:var(--gold)">${o.ref}</div></div>
+    <div class="mf"><label>Data de entrada</label><div class="val">${o.date}</div></div>
+    ${o.obs?`<div class="mf full"><div class="obs-note">${o.obs}</div></div>`:''}
+    ${filesHtml}
+  `;
+  const next=STATUSES[si+1];
+  const advBtn=document.getElementById('mAdvBtn');
+  if(next&&o.status!=='cancelado'&&o.status!=='cliente'){advBtn.textContent=`→ Mover para ${next.label}`;advBtn.style.display='';}
+  else{advBtn.style.display='none';}
+  document.getElementById('detailOverlay').classList.add('open');
+}
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');currentId=null;}
+function advanceStatus(){
+  const o=orders.find(x=>x.id===currentId);if(!o)return;
+  const si=STATUSES.findIndex(x=>x.key===o.status);
+  if(si<STATUSES.length-2){o.status=STATUSES[si+1].key;o.fromClient=false;renderBoard();renderClientOrders();openDetail(o.id);}
+}
+
+function openNew(){document.getElementById('newOverlay').classList.add('open');}
+function closeNew(){document.getElementById('newOverlay').classList.remove('open');}
+function saveNew(){
+  const d=new Date();const dt=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  orders.unshift({id:document.getElementById('mnId').value||String(Math.floor(Math.random()*900000+100000)),
+    product:document.getElementById('mnProd').value,
+    detail:`${document.getElementById('mnMat').value} · ${document.getElementById('mnSize').value||'—'}`,
+    qty:parseInt(document.getElementById('mnQty').value)||1,date:dt,month:String(d.getMonth()+1).padStart(2,'0'),
+    status:'recebido',ref:'—',client:document.getElementById('mnClient').value||'Cliente',
+    obs:document.getElementById('mnObs').value||'',fromClient:false,files:[],photos:[]});
+  closeNew();renderBoard();
+}
+
+// ── Client portal: input mode ──
+function setInputMode(mode,btn){
+  document.querySelectorAll('.im-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('modeForm').style.display=mode==='form'?'block':'none';
+  document.getElementById('modeDoc').style.display=mode==='doc'?'block':'none';
+}
+
+// ── File drag/drop ──
+function onDrag(e,on){e.preventDefault();document.getElementById('mainDropZone').classList.toggle('drag',on);}
+function onDrop(e){
+  e.preventDefault();document.getElementById('mainDropZone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+function handleFiles(files){
+  Array.from(files).forEach(f=>{
+    uploadedFiles.push({name:f.name,size:formatSize(f.size),type:getType(f.name),file:f});
+  });
+  renderUploadedFiles();
+}
+function formatSize(b){if(b<1024)return b+' B';if(b<1048576)return (b/1024).toFixed(0)+' KB';return (b/1048576).toFixed(1)+' MB';}
+function getType(name){const ext=name.split('.').pop().toLowerCase();if(['jpg','jpeg','png','webp','gif'].includes(ext))return 'img';if(ext==='pdf')return 'pdf';if(['doc','docx'].includes(ext))return 'docx';return 'file';}
+const typeIcon={pdf:'📄',docx:'📝',img:'🖼',file:'📎'};
+function renderUploadedFiles(){
+  document.getElementById('uploadedFiles').innerHTML=uploadedFiles.map((f,i)=>`
+    <div class="uploaded-file">
+      <div class="file-icon" style="background:var(--s2);font-size:16px">${typeIcon[f.type]||'📎'}</div>
+      <div style="flex:1;min-width:0"><div class="file-name">${f.name}</div><div class="file-size">${f.size}</div></div>
+      <button class="file-remove" onclick="removeFile(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('');
+}
+function removeFile(i){uploadedFiles.splice(i,1);renderUploadedFiles();}
+
+// ── Photo upload ──
+function triggerPhotoMain(){document.getElementById('fileMain').click();}
+function previewMain(input){
+  const f=input.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    modelPhoto=e.target.result;
+    const slot=document.getElementById('slotMain');
+    let img=slot.querySelector('img');
+    if(!img){img=document.createElement('img');slot.appendChild(img);}
+    img.src=e.target.result;
+    slot.querySelector('.photo-add-icon').style.display='none';
+    slot.querySelector('.photo-slot-main-text').style.display='none';
+    let rmBtn=slot.querySelector('.rm-photo');
+    if(!rmBtn){rmBtn=document.createElement('button');rmBtn.className='rm-photo';rmBtn.innerHTML='×';rmBtn.onclick=e=>{e.stopPropagation();removeMainPhoto();};slot.appendChild(rmBtn);}
+    rmBtn.style.display='flex';
+  };reader.readAsDataURL(f);
+}
+function removeMainPhoto(){
+  modelPhoto=null;const slot=document.getElementById('slotMain');
+  const img=slot.querySelector('img');if(img)img.remove();
+  const rm=slot.querySelector('.rm-photo');if(rm)rm.style.display='none';
+  slot.querySelector('.photo-add-icon').style.display='';
+  slot.querySelector('.photo-slot-main-text').style.display='';
+}
+function buildRefGrid(){
+  const grid=document.getElementById('refGrid');
+  grid.innerHTML=Array.from({length:6},(_,i)=>`
+    <div class="photo-slot" id="refSlot${i}" onclick="document.getElementById('refFile${i}').click()">
+      <input type="file" id="refFile${i}" accept="image/*" style="display:none" onchange="previewRef(this,${i})">
+      <div class="photo-add-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      <span>Ref. ${i+1}</span>
+    </div>`).join('');
+}
+function previewRef(input,i){
+  const f=input.files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    refPhotos[i]=e.target.result;
+    const slot=document.getElementById(`refSlot${i}`);
+    let img=slot.querySelector('img');
+    if(!img){img=document.createElement('img');img.onclick=ev=>ev.stopPropagation();slot.appendChild(img);}
+    img.src=e.target.result;
+    slot.querySelector('.photo-add-icon').style.display='none';
+    const txt=slot.querySelector('span');if(txt)txt.style.display='none';
+    let rm=slot.querySelector('.rm-photo');
+    if(!rm){rm=document.createElement('button');rm.className='rm-photo';rm.innerHTML='×';rm.onclick=ev=>{ev.stopPropagation();removeRef(i);};slot.appendChild(rm);}
+    rm.style.display='flex';
+  };reader.readAsDataURL(f);
+}
+function removeRef(i){
+  refPhotos[i]=null;const slot=document.getElementById(`refSlot${i}`);
+  const img=slot.querySelector('img');if(img)img.remove();
+  const rm=slot.querySelector('.rm-photo');if(rm)rm.style.display='none';
+  slot.querySelector('.photo-add-icon').style.display='';
+  const txt=slot.querySelector('span');if(txt)txt.style.display='';
+}
+
+// ── Submit client order ──
+function submitClientOrder(){
+  const isDocMode=document.querySelector('.im-tab.active').textContent.includes('documento');
+  const rawId=isDocMode?document.getElementById('cIdDoc').value:document.getElementById('cId').value;
+  const id=rawId||String(Math.floor(Math.random()*900000+100000));
+  const d=new Date();const dt=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  const prod=isDocMode?'Pedido via documento':document.getElementById('cProd').value;
+  const mat=isDocMode?'—':document.getElementById('cMat').value;
+  const size=isDocMode?'—':(document.getElementById('cSize').value||'—');
+  const qty=isDocMode?1:parseInt(document.getElementById('cQty').value)||1;
+  const obs=isDocMode?document.getElementById('cObsDoc').value:document.getElementById('cObs').value;
+  const clientFinal=isDocMode?'':document.getElementById('cClientFinal').value;
+  const fls=isDocMode?uploadedFiles.map(f=>({name:f.name,type:f.type,size:f.size})):[];
+
+  orders.unshift({
+    id,product:`${prod}${clientFinal?' — '+clientFinal:''}`,
+    detail:`${mat} · ${size}`,qty,date:dt,
+    month:String(d.getMonth()+1).padStart(2,'0'),
+    status:'recebido',ref:'—',client:'Alvorada Supermercados',obs,fromClient:true,files:fls,photos:[]
+  });
+  clearForm();renderBoard();renderClientOrders();
+  const btn=document.getElementById('submitBtn');
+  btn.innerHTML='✓ Enviado!';btn.className='btn btn-success';
+  setTimeout(()=>{
+    btn.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar para Milena Joias';
+    btn.className='btn btn-blue';},2500);
+}
+function clearForm(){
+  ['cId','cDate','cClientFinal','cSize','cQty','cObs','cIdDoc','cObsDoc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  uploadedFiles=[];renderUploadedFiles();
+  removeMainPhoto();
+  for(let i=0;i<6;i++)if(refPhotos[i])removeRef(i);
+}
+
+// ── Client orders list ──
+function renderClientOrders(){
+  const mine=orders.filter(o=>o.client==='Alvorada Supermercados');
+  document.getElementById('clientOrderCount').textContent=`${mine.length} pedido${mine.length!==1?'s':''}`;
+  if(!mine.length){
+    document.getElementById('clientOrdersList').innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div>Nenhum pedido ainda.</div>`;return;
+  }
+  const dark=isDark();
+  const smap={recebido:0,desenhando:1,fotolito:2,aprovacao:3,producao:4,grafica:5,cliente:6,cancelado:-1};
+  document.getElementById('clientOrdersList').innerHTML=mine.map(o=>{
+    const s=getS(o.status);const pos=smap[o.status]??0;
+    const bars=Array.from({length:6},(_,i)=>`<div class="mini-step ${i<pos?'done':i===pos?'active':''}"></div>`).join('');
+    const filesTag=o.files&&o.files.length?`<div class="order-item-files">${o.files.map(f=>`<span class="order-item-file-tag">${typeIcon[f.type]||'📎'} ${f.name}</span>`).join('')}</div>`:'';
+    return `<div class="order-item">
+      <div class="order-item-top">
+        <span class="order-item-num">#${o.id}</span>
+        <span class="order-item-status" style="background:${dark?s.dbg+'55':s.bg};color:${s.color}">
+          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${s.color}"></span>${s.label}
+        </span>
+      </div>
+      <div class="order-item-title">${o.product}</div>
+      <div class="order-item-detail">${o.detail}</div>
+      ${filesTag}
+      <div class="mini-pipeline">${bars}</div>
+      <div class="order-item-foot">
+        <span class="order-item-date">${o.date}</span>
+        <span class="order-item-qty">${o.qty} unidades</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Overlays ──
+document.getElementById('detailOverlay').addEventListener('click',function(e){if(e.target===this)closeDetail();});
+document.getElementById('newOverlay').addEventListener('click',function(e){if(e.target===this)closeNew();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDetail();closeNew();}});
+
+// ── Init ──
+buildRefGrid();
+renderBoard();
+renderClientOrders();
+</script>
+
+</body>
+</html>
