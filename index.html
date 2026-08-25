@@ -38,7 +38,7 @@
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;}
 
 /* ── Mode bar ── */
-.mode-bar{background:#1C1A16;padding:0 20px;display:flex;align-items:center;gap:0;height:38px;}
+.mode-bar{position:sticky;top:0;z-index:200;background:#1C1A16;padding:0 20px;display:flex;align-items:center;gap:0;height:38px;}
 .mode-bar-brand{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:rgba(255,255,255,.65);margin-right:18px;white-space:nowrap;}
 .mode-bar-brand strong{color:#fff;}
 .mode-tabs{display:flex;gap:3px;background:rgba(255,255,255,.1);border-radius:var(--rs);padding:3px;}
@@ -267,6 +267,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 /* Loading spinner */
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Client management ── */
+.client-mgmt-list{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.client-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);}
+.client-row-info{flex:1;min-width:0;}
+.client-row-name{font-size:13px;font-weight:600;color:var(--text);}
+.client-row-email{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.client-row-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--rf);flex-shrink:0;}
+.badge-ativo{background:var(--blue-f);color:var(--blue);}
+.badge-inativo{background:var(--s3);color:var(--t3);}
+.client-row-actions{display:flex;gap:5px;flex-shrink:0;}
+.client-rename-wrap{display:flex;align-items:center;gap:5px;margin-top:6px;}
+.client-rename-input{flex:1;padding:4px 8px;border:1px solid var(--gold);border-radius:var(--rs);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;}
+
+/* ── Login tabs ── */
+.login-tabs{display:flex;gap:3px;background:var(--s2);border-radius:var(--rs);padding:3px;margin:0 20px 16px;}
+.ltab{flex:1;padding:7px;border-radius:5px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--t2);transition:all .14s;text-align:center;}
+.ltab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm);}
 </style>
 </head>
 <body>
@@ -281,13 +299,18 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="login-logo-name">Milena Joias</div>
       <div class="login-logo-sub">Sistema de Gestão de Pedidos</div>
     </div>
-    <div class="modal-body" style="padding-top:20px">
+    <div class="login-tabs">
+      <button class="ltab active" id="ltabLogin" onclick="setLoginMode('login',this)">Entrar</button>
+      <button class="ltab" id="ltabRegister" onclick="setLoginMode('register',this)">Criar conta</button>
+    </div>
+    <div class="modal-body" style="padding-top:0">
       <div class="login-error" id="loginError"></div>
-      <div class="fld"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
-      <div class="fld"><label>Senha</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fld" id="fldName" style="display:none"><label>Nome completo</label><input type="text" id="loginName" placeholder="Seu nome" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div class="fld"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div class="fld"><label>Senha</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
-      <button class="btn btn-gold" id="loginBtn" onclick="doLogin()">Entrar</button>
+      <button class="btn btn-gold" id="loginBtn" onclick="doAuth()">Entrar</button>
     </div>
   </div>
 </div>
@@ -321,6 +344,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="dv"></div>
     <div class="header-kpis" id="kpiBar"></div>
     <div class="header-right">
+      <button class="btn btn-outline" onclick="openClients()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clientes
+      </button>
       <button class="btn btn-gold" onclick="openNew()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Novo Pedido
@@ -507,6 +534,32 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
+<!-- ── Clients Management Modal ── -->
+<div class="overlay" id="clientsOverlay">
+  <div class="modal" style="width:580px">
+    <div class="modal-head">
+      <div class="minfo">
+        <div class="modal-eyebrow">ADMIN · GESTÃO</div>
+        <div class="modal-title">Clientes Cadastrados</div>
+      </div>
+      <button class="modal-close" onclick="closeClients()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:12px;font-size:12px;color:var(--t2)">Gerencie quem tem acesso ao portal do cliente. Clientes se cadastram pela tela de login com o link do sistema.</div>
+      <div id="clientsMgmtList">
+        <div class="empty-state"><div class="empty-icon">👤</div>Carregando clientes…</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span style="font-size:11px;color:var(--t3)" id="clientsCount">0 clientes</span>
+      <button class="btn btn-outline" style="margin-left:auto" onclick="loadClients()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Atualizar
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ══════════════════════════════════════
 //  SUPABASE
@@ -543,6 +596,15 @@ async function onSignIn(user) {
   currentProfile = profile;
   currentRole = profile?.role || 'cliente';
 
+  // Blocked user: sign them out immediately
+  if (currentRole === 'inativo') {
+    await sb.auth.signOut();
+    const errEl = document.getElementById('loginError');
+    errEl.textContent = 'Seu acesso foi desativado. Entre em contato com a Milena Joias.';
+    errEl.style.display = 'block';
+    return;
+  }
+
   document.getElementById('loginOverlay').classList.remove('open');
   document.getElementById('logoutBtn').style.display = '';
   document.getElementById('userLabel').textContent = profile?.name || user.email;
@@ -574,12 +636,36 @@ function onSignOut() {
   document.getElementById('viewCliente').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
   document.getElementById('userLabel').textContent = '';
-  document.getElementById('loginOverlay').classList.add('open');
+  // Reset login mode to 'login'
+  loginMode = 'login';
+  document.getElementById('ltabLogin')?.classList.add('active');
+  document.getElementById('ltabRegister')?.classList.remove('active');
+  document.getElementById('loginBtn').textContent = 'Entrar';
+  document.getElementById('fldName').style.display = 'none';
+  document.getElementById('loginError').style.display = 'none';
   document.getElementById('loginEmail').value = '';
   document.getElementById('loginPassword').value = '';
+  document.getElementById('loginName').value = '';
+  document.getElementById('loginOverlay').classList.add('open');
 }
 
-async function doLogin() {
+
+async function doLogout() {
+  await sb.auth.signOut();
+}
+
+// ── Login mode toggle ──
+let loginMode = 'login';
+function setLoginMode(mode, btn) {
+  loginMode = mode;
+  document.querySelectorAll('.ltab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('fldName').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('loginBtn').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+async function doAuth() {
   const email    = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
   const errEl    = document.getElementById('loginError');
@@ -588,18 +674,107 @@ async function doLogin() {
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled  = true;
   errEl.style.display = 'none';
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if (error) {
-    errEl.textContent = 'E-mail ou senha incorretos.';
-    errEl.style.display = 'block';
-    btn.textContent = 'Entrar';
-    btn.disabled = false;
+
+  if (loginMode === 'register') {
+    const name = document.getElementById('loginName').value.trim();
+    if (!name) { errEl.textContent = 'Digite seu nome.'; errEl.style.display = 'block'; btn.textContent='Criar conta'; btn.disabled=false; return; }
+    const { error } = await sb.auth.signUp({
+      email, password,
+      options: { data: { name } }
+    });
+    if (error) {
+      errEl.textContent = error.message.includes('already') ? 'E-mail já cadastrado. Faça login.' : error.message;
+      errEl.style.display = 'block';
+      btn.textContent = 'Criar conta'; btn.disabled = false;
+    }
+    // On success, onAuthStateChange → onSignIn handles the rest
+  } else {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      errEl.textContent = 'E-mail ou senha incorretos.';
+      errEl.style.display = 'block';
+      btn.textContent = 'Entrar'; btn.disabled = false;
+    }
   }
-  // success handled by onAuthStateChange → onSignIn
 }
 
-async function doLogout() {
-  await sb.auth.signOut();
+// ── Clients management ──
+let clientsList = [];
+
+async function openClients() {
+  document.getElementById('clientsOverlay').classList.add('open');
+  await loadClients();
+}
+function closeClients() {
+  document.getElementById('clientsOverlay').classList.remove('open');
+}
+
+async function loadClients() {
+  const listEl = document.getElementById('clientsMgmtList');
+  listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Carregando…</div>';
+  const { data, error } = await sb.from('profiles').select('*').eq('role', 'cliente').order('name');
+  const inativo = await sb.from('profiles').select('*').eq('role', 'inativo').order('name');
+  clientsList = [...(data || []), ...(inativo.data || [])];
+  if (error) { listEl.innerHTML = `<div class="empty-state" style="color:#C0392B">Erro: ${error.message}</div>`; return; }
+  if (!clientsList.length) { listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div>Nenhum cliente cadastrado ainda.</div>'; return; }
+  document.getElementById('clientsCount').textContent = `${clientsList.length} cliente${clientsList.length!==1?'s':''}`;
+  renderClientsList();
+}
+
+function renderClientsList() {
+  const listEl = document.getElementById('clientsMgmtList');
+  listEl.innerHTML = '<div class="client-mgmt-list">' + clientsList.map((c, i) => `
+    <div class="client-row" id="crow-${i}">
+      <div class="client-row-info">
+        <div class="client-row-name">${escHtml(c.name || '(sem nome)')}</div>
+        <div class="client-row-email">${escHtml(c.email || c.id)}</div>
+        <div id="crow-rename-${i}" style="display:none" class="client-rename-wrap">
+          <input class="client-rename-input" id="crow-input-${i}" type="text" value="${escHtml(c.name||'')}" placeholder="Novo nome" onkeydown="if(event.key==='Enter')saveRename(${i})">
+          <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="saveRename(${i})">Salvar</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="cancelRename(${i})">×</button>
+        </div>
+      </div>
+      <span class="client-row-badge ${c.role==='inativo'?'badge-inativo':'badge-ativo'}">${c.role==='inativo'?'Bloqueado':'Ativo'}</span>
+      <div class="client-row-actions">
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="startRename(${i})">Renomear</button>
+        ${c.role==='inativo'
+          ? `<button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:var(--blue)" onclick="toggleClientAccess(${i},'cliente')">Reativar</button>`
+          : `<button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:#C0392B" onclick="toggleClientAccess(${i},'inativo')">Bloquear</button>`
+        }
+      </div>
+    </div>`).join('') + '</div>';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function startRename(i) {
+  document.getElementById(`crow-rename-${i}`).style.display = 'flex';
+  document.getElementById(`crow-input-${i}`).focus();
+}
+function cancelRename(i) {
+  document.getElementById(`crow-rename-${i}`).style.display = 'none';
+}
+
+async function saveRename(i) {
+  const client = clientsList[i]; if (!client) return;
+  const newName = document.getElementById(`crow-input-${i}`).value.trim();
+  if (!newName) return;
+  const { error } = await sb.from('profiles').update({ name: newName }).eq('id', client.id);
+  if (error) { alert('Erro ao renomear: ' + error.message); return; }
+  clientsList[i].name = newName;
+  renderClientsList();
+}
+
+async function toggleClientAccess(i, newRole) {
+  const client = clientsList[i]; if (!client) return;
+  const label = newRole === 'inativo' ? 'Bloquear' : 'Reativar';
+  if (!confirm(`${label} acesso de ${client.name || client.email}?`)) return;
+  const { error } = await sb.from('profiles').update({ role: newRole }).eq('id', client.id);
+  if (error) { alert('Erro: ' + error.message); return; }
+  clientsList[i].role = newRole;
+  renderClientsList();
 }
 
 // ══════════════════════════════════════
@@ -1050,9 +1225,10 @@ function renderClientOrders() {
 }
 
 // ── Overlays ──
-document.getElementById('detailOverlay').addEventListener('click', function(e) { if(e.target===this) closeDetail(); });
-document.getElementById('newOverlay').addEventListener('click',    function(e) { if(e.target===this) closeNew(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape') { closeDetail(); closeNew(); } });
+document.getElementById('detailOverlay').addEventListener('click',  function(e) { if(e.target===this) closeDetail(); });
+document.getElementById('newOverlay').addEventListener('click',     function(e) { if(e.target===this) closeNew(); });
+document.getElementById('clientsOverlay').addEventListener('click', function(e) { if(e.target===this) closeClients(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') { closeDetail(); closeNew(); closeClients(); } });
 
 // ── Init ──
 initAuth();
