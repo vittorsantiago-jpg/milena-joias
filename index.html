@@ -167,6 +167,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .ftab{padding:5px 11px;border-radius:var(--rs);border:1px solid transparent;background:transparent;color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;}
 .ftab:hover{background:var(--s2);color:var(--text);}.ftab.active{background:var(--gold-f);color:var(--gold);border-color:var(--gold-l);}
 
+.board-wrap{position:relative;}
+.board-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left,var(--bg),transparent);pointer-events:none;z-index:2;}
 .board{padding:16px 20px 40px;overflow-x:auto;display:flex;gap:11px;min-height:calc(100vh - 156px);align-items:flex-start;}
 .col{flex-shrink:0;width:218px;display:flex;flex-direction:column;gap:6px;}
 .col-head{display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);}
@@ -268,6 +270,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ── Priority badge ── */
+.priority-urgente{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:var(--rf);background:#FEE2E2;color:#DC2626;text-transform:uppercase;letter-spacing:.04em;}
+.priority-urgente::before{content:'⚡';font-size:9px;}
+.req{color:var(--gold);margin-left:1px;}
+[title]{cursor:help;}
+
 /* ── Client management ── */
 .client-mgmt-list{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
 .client-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);}
@@ -363,7 +371,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <button class="ftab active" onclick="setMonth('all',this)">Todos</button>
     </div>
   </div>
-  <div class="board" id="board"></div>
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
 </div>
 
 <!-- ════════ VIEW: CLIENTE ════════ -->
@@ -373,7 +383,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="client-dot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M6 2L3 6l9 13 9-13-3-4z"/><path d="M3 6h18"/></svg></div>
       <div><div class="client-logo-name" id="clientLogoName">Portal do Cliente</div><div class="client-logo-sub">Portal de Pedidos · Milena Joias</div></div>
     </div>
-    <span class="client-tag">Cliente verificado</span>
+    <span class="client-tag" title="Sua conta foi verificada e você tem acesso ao portal de pedidos da Milena Joias">✓ Cliente verificado</span>
   </header>
 
   <div class="client-layout">
@@ -408,16 +418,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
               </div>
               <div class="fld"><label>Nome do cliente final</label><input type="text" placeholder="Nome de quem comprou" id="cClientFinal"></div>
               <div class="form-row">
-                <div class="fld"><label>Produto</label>
-                  <select id="cProd"><option>BROCHE</option><option>PIN</option><option>MEDALHA</option><option>OUTRO</option></select>
+                <div class="fld"><label>Produto <span class="req">*</span></label>
+                  <select id="cProd">
+                    <option>BROCHE</option><option>PIN</option><option>MEDALHA</option>
+                    <option>PINGENTE</option><option>BRINCO</option><option>ANEL</option>
+                    <option>PULSEIRA</option><option>COLAR</option><option>OUTRO</option>
+                  </select>
                 </div>
                 <div class="fld"><label>Material</label>
-                  <select id="cMat"><option>Ouro</option><option>Prata</option><option>Rose Gold</option><option>Prata Envelhecida</option><option>Colorido</option></select>
+                  <select id="cMat">
+                    <option>Ouro</option><option>Prata</option><option>Rose Gold</option>
+                    <option>Prata Envelhecida</option><option>Bronze</option>
+                    <option>Acrílico</option><option>Resina</option><option>Colorido</option>
+                  </select>
                 </div>
               </div>
               <div class="form-row">
                 <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm, 5×5cm" id="cSize"></div>
-                <div class="fld"><label>Quantidade</label><input type="number" placeholder="0" min="1" id="cQty"></div>
+                <div class="fld"><label>Quantidade <span class="req">*</span></label><input type="number" min="1" value="1" id="cQty"></div>
               </div>
               <div class="fld"><label>Observações / detalhes do design</label><textarea placeholder="Tipo de fecho, cores específicas, variações…" id="cObs"></textarea></div>
             </div>
@@ -518,14 +536,44 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <button class="modal-close" onclick="closeNew()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div class="form-row"><div class="fld"><label>Nº Pedido</label><input type="text" placeholder="ex: 570990" id="mnId"></div><div class="fld"><label>Data</label><input type="date" id="mnDate"></div></div>
-      <div class="fld"><label>Cliente</label><input type="text" placeholder="Nome do cliente ou empresa" id="mnClient"></div>
       <div class="form-row">
-        <div class="fld"><label>Produto</label><select id="mnProd"><option>BROCHE</option><option>PIN</option><option>MEDALHA</option></select></div>
-        <div class="fld"><label>Material</label><select id="mnMat"><option>Ouro</option><option>Prata</option><option>Rose Gold</option><option>Colorido</option></select></div>
+        <div class="fld"><label>Nº Pedido <span class="req">*</span></label><input type="text" placeholder="ex: 570990" id="mnId"></div>
+        <div class="fld"><label>Data de entrada</label><input type="date" id="mnDate"></div>
       </div>
-      <div class="form-row"><div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm" id="mnSize"></div><div class="fld"><label>Quantidade</label><input type="number" placeholder="0" id="mnQty"></div></div>
-      <div class="fld"><label>Observações</label><textarea placeholder="Detalhes do design, cores…" id="mnObs"></textarea></div>
+      <div class="form-row">
+        <div class="fld"><label>Cliente <span class="req">*</span></label><input type="text" placeholder="Nome do cliente ou empresa" id="mnClient"></div>
+        <div class="fld"><label>Prazo de entrega</label><input type="date" id="mnPrazo"></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>Produto <span class="req">*</span></label>
+          <select id="mnProd">
+            <option>BROCHE</option><option>PIN</option><option>MEDALHA</option>
+            <option>PINGENTE</option><option>BRINCO</option><option>ANEL</option>
+            <option>PULSEIRA</option><option>COLAR</option><option>OUTRO</option>
+          </select>
+        </div>
+        <div class="fld"><label>Material</label>
+          <select id="mnMat">
+            <option>Ouro</option><option>Prata</option><option>Rose Gold</option>
+            <option>Prata Envelhecida</option><option>Bronze</option>
+            <option>Acrílico</option><option>Resina</option><option>Colorido</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm" id="mnSize"></div>
+        <div class="fld"><label>Quantidade <span class="req">*</span></label><input type="number" min="1" value="1" id="mnQty"></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>Prioridade</label>
+          <select id="mnPrioridade">
+            <option value="normal">Normal</option>
+            <option value="urgente">⚡ Urgente</option>
+          </select>
+        </div>
+        <div class="fld"><label>Valor do pedido (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00" id="mnValor"></div>
+      </div>
+      <div class="fld"><label>Observações</label><textarea placeholder="Detalhes do design, cores, acabamento…" id="mnObs"></textarea></div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
       <button class="btn btn-outline" onclick="closeNew()">Cancelar</button>
@@ -711,14 +759,33 @@ function closeClients() {
 
 async function loadClients() {
   const listEl = document.getElementById('clientsMgmtList');
-  listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Carregando…</div>';
-  const { data, error } = await sb.from('profiles').select('*').eq('role', 'cliente').order('name');
-  const inativo = await sb.from('profiles').select('*').eq('role', 'inativo').order('name');
-  clientsList = [...(data || []), ...(inativo.data || [])];
-  if (error) { listEl.innerHTML = `<div class="empty-state" style="color:#C0392B">Erro: ${error.message}</div>`; return; }
-  if (!clientsList.length) { listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div>Nenhum cliente cadastrado ainda.</div>'; return; }
-  document.getElementById('clientsCount').textContent = `${clientsList.length} cliente${clientsList.length!==1?'s':''}`;
-  renderClientsList();
+  listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div>Carregando clientes…</div>';
+
+  try {
+    // Load ativos and inativos in parallel
+    const [res1, res2] = await Promise.all([
+      sb.from('profiles').select('id,name,email,role').neq('role','admin').order('name'),
+      Promise.resolve(null) // placeholder — single query covers all non-admin roles
+    ]);
+
+    if (res1.error) {
+      const msg = res1.error.code === '42P17'
+        ? 'Erro de permissão (RLS). Execute o SQL de correção de políticas no Supabase antes de usar esta função.'
+        : res1.error.message;
+      listEl.innerHTML = `<div class="empty-state" style="color:#C0392B;font-size:12px;line-height:1.5">⚠️ ${msg}</div>`;
+      return;
+    }
+
+    clientsList = (res1.data || []).filter(p => p.role !== 'admin');
+    if (!clientsList.length) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-icon">👤</div>Nenhum cliente cadastrado ainda.<br><span style="font-size:11px;margin-top:4px;display:block">Os clientes se cadastram pela tela de login.</span></div>';
+      return;
+    }
+    document.getElementById('clientsCount').textContent = `${clientsList.length} cliente${clientsList.length!==1?'s':''}`;
+    renderClientsList();
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty-state" style="color:#C0392B">Erro inesperado: ${e.message}</div>`;
+  }
 }
 
 function renderClientsList() {
@@ -814,6 +881,9 @@ function dbToOrder(row) {
     photos:      row.photos  || [],
     userId:      row.user_id,
     clientEmail: row.client_email,
+    prazo:       row.prazo   || '',
+    prioridade:  row.prioridade || 'normal',
+    valor:       row.valor   || null,
   };
 }
 
@@ -844,6 +914,11 @@ const isDark  = () => {
 const fmtDate = () => {
   const d = new Date();
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+};
+const fmtDateBR = (iso) => {
+  if (!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
 };
 const fmtMonth = () => String(new Date().getMonth()+1).padStart(2,'0');
 const randId   = () => String(Math.floor(Math.random()*900000+100000));
@@ -891,7 +966,19 @@ function renderBoard() {
     `<div class="kpi"><span class="kpi-dot" style="background:${s.color}"></span><strong>${cnts[s.key]}</strong>${s.short}</div>`
   ).join('');
 
-  document.getElementById('board').innerHTML = STATUSES.filter(s => s.key !== 'cancelado').map(st => {
+  const boardEl = document.getElementById('board');
+  if (!visible.length) {
+    boardEl.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:340px">
+      <div style="text-align:center;color:var(--t3);max-width:280px">
+        <div style="font-size:36px;margin-bottom:12px;opacity:.4">💎</div>
+        <div style="font-size:14px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum pedido ainda</div>
+        <div style="font-size:12px;line-height:1.5;margin-bottom:16px">Crie o primeiro pedido clicando em <strong>+ Novo Pedido</strong> ou aguarde envios do portal do cliente.</div>
+        <button class="btn btn-gold" onclick="openNew()">+ Novo Pedido</button>
+      </div>
+    </div>`;
+    return;
+  }
+  boardEl.innerHTML = STATUSES.filter(s => s.key !== 'cancelado').map(st => {
     const col = visible.filter(o => o.status === st.key);
     return `<div class="col">
       <div class="col-head">
@@ -899,11 +986,12 @@ function renderBoard() {
         <span class="col-cnt">${col.length}</span>
       </div>
       ${col.map(o => `
-        <div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${st.color}" onclick="openDetail('${o.id}')">
+        <div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${o.prioridade==='urgente'?'#DC2626':st.color}" onclick="openDetail('${o.id}')">
           <div class="card-top">
             <span class="card-num">#${o.id}</span>
             <div style="display:flex;align-items:center;gap:4px">
-              ${o.fromClient?'<span class="new-badge">novo</span>':''}
+              ${o.prioridade==='urgente'?'<span class="priority-urgente">Urgente</span>':''}
+              ${o.fromClient&&o.prioridade!=='urgente'?'<span class="new-badge">novo</span>':''}
               <span class="card-qty">${o.qty} un</span>
             </div>
           </div>
@@ -915,8 +1003,8 @@ function renderBoard() {
             ${o.files.length} arquivo${o.files.length>1?'s':''}
           </div>`:''}
           <div class="card-foot">
-            <span class="card-date">${o.date}</span>
-            <span class="card-ref">${o.ref}</span>
+            <span class="card-date">${o.prazo?`📅 ${fmtDateBR(o.prazo)}`:o.date}</span>
+            <span class="card-ref">${o.valor?`R$ ${Number(o.valor).toFixed(0)}`:o.ref}</span>
           </div>
         </div>`).join('')}
       <button class="add-btn" onclick="openNew()">
@@ -963,6 +1051,9 @@ function openDetail(id) {
     <div class="mf full"><label>Descrição</label><div class="val">${o.detail}</div></div>
     <div class="mf"><label>Ref. Fotolito</label><div class="val" style="font-family:'DM Mono',monospace;color:var(--gold)">${o.ref}</div></div>
     <div class="mf"><label>Data de entrada</label><div class="val">${o.date}</div></div>
+    ${o.prazo ? `<div class="mf"><label>Prazo de entrega</label><div class="val" style="font-weight:600">${fmtDateBR(o.prazo)}</div></div>` : ''}
+    ${o.prioridade === 'urgente' ? `<div class="mf"><label>Prioridade</label><div class="val"><span class="priority-urgente">Urgente</span></div></div>` : ''}
+    ${o.valor ? `<div class="mf"><label>Valor</label><div class="val" style="font-weight:600;color:var(--gold)">R$ ${Number(o.valor).toFixed(2).replace('.',',')}</div></div>` : ''}
     ${o.obs ? `<div class="mf full"><div class="obs-note">${o.obs}</div></div>` : ''}
     ${filesHtml}
   `;
@@ -1010,27 +1101,36 @@ async function saveNew() {
   const btn = document.getElementById('saveNewBtn');
   btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
 
+  const mnClient = document.getElementById('mnClient').value.trim();
+  const mnQty    = document.getElementById('mnQty');
+  if (!mnClient) { alert('Informe o nome do cliente.'); btn.textContent='Salvar Pedido'; btn.disabled=false; return; }
+
   const order = {
     id:          document.getElementById('mnId').value || randId(),
     product:     document.getElementById('mnProd').value,
     detail:      `${document.getElementById('mnMat').value} · ${document.getElementById('mnSize').value || '—'}`,
-    qty:         parseInt(document.getElementById('mnQty').value) || 1,
+    qty:         parseInt(mnQty.value) || 1,
     date:        fmtDate(),
     month:       fmtMonth(),
     status:      'recebido',
     ref:         '—',
-    client:      document.getElementById('mnClient').value || 'Cliente',
+    client:      mnClient,
     obs:         document.getElementById('mnObs').value || '',
     from_client: false,
     files:       [],
     photos:      [],
+    prazo:       document.getElementById('mnPrazo').value || null,
+    prioridade:  document.getElementById('mnPrioridade').value || 'normal',
+    valor:       parseFloat(document.getElementById('mnValor').value) || null,
   };
 
   const { error } = await sb.from('orders').insert([order]);
   if (error) { alert('Erro ao salvar: ' + error.message); btn.textContent='Salvar Pedido'; btn.disabled=false; return; }
   closeNew();
   // Clear fields
-  ['mnId','mnClient','mnSize','mnQty','mnObs'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['mnId','mnClient','mnSize','mnObs','mnPrazo','mnValor'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  if (mnQty) mnQty.value = '1';
+  document.getElementById('mnPrioridade').value = 'normal';
   btn.textContent = 'Salvar Pedido'; btn.disabled = false;
   // Realtime will refresh board
 }
@@ -1201,10 +1301,14 @@ function renderClientOrders() {
   if (!mine.length) { list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>Nenhum pedido ainda.</div>`; return; }
   const dark = isDark();
   const smap = {recebido:0,desenhando:1,fotolito:2,aprovacao:3,producao:4,grafica:5,cliente:6,cancelado:-1};
+  const TRACKER_STEPS = ['Recebido','Desenho','Fotolito','Aprovação','Produção','Gráfica','Entregue'];
   list.innerHTML = mine.map(o => {
     const s = getS(o.status); const pos = smap[o.status] ?? 0;
     const bars = Array.from({length:6}, (_,i) => `<div class="mini-step ${i<pos?'done':i===pos?'active':''}"></div>`).join('');
     const filesTag = o.files&&o.files.length ? `<div class="order-item-files">${o.files.map(f=>`<span class="order-item-file-tag">${typeIcon[f.type]||'📎'} ${f.name}</span>`).join('')}</div>` : '';
+    const currentStepLabel = TRACKER_STEPS[Math.min(pos, TRACKER_STEPS.length-1)] || s.label;
+    const nextStepLabel = pos < TRACKER_STEPS.length-1 ? TRACKER_STEPS[pos+1] : null;
+    const prazoTag = o.prazo ? `<span style="font-size:10px;color:var(--t3)">📅 Prazo: ${fmtDateBR(o.prazo)}</span>` : `<span class="order-item-date">${o.date}</span>`;
     return `<div class="order-item">
       <div class="order-item-top">
         <span class="order-item-num">#${o.id}</span>
@@ -1215,10 +1319,13 @@ function renderClientOrders() {
       <div class="order-item-title">${o.product}</div>
       <div class="order-item-detail">${o.detail}</div>
       ${filesTag}
-      <div class="mini-pipeline">${bars}</div>
+      <div class="mini-pipeline" title="Progresso do pedido">${bars}</div>
+      <div style="font-size:10px;color:var(--t2);margin-top:4px">
+        Etapa atual: <strong style="color:${s.color}">${currentStepLabel}</strong>${nextStepLabel?` → próxima: ${nextStepLabel}`:''}
+      </div>
       <div class="order-item-foot">
-        <span class="order-item-date">${o.date}</span>
-        <span class="order-item-qty">${o.qty} unidades</span>
+        ${prazoTag}
+        <span class="order-item-qty">${o.qty} un</span>
       </div>
     </div>`;
   }).join('');
