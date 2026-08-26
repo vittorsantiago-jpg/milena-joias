@@ -688,7 +688,23 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <button class="modal-close" onclick="closeClients()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div style="margin-bottom:12px;font-size:12px;color:var(--t2)">Gerencie quem tem acesso ao portal do cliente. Clientes se cadastram pela tela de login com o link do sistema.</div>
+      <!-- Create client form (collapsed by default) -->
+      <div id="newClientForm" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Criar novo cliente</div>
+        <div class="form-row" style="margin-bottom:8px">
+          <div class="fld"><label>Nome <span class="req">*</span></label><input type="text" id="ncName" placeholder="Nome do cliente"></div>
+          <div class="fld"><label>E-mail <span class="req">*</span></label><input type="email" id="ncEmail" placeholder="email@cliente.com"></div>
+        </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <div class="fld"><label>Senha temporária <span class="req">*</span></label><input type="password" id="ncPass" placeholder="Mínimo 6 caracteres"></div>
+          <div class="fld" style="justify-content:flex-end;display:flex;align-items:flex-end;gap:8px">
+            <button class="btn btn-outline" onclick="toggleNewClientForm(false)">Cancelar</button>
+            <button class="btn btn-gold" id="ncSaveBtn" onclick="createClient()">Criar conta</button>
+          </div>
+        </div>
+        <div id="ncError" style="display:none;color:#C0392B;font-size:11px;margin-top:4px"></div>
+      </div>
+
       <div id="clientsMgmtList">
         <div class="empty-state"><div class="empty-icon">👤</div>Carregando clientes…</div>
       </div>
@@ -698,6 +714,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <button class="btn btn-outline" style="margin-left:auto" onclick="loadClients()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         Atualizar
+      </button>
+      <button class="btn btn-gold" style="margin-left:8px" onclick="toggleNewClientForm(true)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Cliente
       </button>
     </div>
   </div>
@@ -850,6 +870,57 @@ async function openClients() {
 }
 function closeClients() {
   document.getElementById('clientsOverlay').classList.remove('open');
+  toggleNewClientForm(false);
+}
+
+function toggleNewClientForm(show) {
+  document.getElementById('newClientForm').style.display = show ? 'block' : 'none';
+  if (show) {
+    document.getElementById('ncName').value = '';
+    document.getElementById('ncEmail').value = '';
+    document.getElementById('ncPass').value = '';
+    document.getElementById('ncError').style.display = 'none';
+    setTimeout(() => document.getElementById('ncName').focus(), 50);
+  }
+}
+
+async function createClient() {
+  const name  = document.getElementById('ncName').value.trim();
+  const email = document.getElementById('ncEmail').value.trim();
+  const pass  = document.getElementById('ncPass').value;
+  const errEl = document.getElementById('ncError');
+  errEl.style.display = 'none';
+
+  if (!name || !email || !pass) { errEl.textContent = 'Preencha todos os campos.'; errEl.style.display = 'block'; return; }
+  if (pass.length < 6) { errEl.textContent = 'A senha deve ter ao menos 6 caracteres.'; errEl.style.display = 'block'; return; }
+
+  const btn = document.getElementById('ncSaveBtn');
+  btn.innerHTML = '<span class="spinner"></span> Criando…'; btn.disabled = true;
+
+  // Save admin session before signUp replaces it
+  const { data: { session: adminSession } } = await sb.auth.getSession();
+
+  const { error: signUpErr } = await sb.auth.signUp({
+    email, password: pass,
+    options: { data: { name } }
+  });
+
+  // Restore admin session immediately
+  if (adminSession) {
+    await sb.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token });
+  }
+
+  btn.innerHTML = 'Criar conta'; btn.disabled = false;
+
+  if (signUpErr) {
+    let msg = signUpErr.message;
+    if (msg.includes('already registered')) msg = 'Este e-mail já está cadastrado.';
+    errEl.textContent = msg; errEl.style.display = 'block';
+    return;
+  }
+
+  toggleNewClientForm(false);
+  await loadClients();
 }
 
 async function loadClients() {
