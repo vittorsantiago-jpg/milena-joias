@@ -312,7 +312,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 @media print {
   .mode-bar,.header,.toolbar,.client-header,
   #loginOverlay,#detailOverlay,#newOverlay,#clientsOverlay,
-  #viewMilena,#viewCliente,
+  #viewMilena,
   .dash-header-btn { display:none!important; }
   body { background:#fff!important; color:#1C1A16!important; font-size:11px; }
   .dash-layout { padding:0!important; max-width:100%!important; }
@@ -384,10 +384,6 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10.5" y="3" width="5" height="12" rx="1"/></svg>
       Painel Milena Joias
     </button>
-    <button class="mtab" onclick="setView('cliente',this)">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Portal do Cliente
-    </button>
     <button class="mtab" onclick="setView('dashboard',this)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
       Dashboard
@@ -409,14 +405,22 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="dv"></div>
     <div class="header-kpis" id="kpiBar"></div>
     <div class="header-right">
-      <button class="btn btn-outline" onclick="openClients()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Clientes
-      </button>
-      <button class="btn btn-gold" onclick="openNew()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Novo Pedido
-      </button>
+      <div id="adminHeaderBtns" style="display:none;gap:8px;align-items:center">
+        <button class="btn btn-outline" onclick="openClients()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Clientes
+        </button>
+        <button class="btn btn-gold" onclick="openNew()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Pedido
+        </button>
+      </div>
+      <div id="clientHeaderBtns" style="display:none;gap:8px;align-items:center">
+        <button class="btn btn-gold" onclick="openClientSubmit()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          + Enviar Pedido
+        </button>
+      </div>
     </div>
   </header>
   <div class="toolbar">
@@ -433,127 +437,78 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- ════════ VIEW: CLIENTE ════════ -->
-<div id="viewCliente" style="display:none">
-  <header class="client-header">
-    <div class="client-logo">
-      <div class="client-dot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M6 2L3 6l9 13 9-13-3-4z"/><path d="M3 6h18"/></svg></div>
-      <div><div class="client-logo-name" id="clientLogoName">Portal do Cliente</div><div class="client-logo-sub">Portal de Pedidos · Milena Joias</div></div>
+<!-- ════════ CLIENT SUBMIT OVERLAY ════════ -->
+<div class="overlay" id="clientSubmitOverlay">
+  <div class="modal" style="width:640px">
+    <div class="modal-head">
+      <div class="minfo">
+        <div class="modal-eyebrow">NOVO PEDIDO</div>
+        <div class="modal-title">Enviar Pedido</div>
+      </div>
+      <button class="modal-close" onclick="closeClientSubmit()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <span class="client-tag" title="Sua conta foi verificada e você tem acesso ao portal de pedidos da Milena Joias">✓ Cliente verificado</span>
-  </header>
-
-  <div class="client-layout">
-    <div class="client-columns">
-
-      <!-- ── Form ── -->
-      <div>
-        <div class="section-label" style="margin-bottom:10px">Novo pedido</div>
-        <div class="form-card">
-          <div class="form-card-head">
-            <div class="form-card-title">Adicionar pedido da loja</div>
-            <div class="form-card-sub">Preencha o formulário ou envie um documento — a Milena recebe automaticamente</div>
+    <div class="modal-body" style="max-height:65vh;overflow-y:auto">
+      <div class="input-mode-toggle">
+        <button class="im-tab active" onclick="setInputMode('form',this)">Preencher formulário</button>
+        <button class="im-tab" onclick="setInputMode('doc',this)">Enviar documento</button>
+      </div>
+      <!-- FORM mode -->
+      <div id="modeForm">
+        <div class="form-row">
+          <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cId"></div>
+          <div class="fld"><label>Data</label><input type="date" id="cDate"></div>
+        </div>
+        <div class="fld"><label>Nome do cliente final</label><input type="text" placeholder="Nome de quem comprou" id="cClientFinal"></div>
+        <div class="form-row">
+          <div class="fld"><label>Produto <span class="req">*</span></label>
+            <select id="cProd"><option>BROCHE</option><option>PIN</option><option>MEDALHA</option><option>PINGENTE</option><option>BRINCO</option><option>ANEL</option><option>PULSEIRA</option><option>COLAR</option><option>OUTRO</option></select>
           </div>
-          <div class="form-card-body">
-
-            <div class="input-mode-toggle">
-              <button class="im-tab active" onclick="setInputMode('form',this)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M8 8h5"/></svg>
-                Preencher formulário
-              </button>
-              <button class="im-tab" onclick="setInputMode('doc',this)">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Enviar documento
-              </button>
-            </div>
-
-            <!-- FORM mode -->
-            <div id="modeForm">
-              <div class="form-row">
-                <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cId"></div>
-                <div class="fld"><label>Data</label><input type="date" id="cDate"></div>
-              </div>
-              <div class="fld"><label>Nome do cliente final</label><input type="text" placeholder="Nome de quem comprou" id="cClientFinal"></div>
-              <div class="form-row">
-                <div class="fld"><label>Produto <span class="req">*</span></label>
-                  <select id="cProd">
-                    <option>BROCHE</option><option>PIN</option><option>MEDALHA</option>
-                    <option>PINGENTE</option><option>BRINCO</option><option>ANEL</option>
-                    <option>PULSEIRA</option><option>COLAR</option><option>OUTRO</option>
-                  </select>
-                </div>
-                <div class="fld"><label>Material</label>
-                  <select id="cMat">
-                    <option>Ouro</option><option>Prata</option><option>Rose Gold</option>
-                    <option>Prata Envelhecida</option><option>Bronze</option>
-                    <option>Acrílico</option><option>Resina</option><option>Colorido</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm, 5×5cm" id="cSize"></div>
-                <div class="fld"><label>Quantidade <span class="req">*</span></label><input type="number" min="1" value="1" id="cQty"></div>
-              </div>
-              <div class="fld"><label>Observações / detalhes do design</label><textarea placeholder="Tipo de fecho, cores específicas, variações…" id="cObs"></textarea></div>
-            </div>
-
-            <!-- DOC mode -->
-            <div id="modeDoc" style="display:none">
-              <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cIdDoc"></div>
-              <div class="drop-zone" id="mainDropZone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
-                <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp" multiple onchange="handleFiles(this.files)">
-                <div class="drop-icon">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                </div>
-                <div class="drop-title">Arraste os arquivos aqui</div>
-                <div class="drop-sub">ou clique para selecionar</div>
-                <div class="drop-types">
-                  <span class="type-chip">PDF</span>
-                  <span class="type-chip">Word</span>
-                  <span class="type-chip">Excel</span>
-                  <span class="type-chip">JPG/PNG</span>
-                </div>
-              </div>
-              <div id="uploadedFiles"></div>
-              <div class="fld" style="margin-top:4px"><label>Observações adicionais</label><textarea placeholder="Qualquer detalhe extra que não esteja no documento…" id="cObsDoc"></textarea></div>
-            </div>
-
-            <!-- Referências visuais -->
-            <div style="margin-top:4px">
-              <div class="section-label" style="margin-bottom:8px">Referências visuais</div>
-              <div style="margin-bottom:10px">
-                <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Foto do modelo / produto de referência</div>
-                <div class="photo-slot photo-slot-main" onclick="triggerPhotoMain()" id="slotMain">
-                  <input type="file" id="fileMain" accept="image/*" style="display:none" onchange="previewMain(this)">
-                  <div class="photo-add-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-                  <div class="photo-slot-main-text"><strong>Adicionar foto do modelo</strong><span>JPG, PNG — foto do produto físico ou referência</span></div>
-                </div>
-              </div>
-              <div>
-                <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Fotos de referência do design (até 6)</div>
-                <div class="photo-grid" id="refGrid"></div>
-              </div>
-            </div>
-
-          </div>
-          <div class="form-card-foot">
-            <button class="btn btn-outline" onclick="clearForm()">Limpar</button>
-            <button class="btn btn-blue" id="submitBtn" onclick="submitClientOrder()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-              Enviar para Milena Joias
-            </button>
+          <div class="fld"><label>Material</label>
+            <select id="cMat"><option>Ouro</option><option>Prata</option><option>Rose Gold</option><option>Prata Envelhecida</option><option>Bronze</option><option>Acrílico</option><option>Resina</option><option>Colorido</option></select>
           </div>
         </div>
-      </div>
-
-      <!-- ── Orders list ── -->
-      <div>
-        <div class="orders-panel-head">
-          <div class="section-label" style="margin-bottom:0">Meus pedidos</div>
-          <span class="orders-count" id="clientOrderCount">0 pedidos</span>
+        <div class="form-row">
+          <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm, 5×5cm" id="cSize"></div>
+          <div class="fld"><label>Quantidade</label><input type="number" min="1" value="1" id="cQty"></div>
         </div>
-        <div id="clientOrdersList"></div>
+        <div class="fld"><label>Observações / detalhes do design</label><textarea placeholder="Tipo de fecho, cores específicas, variações…" id="cObs"></textarea></div>
       </div>
+      <!-- DOC mode -->
+      <div id="modeDoc" style="display:none">
+        <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cIdDoc"></div>
+        <div class="drop-zone" id="mainDropZone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+          <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp" multiple onchange="handleFiles(this.files)">
+          <div class="drop-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+          <div class="drop-title">Arraste os arquivos aqui</div>
+          <div class="drop-sub">ou clique para selecionar</div>
+          <div class="drop-types"><span class="type-chip">PDF</span><span class="type-chip">Word</span><span class="type-chip">Excel</span><span class="type-chip">JPG/PNG</span></div>
+        </div>
+        <div id="uploadedFiles"></div>
+        <div class="fld" style="margin-top:4px"><label>Observações adicionais</label><textarea placeholder="Qualquer detalhe extra que não esteja no documento…" id="cObsDoc"></textarea></div>
+      </div>
+      <!-- Referências visuais -->
+      <div style="margin-top:4px">
+        <div class="section-label" style="margin-bottom:8px">Referências visuais</div>
+        <div style="margin-bottom:10px">
+          <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Foto do modelo / produto de referência</div>
+          <div class="photo-slot photo-slot-main" onclick="triggerPhotoMain()" id="slotMain">
+            <input type="file" id="fileMain" accept="image/*" style="display:none" onchange="previewMain(this)">
+            <div class="photo-add-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+            <div class="photo-slot-main-text"><strong>Adicionar foto do modelo</strong><span>JPG, PNG — foto do produto físico ou referência</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Fotos de referência do design (até 6)</div>
+          <div class="photo-grid" id="refGrid"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot" style="justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeClientSubmit()">Cancelar</button>
+      <button class="btn btn-blue" id="submitBtn" onclick="submitClientOrder()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Enviar para Milena Joias
+      </button>
     </div>
   </div>
 </div>
@@ -616,10 +571,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="pipeline" id="mPipeline"></div>
       <div class="mfields" id="mFields"></div>
     </div>
-    <div class="modal-foot">
-      <button class="btn-adv" id="mAdvBtn" onclick="advanceStatus()">Avançar status</button>
-      <button class="btn-danger" onclick="cancelOrder()">Cancelar pedido</button>
-    </div>
+    <div class="modal-foot" id="mFoot"></div>
   </div>
 </div>
 
@@ -659,16 +611,21 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm" id="mnSize"></div>
         <div class="fld"><label>Quantidade <span class="req">*</span></label><input type="number" min="1" value="1" id="mnQty"></div>
       </div>
-      <div class="form-row">
-        <div class="fld"><label>Prioridade</label>
-          <select id="mnPrioridade">
-            <option value="normal">Normal</option>
-            <option value="urgente">⚡ Urgente</option>
-          </select>
-        </div>
-        <div class="fld"><label>Valor do pedido (R$)</label><input type="number" min="0" step="0.01" placeholder="0,00" id="mnValor"></div>
+      <div class="fld"><label>Prioridade</label>
+        <select id="mnPrioridade">
+          <option value="normal">Normal</option>
+          <option value="urgente">⚡ Urgente</option>
+        </select>
       </div>
       <div class="fld"><label>Observações</label><textarea placeholder="Detalhes do design, cores, acabamento…" id="mnObs"></textarea></div>
+      <div class="fld">
+        <label>Arquivos anexados</label>
+        <div class="upload-area" id="newOrderUploadArea" style="position:relative;overflow:hidden">
+          <input type="file" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleNewOrderFiles(this.files)">
+          📎 Clique para anexar arquivos (PDF, Word, imagens…)
+        </div>
+        <div id="newOrderFilesList"></div>
+      </div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
       <button class="btn btn-outline" onclick="closeNew()">Cancelar</button>
@@ -775,16 +732,13 @@ async function onSignIn(user) {
   if (currentRole === 'admin') {
     document.getElementById('modeTabs').style.display = '';
     document.getElementById('viewMilena').style.display = 'block';
-    document.getElementById('viewCliente').style.display = 'none';
-    document.querySelectorAll('.mtab')[0].classList.add('active');
-    document.querySelectorAll('.mtab')[1].classList.remove('active');
+    document.getElementById('adminHeaderBtns').style.display = 'flex';
+    document.getElementById('clientHeaderBtns').style.display = 'none';
   } else {
-    // Client: hide admin tab, go straight to portal
     document.getElementById('modeTabs').style.display = 'none';
-    document.getElementById('viewMilena').style.display = 'none';
-    document.getElementById('viewCliente').style.display = 'block';
-    document.getElementById('clientLogoName').textContent = profile?.name || user.email;
-    buildRefGrid();
+    document.getElementById('viewMilena').style.display = 'block';
+    document.getElementById('adminHeaderBtns').style.display = 'none';
+    document.getElementById('clientHeaderBtns').style.display = 'flex';
   }
 
   await loadOrders();
@@ -796,7 +750,8 @@ function onSignOut() {
   orders = [];
   if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
   document.getElementById('viewMilena').style.display = 'none';
-  document.getElementById('viewCliente').style.display = 'none';
+  document.getElementById('adminHeaderBtns').style.display = 'none';
+  document.getElementById('clientHeaderBtns').style.display = 'none';
   document.getElementById('logoutBtn').style.display = 'none';
   document.getElementById('userLabel').textContent = '';
   // Reset login mode to 'login'
@@ -1014,19 +969,21 @@ async function toggleClientAccess(i, newRole) {
 //  DATA
 // ══════════════════════════════════════
 const STATUSES = [
-  {key:'recebido',  label:'Recebido',          short:'Recebido',  color:'#2563EB', bg:'#EFF6FF', dbg:'#1E3A5F'},
-  {key:'desenhando',label:'Desenhando',         short:'Desenho',   color:'#7C3AED', bg:'#F5F0FF', dbg:'#2E1A5A'},
-  {key:'fotolito',  label:'Fotolito',           short:'Fotolito',  color:'#9B5E00', bg:'#FFFBEB', dbg:'#3A2C10'},
-  {key:'aprovacao', label:'Em Aprovação',       short:'Aprovação', color:'#B87820', bg:'#FEF3D7', dbg:'#3A2C10'},
-  {key:'producao',  label:'Em Produção',        short:'Produção',  color:'#C03228', bg:'#FEEAE9', dbg:'#3A1812'},
-  {key:'grafica',   label:'Enviado p/ Gráfica', short:'Gráfica',   color:'#1A7A5C', bg:'#E2F5EE', dbg:'#102E22'},
-  {key:'cliente',   label:'Entregue',           short:'Entregue',  color:'#1A5E9A', bg:'#E1EFFC', dbg:'#0E2640'},
-  {key:'cancelado', label:'Cancelado',          short:'Cancelado', color:'#7A7268', bg:'#F0EDE9', dbg:'#2A2620'},
+  {key:'recebido',   label:'Recebido',     short:'Recebido',   color:'#2563EB', bg:'#EFF6FF', dbg:'#1E3A5F'},
+  {key:'desenhando', label:'Desenhando',   short:'Desenhando', color:'#7C3AED', bg:'#F5F0FF', dbg:'#2E1A5A'},
+  {key:'aprovacao',  label:'Em Aprovação', short:'Aprovação',  color:'#B87820', bg:'#FEF3D7', dbg:'#3A2C10'},
+  {key:'aprovado',   label:'Aprovado',     short:'Aprovado',   color:'#059669', bg:'#ECFDF5', dbg:'#064E3B'},
+  {key:'fotolito',   label:'Fotolito',     short:'Fotolito',   color:'#9B5E00', bg:'#FFFBEB', dbg:'#3A2C10'},
+  {key:'enviado',    label:'Enviado',      short:'Enviado',    color:'#1A5E9A', bg:'#E1EFFC', dbg:'#0E2640'},
+  {key:'cancelado',  label:'Cancelado',    short:'Cancelado',  color:'#7A7268', bg:'#F0EDE9', dbg:'#2A2620'},
 ];
+const mainStatuses = STATUSES.filter(s => s.key !== 'cancelado');
 
 let orders = [];
 let currentMonth = 'all', currentId = null;
 let uploadedFiles = [], refPhotos = new Array(6).fill(null), modelPhoto = null;
+let newOrderFiles = [];
+let arteSignedUrls = [];
 
 const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -1054,12 +1011,13 @@ function dbToOrder(row) {
 }
 
 async function loadOrders() {
-  const { data, error } = await sb.from('orders').select('*').order('created_at', { ascending: false });
+  let query = sb.from('orders').select('*').order('created_at', { ascending: false });
+  if (currentRole === 'cliente') query = query.eq('user_id', currentUser.id);
+  const { data, error } = await query;
   if (error) { console.error('loadOrders:', error); return; }
   orders = (data || []).map(dbToOrder);
   renderMonthTabs();
   renderBoard();
-  renderClientOrders();
 }
 
 function subscribeRealtime() {
@@ -1092,11 +1050,9 @@ const randId   = () => String(Math.floor(Math.random()*900000+100000));
 // ── View switch ──
 function setView(v, btn) {
   document.getElementById('viewMilena').style.display    = v==='milena'    ? 'block' : 'none';
-  document.getElementById('viewCliente').style.display  = v==='cliente'   ? 'block' : 'none';
   document.getElementById('viewDashboard').style.display = v==='dashboard' ? 'block' : 'none';
   document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  if (v === 'cliente')   { renderClientOrders(); buildRefGrid(); }
   if (v === 'dashboard') { renderDashboard(); }
 }
 
@@ -1126,35 +1082,50 @@ function filteredOrders() {
 }
 
 function renderBoard() {
+  const q = (document.getElementById('searchInput')?.value || '').trim();
   const visible = filteredOrders();
-  const cnts    = {};
-  STATUSES.forEach(s => cnts[s.key] = 0);
+  const cnts = {};
+  mainStatuses.forEach(s => cnts[s.key] = 0);
   visible.forEach(o => { if (cnts[o.status] !== undefined) cnts[o.status]++; });
-  document.getElementById('kpiBar').innerHTML = STATUSES.filter(s => s.key !== 'cancelado').map(s =>
-    `<div class="kpi"><span class="kpi-dot" style="background:${s.color}"></span><strong>${cnts[s.key]}</strong>${s.short}</div>`
+  document.getElementById('kpiBar').innerHTML = mainStatuses.map(s =>
+    `<div class="kpi"><span class="kpi-dot" style="background:${s.color}"></span><strong>${cnts[s.key]||0}</strong>${s.short}</div>`
   ).join('');
 
   const boardEl = document.getElementById('board');
   if (!visible.length) {
-    boardEl.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:340px">
-      <div style="text-align:center;color:var(--t3);max-width:280px">
-        <div style="font-size:36px;margin-bottom:12px;opacity:.4">💎</div>
-        <div style="font-size:14px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum pedido ainda</div>
-        <div style="font-size:12px;line-height:1.5;margin-bottom:16px">Crie o primeiro pedido clicando em <strong>+ Novo Pedido</strong> ou aguarde envios do portal do cliente.</div>
-        <button class="btn btn-gold" onclick="openNew()">+ Novo Pedido</button>
-      </div>
-    </div>`;
+    if (q) {
+      boardEl.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:340px">
+        <div style="text-align:center;color:var(--t3);max-width:280px">
+          <div style="font-size:30px;margin-bottom:10px;opacity:.4">🔍</div>
+          <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum resultado para "${escHtml(q)}"</div>
+          <div style="font-size:12px;line-height:1.5">Tente buscar por número do pedido, cliente ou produto.</div>
+        </div>
+      </div>`;
+    } else {
+      const isAdmin = currentRole === 'admin';
+      boardEl.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:340px">
+        <div style="text-align:center;color:var(--t3);max-width:280px">
+          <div style="font-size:36px;margin-bottom:12px;opacity:.4">💎</div>
+          <div style="font-size:14px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum pedido ainda</div>
+          <div style="font-size:12px;line-height:1.5;margin-bottom:16px">${isAdmin?'Crie o primeiro pedido clicando em <strong>+ Novo Pedido</strong>.':'Envie o primeiro pedido clicando em <strong>+ Enviar Pedido</strong>.'}</div>
+          ${isAdmin?'<button class="btn btn-gold" onclick="openNew()">+ Novo Pedido</button>':'<button class="btn btn-gold" onclick="openClientSubmit()">+ Enviar Pedido</button>'}
+        </div>
+      </div>`;
+    }
     return;
   }
-  boardEl.innerHTML = STATUSES.filter(s => s.key !== 'cancelado').map(st => {
+  const isAdmin = currentRole === 'admin';
+  boardEl.innerHTML = mainStatuses.map(st => {
     const col = visible.filter(o => o.status === st.key);
+    const arteFiles = col.filter(o => (o.files||[]).some(f => f.role==='arte'));
     return `<div class="col">
       <div class="col-head">
         <div class="col-label"><span class="col-pip" style="background:${st.color}"></span>${st.label}</div>
         <span class="col-cnt">${col.length}</span>
       </div>
-      ${col.map(o => `
-        <div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${o.prioridade==='urgente'?'#DC2626':st.color}" onclick="openDetail('${o.id}')">
+      ${col.map(o => {
+        const hasArte = (o.files||[]).some(f => f.role==='arte');
+        return `<div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${o.prioridade==='urgente'?'#DC2626':st.color}" onclick="openDetail('${o.id}')">
           <div class="card-top">
             <span class="card-num">#${o.id}</span>
             <div style="display:flex;align-items:center;gap:4px">
@@ -1166,26 +1137,24 @@ function renderBoard() {
           <div class="card-title">${o.product}</div>
           <div class="card-desc">${o.detail}</div>
           <div class="card-client">${o.client}</div>
-          ${o.files&&o.files.length?`<div style="margin-top:4px;font-size:10px;color:var(--blue);display:flex;align-items:center;gap:3px">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-            ${o.files.length} arquivo${o.files.length>1?'s':''}
-          </div>`:''}
+          ${hasArte?'<div style="margin-top:4px;font-size:10px;color:var(--gold);display:flex;align-items:center;gap:3px">🖼 Arte anexada</div>':''}
+          ${!hasArte&&o.files&&o.files.length?`<div style="margin-top:4px;font-size:10px;color:var(--blue);display:flex;align-items:center;gap:3px">📎 ${o.files.length} arquivo${o.files.length>1?'s':''}</div>`:''}
           <div class="card-foot">
             <span class="card-date">${o.prazo?`📅 ${fmtDateBR(o.prazo)}`:o.date}</span>
-            <span class="card-ref">${o.valor?`R$ ${Number(o.valor).toFixed(0)}`:o.ref}</span>
+            <span class="card-ref">${o.ref}</span>
           </div>
-        </div>`).join('')}
-      <button class="add-btn" onclick="openNew()">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Adicionar
-      </button>
+        </div>`;
+      }).join('')}
+      ${isAdmin?`<button class="add-btn" onclick="openNew()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Adicionar</button>`:''}
     </div>`;
   }).join('');
 }
 
 // ── Detail modal ──
-function openDetail(id) {
+async function openDetail(id) {
   const o = orders.find(x => x.id === id); if (!o) return;
   currentId = id;
+  arteSignedUrls = [];
   const s = getS(o.status); const dark = isDark();
   document.getElementById('mBar').style.background = s.color;
   document.getElementById('mNum').textContent = `Pedido #${o.id} · ${o.date}`;
@@ -1194,26 +1163,55 @@ function openDetail(id) {
   const pill = document.getElementById('mPill');
   pill.style.cssText = `background:${dark?s.dbg+'55':s.bg};color:${s.color}`;
   pill.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${s.color};margin-right:4px"></span>${s.label}`;
-  document.getElementById('mNewBadge').innerHTML = o.fromClient ? '<span class="new-badge" style="font-size:10px;padding:2px 8px">via portal do cliente</span>' : '';
-  const si = STATUSES.findIndex(x => x.key === o.status);
-  document.getElementById('mPipeline').innerHTML = STATUSES.slice(0, 7).map((st, i) => {
+  document.getElementById('mNewBadge').innerHTML = o.fromClient ? '<span class="new-badge" style="font-size:10px;padding:2px 8px">via cliente</span>' : '';
+
+  const si = mainStatuses.findIndex(x => x.key === o.status);
+  document.getElementById('mPipeline').innerHTML = mainStatuses.map((st, i) => {
     const cls = i < si ? 'done' : i === si ? 'active' : '';
     return `<div class="pipe-step ${cls}"><div class="pipe-dot"></div>${st.short}</div>`;
   }).join('');
 
-  const fileIcons = {pdf:'📄',docx:'📝',doc:'📝',img:'🖼',default:'📎'};
-  const filesHtml = o.files && o.files.length ? `
+  // Separate arte files from other files
+  const arteFiles  = (o.files || []).filter(f => f.role === 'arte');
+  const otherFiles = (o.files || []).filter(f => f.role !== 'arte');
+  const fileIcons  = {pdf:'📄',docx:'📝',doc:'📝',img:'🖼',default:'📎'};
+
+  const otherFilesHtml = otherFiles.length ? `
     <div class="mf full">
       <label>Arquivos anexados</label>
       <div class="attach-list">
-        ${o.files.map(f => `<div class="attach-item">
+        ${otherFiles.map(f => `<div class="attach-item">
           <div class="attach-icon" style="background:var(--s2)">${fileIcons[f.type]||fileIcons.default}</div>
           <div style="flex:1;min-width:0"><div class="attach-name">${f.name}</div><div class="attach-type">${f.type?f.type.toUpperCase():''} · ${f.size||''}</div></div>
         </div>`).join('')}
       </div>
     </div>` : '';
 
-  // Build photos HTML — sign URLs then inject asynchronously
+  // Arte section (admin in aprovacao: upload; client in aprovacao: view; others: just list)
+  let arteHtml = '';
+  if (currentRole === 'admin' && o.status === 'aprovacao') {
+    const existingArte = arteFiles.length ? `
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="arteImgRow">
+        ${arteFiles.map((f,i) => `<div id="arteImg${i}" style="width:80px;height:80px;border-radius:var(--rs);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>`).join('')}
+      </div>` : '';
+    arteHtml = `<div class="mf full">
+      <label>Arte para aprovação</label>
+      ${existingArte}
+      <div class="upload-area" id="arteUploadArea" style="position:relative;overflow:hidden">
+        <input type="file" accept="image/*,.pdf" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadArtImages(this.files,'${o.id}')">
+        🖼 Clique para anexar arte (imagem ou PDF)
+      </div>
+    </div>`;
+  } else if (arteFiles.length) {
+    arteHtml = `<div class="mf full">
+      <label>Arte${o.status==='aprovacao'?' — aguardando aprovação':''}</label>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="arteImgRow">
+        ${arteFiles.map((f,i) => `<div id="arteImg${i}" style="width:80px;height:80px;border-radius:var(--rs);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Photos
   const photoEntries = (o.photos || []).filter(p => p && p.path);
   let photosHtml = '';
   if (photoEntries.length) {
@@ -1233,13 +1231,28 @@ function openDetail(id) {
     <div class="mf"><label>Data de entrada</label><div class="val">${o.date}</div></div>
     ${o.prazo ? `<div class="mf"><label>Prazo de entrega</label><div class="val" style="font-weight:600">${fmtDateBR(o.prazo)}</div></div>` : ''}
     ${o.prioridade === 'urgente' ? `<div class="mf"><label>Prioridade</label><div class="val"><span class="priority-urgente">Urgente</span></div></div>` : ''}
-    ${o.valor ? `<div class="mf"><label>Valor</label><div class="val" style="font-weight:600;color:var(--gold)">R$ ${Number(o.valor).toFixed(2).replace('.',',')}</div></div>` : ''}
-    ${o.obs ? `<div class="mf full"><div class="obs-note">${o.obs}</div></div>` : ''}
+    ${o.obs ? `<div class="mf full"><div class="obs-note">${o.obs.replace(/\n/g,'<br>')}</div></div>` : ''}
+    ${arteHtml}
     ${photosHtml}
-    ${filesHtml}
+    ${otherFilesHtml}
   `;
 
-  // Sign photo URLs after DOM is ready
+  // Sign arte URLs
+  if (arteFiles.length) {
+    arteFiles.forEach(async (f, i) => {
+      if (!f.path) return;
+      try {
+        const { data } = await sb.storage.from('order-files').createSignedUrl(f.path, 3600);
+        if (data?.signedUrl) {
+          arteSignedUrls[i] = data.signedUrl;
+          const el = document.getElementById(`arteImg${i}`);
+          if (el) el.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer" onclick="window.open('${data.signedUrl}','_blank')">`;
+        }
+      } catch(e) {}
+    });
+  }
+
+  // Sign photo URLs
   if (photoEntries.length) {
     photoEntries.forEach(async (p, i) => {
       try {
@@ -1251,34 +1264,47 @@ function openDetail(id) {
       } catch(e) {}
     });
   }
-  const next   = STATUSES[si + 1];
-  const advBtn = document.getElementById('mAdvBtn');
-  if (next && o.status !== 'cancelado' && o.status !== 'cliente') {
-    advBtn.textContent  = `→ Mover para ${next.label}`;
-    advBtn.style.display = '';
+
+  // Dynamic footer
+  const mFoot = document.getElementById('mFoot');
+  if (currentRole === 'admin') {
+    const nextSt = mainStatuses[si + 1];
+    mFoot.innerHTML = `
+      ${nextSt ? `<button class="btn-adv" onclick="advanceStatus()">→ Mover para ${nextSt.label}</button>` : ''}
+      <button class="btn-danger" onclick="cancelOrder()">Cancelar pedido</button>
+    `;
+  } else if (currentRole === 'cliente' && o.status === 'aprovacao') {
+    if (arteFiles.length) {
+      mFoot.innerHTML = `
+        <button class="btn btn-outline" onclick="copyArt()">📋 Copiar arte</button>
+        <button class="btn btn-gold" onclick="approveOrder()">✓ Aprovar arte</button>
+        <button class="btn btn-outline" style="color:#C0392B;border-color:#C0392B" onclick="openRequestChanges()">✗ Solicitar alteração</button>
+      `;
+    } else {
+      mFoot.innerHTML = `<span style="font-size:12px;color:var(--t3)">⏳ Aguardando envio da arte pela Milena Joias…</span>`;
+    }
   } else {
-    advBtn.style.display = 'none';
+    mFoot.innerHTML = '';
   }
+
   document.getElementById('detailOverlay').classList.add('open');
 }
 function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); currentId = null; }
 
 async function advanceStatus() {
-  const o  = orders.find(x => x.id === currentId); if (!o) return;
-  const si = STATUSES.findIndex(x => x.key === o.status);
-  if (si < STATUSES.length - 2) {
-    const newStatus = STATUSES[si + 1].key;
-    const { error } = await sb.from('orders').update({ status: newStatus, from_client: false }).eq('id', o.id);
-    if (error) { alert('Erro ao atualizar: ' + error.message); return; }
-    // Realtime will refresh, but update locally for instant feedback
-    o.status = newStatus; o.fromClient = false;
-    renderBoard(); renderClientOrders();
-    openDetail(o.id);
-  }
+  const o = orders.find(x => x.id === currentId); if (!o) return;
+  const si = mainStatuses.findIndex(x => x.key === o.status);
+  if (si < 0 || si >= mainStatuses.length - 1) return;
+  const newStatus = mainStatuses[si + 1].key;
+  const { error } = await sb.from('orders').update({ status: newStatus, from_client: false }).eq('id', o.id);
+  if (error) { alert('Erro ao atualizar: ' + error.message); return; }
+  o.status = newStatus; o.fromClient = false;
+  renderBoard();
+  openDetail(o.id);
 }
 
 async function cancelOrder() {
-  if (!currentId) return;
+  if (!currentId || currentRole !== 'admin') return;
   if (!confirm('Cancelar este pedido?')) return;
   const { error } = await sb.from('orders').update({ status: 'cancelado' }).eq('id', currentId);
   if (error) { alert('Erro: ' + error.message); return; }
@@ -1292,41 +1318,53 @@ function openNew()  { document.getElementById('newOverlay').classList.add('open'
 function closeNew() { document.getElementById('newOverlay').classList.remove('open'); }
 
 async function saveNew() {
-  const btn = document.getElementById('saveNewBtn');
+  const btn      = document.getElementById('saveNewBtn');
+  const mnIdEl   = document.getElementById('mnId');
+  const mnClientEl = document.getElementById('mnClient');
+  // Validation with red border
+  let valid = true;
+  [mnIdEl, mnClientEl].forEach(el => {
+    if (!el.value.trim()) { el.style.borderColor = '#DC2626'; valid = false; }
+    else el.style.borderColor = '';
+  });
+  if (!valid) { return; }
   btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
 
-  const mnClient = document.getElementById('mnClient').value.trim();
-  const mnQty    = document.getElementById('mnQty');
-  if (!mnClient) { alert('Informe o nome do cliente.'); btn.textContent='Salvar Pedido'; btn.disabled=false; return; }
-
   const order = {
-    id:          document.getElementById('mnId').value || randId(),
+    id:          mnIdEl.value.trim() || randId(),
     product:     document.getElementById('mnProd').value,
     detail:      `${document.getElementById('mnMat').value} · ${document.getElementById('mnSize').value || '—'}`,
-    qty:         parseInt(mnQty.value) || 1,
-    date:        fmtDate(),
-    month:       fmtMonth(),
-    status:      'recebido',
-    ref:         '—',
-    client:      mnClient,
+    qty:         parseInt(document.getElementById('mnQty').value) || 1,
+    date:        fmtDate(), month: fmtMonth(),
+    status:      'recebido', ref: '—',
+    client:      mnClientEl.value.trim(),
     obs:         document.getElementById('mnObs').value || '',
-    from_client: false,
-    files:       [],
-    photos:      [],
+    from_client: false, files: [], photos: [],
     prazo:       document.getElementById('mnPrazo').value || null,
     prioridade:  document.getElementById('mnPrioridade').value || 'normal',
-    valor:       parseFloat(document.getElementById('mnValor').value) || null,
   };
+
+  // Upload attached files
+  let filesData = [];
+  for (const f of newOrderFiles) {
+    try {
+      const path = `admin/${order.id}/${Date.now()}-${f.name}`;
+      const { error: upErr } = await sb.storage.from('order-files').upload(path, f.file, { upsert: true });
+      filesData.push({ name:f.name, size:f.size, type:f.type, ...(upErr ? {} : { path }) });
+    } catch(e) {
+      filesData.push({ name:f.name, size:f.size, type:f.type });
+    }
+  }
+  order.files = filesData;
 
   const { error } = await sb.from('orders').insert([order]);
   if (error) { alert('Erro ao salvar: ' + error.message); btn.textContent='Salvar Pedido'; btn.disabled=false; return; }
   closeNew();
-  // Clear fields
-  ['mnId','mnClient','mnSize','mnObs','mnPrazo','mnValor'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-  if (mnQty) mnQty.value = '1';
+  ['mnId','mnClient','mnSize','mnObs','mnPrazo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('mnQty').value = '1';
   document.getElementById('mnPrioridade').value = 'normal';
+  newOrderFiles = []; renderNewOrderFiles();
   btn.textContent = 'Salvar Pedido'; btn.disabled = false;
-  // Realtime will refresh board
 }
 
 // ── Client portal: input mode ──
@@ -1503,7 +1541,8 @@ async function submitClientOrder() {
   setTimeout(() => {
     btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar para Milena Joias';
     btn.className = 'btn btn-blue';
-  }, 2500);
+    closeClientSubmit();
+  }, 1500);
 }
 
 function clearForm() {
@@ -1513,43 +1552,110 @@ function clearForm() {
   for (let i=0;i<6;i++) if (refPhotos[i]) removeRef(i);
 }
 
-// ── Client orders list ──
-function renderClientOrders() {
-  const mine = orders.filter(o => o.userId === currentUser?.id);
-  const el   = document.getElementById('clientOrderCount'); if (el) el.textContent = `${mine.length} pedido${mine.length!==1?'s':''}`;
-  const list = document.getElementById('clientOrdersList'); if (!list) return;
-  if (!mine.length) { list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>Nenhum pedido ainda.</div>`; return; }
-  const dark = isDark();
-  const smap = {recebido:0,desenhando:1,fotolito:2,aprovacao:3,producao:4,grafica:5,cliente:6,cancelado:-1};
-  const TRACKER_STEPS = ['Recebido','Desenho','Fotolito','Aprovação','Produção','Gráfica','Entregue'];
-  list.innerHTML = mine.map(o => {
-    const s = getS(o.status); const pos = smap[o.status] ?? 0;
-    const bars = Array.from({length:6}, (_,i) => `<div class="mini-step ${i<pos?'done':i===pos?'active':''}"></div>`).join('');
-    const filesTag = o.files&&o.files.length ? `<div class="order-item-files">${o.files.map(f=>`<span class="order-item-file-tag">${typeIcon[f.type]||'📎'} ${f.name}</span>`).join('')}</div>` : '';
-    const currentStepLabel = TRACKER_STEPS[Math.min(pos, TRACKER_STEPS.length-1)] || s.label;
-    const nextStepLabel = pos < TRACKER_STEPS.length-1 ? TRACKER_STEPS[pos+1] : null;
-    const prazoTag = o.prazo ? `<span style="font-size:10px;color:var(--t3)">📅 Prazo: ${fmtDateBR(o.prazo)}</span>` : `<span class="order-item-date">${o.date}</span>`;
-    return `<div class="order-item">
-      <div class="order-item-top">
-        <span class="order-item-num">#${o.id}</span>
-        <span class="order-item-status" style="background:${dark?s.dbg+'55':s.bg};color:${s.color}">
-          <span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:${s.color}"></span>${s.label}
-        </span>
-      </div>
-      <div class="order-item-title">${o.product}</div>
-      <div class="order-item-detail">${o.detail}</div>
-      ${filesTag}
-      <div class="mini-pipeline" title="Progresso do pedido">${bars}</div>
-      <div style="font-size:10px;color:var(--t2);margin-top:4px">
-        Etapa atual: <strong style="color:${s.color}">${currentStepLabel}</strong>${nextStepLabel?` → próxima: ${nextStepLabel}`:''}
-      </div>
-      <div class="order-item-foot">
-        ${prazoTag}
-        <span class="order-item-qty">${o.qty} un</span>
-      </div>
-    </div>`;
-  }).join('');
+// ── Arte upload (admin) ──
+async function uploadArtImages(files, orderId) {
+  const o = orders.find(x => x.id === orderId); if (!o) return;
+  const uploadArea = document.getElementById('arteUploadArea');
+  if (uploadArea) uploadArea.innerHTML = '<span class="spinner" style="border-top-color:var(--gold)"></span> Enviando arte…';
+  const currentFiles = o.files || [];
+  const newArteFiles = [];
+  for (const file of Array.from(files)) {
+    try {
+      const path = `artes/${orderId}/${Date.now()}-${file.name}`;
+      const { error } = await sb.storage.from('order-files').upload(path, file, { upsert: true });
+      newArteFiles.push({ name:file.name, size:formatSize(file.size), type:getType(file.name), role:'arte', ...(error?{}:{path}) });
+    } catch(e) {
+      newArteFiles.push({ name:file.name, size:formatSize(file.size), type:getType(file.name), role:'arte' });
+    }
+  }
+  const updatedFiles = [...currentFiles, ...newArteFiles];
+  const { error } = await sb.from('orders').update({ files: updatedFiles }).eq('id', orderId);
+  if (error) { alert('Erro ao salvar arte: ' + error.message); return; }
+  o.files = updatedFiles;
+  renderBoard();
+  openDetail(orderId);
 }
+
+// ── Approve order (client) ──
+async function approveOrder() {
+  if (!currentId) return;
+  const { error } = await sb.from('orders').update({ status: 'aprovado', from_client: false }).eq('id', currentId);
+  if (error) { alert('Erro: ' + error.message); return; }
+  const o = orders.find(x => x.id === currentId);
+  if (o) { o.status = 'aprovado'; o.fromClient = false; }
+  renderBoard();
+  openDetail(currentId);
+}
+
+// ── Request changes (client) ──
+function openRequestChanges() {
+  const mFoot = document.getElementById('mFoot');
+  mFoot.innerHTML = `<div style="width:100%;display:flex;flex-direction:column;gap:8px">
+    <div style="font-size:12px;font-weight:500;color:var(--text)">Motivo da alteração <span class="req">*</span></div>
+    <textarea id="altNote" placeholder="Descreva o que deve ser alterado na arte…" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:70px;outline:none"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-outline" onclick="openDetail(currentId)">Cancelar</button>
+      <button class="btn btn-blue" onclick="submitRequestChanges()">Enviar solicitação</button>
+    </div>
+  </div>`;
+  setTimeout(() => document.getElementById('altNote')?.focus(), 50);
+}
+async function submitRequestChanges() {
+  const note = document.getElementById('altNote')?.value.trim();
+  if (!note) { const el = document.getElementById('altNote'); if(el) el.style.borderColor='#DC2626'; return; }
+  const o = orders.find(x => x.id === currentId); if (!o) return;
+  const newObs = o.obs ? `${o.obs}\n\n✗ Alteração solicitada: ${note}` : `✗ Alteração solicitada: ${note}`;
+  const { error } = await sb.from('orders').update({ status:'desenhando', obs:newObs, from_client:true }).eq('id', currentId);
+  if (error) { alert('Erro: ' + error.message); return; }
+  o.status = 'desenhando'; o.obs = newObs; o.fromClient = true;
+  renderBoard();
+  openDetail(currentId);
+}
+
+// ── Copy art to clipboard ──
+async function copyArt() {
+  if (!arteSignedUrls.length) { alert('Nenhuma arte disponível para copiar.'); return; }
+  const url = arteSignedUrls.find(u => u);
+  const btn = document.querySelector('#mFoot .btn-outline');
+  try {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({[blob.type]: blob})]);
+    if (btn) { btn.textContent = '✓ Arte copiada!'; setTimeout(() => { btn.textContent = '📋 Copiar arte'; }, 2000); }
+  } catch(e) {
+    try {
+      await navigator.clipboard.writeText(url);
+      if (btn) { btn.textContent = '✓ Link copiado!'; setTimeout(() => { btn.textContent = '📋 Copiar arte'; }, 2000); }
+    } catch(e2) {
+      alert('Não foi possível copiar. Abra a arte e salve manualmente.');
+    }
+  }
+}
+
+// ── Client submit overlay ──
+function openClientSubmit() {
+  document.getElementById('clientSubmitOverlay').classList.add('open');
+  buildRefGrid();
+}
+function closeClientSubmit() {
+  document.getElementById('clientSubmitOverlay').classList.remove('open');
+}
+
+// ── Admin new order file upload ──
+function handleNewOrderFiles(files) {
+  Array.from(files).forEach(f => newOrderFiles.push({ name:f.name, size:formatSize(f.size), type:getType(f.name), file:f }));
+  renderNewOrderFiles();
+}
+function renderNewOrderFiles() {
+  const el = document.getElementById('newOrderFilesList'); if (!el) return;
+  el.innerHTML = newOrderFiles.map((f,i) => `
+    <div class="uploaded-file">
+      <div class="file-icon" style="background:var(--s2);font-size:16px">${typeIcon[f.type]||'📎'}</div>
+      <div style="flex:1;min-width:0"><div class="file-name">${f.name}</div><div class="file-size">${f.size}</div></div>
+      <button class="file-remove" onclick="removeNewOrderFile(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('');
+}
+function removeNewOrderFile(i) { newOrderFiles.splice(i,1); renderNewOrderFiles(); }
 
 // ══════════════════════════════════════
 //  DASHBOARD
@@ -1557,14 +1663,14 @@ function renderClientOrders() {
 
 function renderDashboard() {
   if (!orders) return;
-  const active    = orders.filter(o => !['cliente','cancelado'].includes(o.status));
-  const entregues = orders.filter(o => o.status === 'cliente');
-  const urgentes  = orders.filter(o => o.prioridade === 'urgente' && !['cliente','cancelado'].includes(o.status));
-  const valorTotal = orders.reduce((s,o) => s + (o.valor||0), 0);
+  const active    = orders.filter(o => !['enviado','cancelado'].includes(o.status));
+  const entregues = orders.filter(o => o.status === 'enviado');
+  const urgentes  = orders.filter(o => o.prioridade === 'urgente' && !['enviado','cancelado'].includes(o.status));
+  const aguardandoAprovacao = orders.filter(o => o.status === 'aprovacao').length;
   const hoje = new Date().toISOString().slice(0,10);
 
   // Prazo em risco
-  const atrasados = orders.filter(o => o.prazo && o.prazo < hoje && !['cliente','cancelado'].includes(o.status));
+  const atrasados = orders.filter(o => o.prazo && o.prazo < hoje && !['enviado','cancelado'].includes(o.status));
 
   // Subtitle
   document.getElementById('dashSubtitle').textContent =
@@ -1601,10 +1707,10 @@ function renderDashboard() {
       <div class="kpi-tile-value">${entregues.length}</div>
       <div class="kpi-tile-sub">taxa de conclusão: ${taxa}%</div>
     </div>
-    <div class="kpi-tile t-${valorTotal>0?'gold':'red'}">
-      <div class="kpi-tile-label">Valor em Carteira</div>
-      <div class="kpi-tile-value">${valorTotal>0?'R$&nbsp;'+valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}):'—'}</div>
-      <div class="kpi-tile-sub">${valorTotal>0?'pedidos com valor cadastrado':'adicione valor nos pedidos'}</div>
+    <div class="kpi-tile t-${aguardandoAprovacao>0?'red':'green'}">
+      <div class="kpi-tile-label">Aguardando Aprovação</div>
+      <div class="kpi-tile-value">${aguardandoAprovacao}</div>
+      <div class="kpi-tile-sub">${aguardandoAprovacao>0?'pedido'+( aguardandoAprovacao>1?'s':'')+' aguardando cliente':'nenhum em aprovação'}</div>
     </div>
   `;
 
@@ -1726,10 +1832,10 @@ function svgProducts(orders) {
 // ── SVG: Prazo summary ──
 function svgPrazo(orders, hoje) {
   const comPrazo  = orders.filter(o => o.prazo && !['cancelado'].includes(o.status));
-  const atrasados = comPrazo.filter(o => o.prazo < hoje && o.status !== 'cliente');
+  const atrasados = comPrazo.filter(o => o.prazo < hoje && o.status !== 'enviado');
   const emDia     = comPrazo.filter(o => o.prazo >= hoje);
-  const semPrazo  = orders.filter(o => !o.prazo && !['cancelado','cliente'].includes(o.status));
-  const entregues = orders.filter(o => o.status === 'cliente').length;
+  const semPrazo  = orders.filter(o => !o.prazo && !['cancelado','enviado'].includes(o.status));
+  const entregues = orders.filter(o => o.status === 'enviado').length;
 
   const items = [
     { label:'Em atraso',    cnt:atrasados.length, color:'#DC2626' },
@@ -1756,29 +1862,25 @@ function svgPrazo(orders, hoje) {
 
 // ── PDF Export ──
 function exportPDF() {
-  const views = ['viewMilena','viewCliente','viewDashboard'];
-  const saved = {};
-  views.forEach(id => { saved[id] = document.getElementById(id).style.display; });
-
-  // Switch to dashboard
+  const milenaDisplay = document.getElementById('viewMilena').style.display;
   document.getElementById('viewMilena').style.display    = 'none';
-  document.getElementById('viewCliente').style.display   = 'none';
   document.getElementById('viewDashboard').style.display = 'block';
   document.getElementById('printDate').textContent = `Gerado em ${fmtDate()}`;
-
   setTimeout(() => {
     window.print();
     setTimeout(() => {
-      views.forEach(id => { document.getElementById(id).style.display = saved[id]; });
+      document.getElementById('viewMilena').style.display    = milenaDisplay;
+      document.getElementById('viewDashboard').style.display = 'none';
     }, 800);
   }, 150);
 }
 
 // ── Overlays ──
-document.getElementById('detailOverlay').addEventListener('click',  function(e) { if(e.target===this) closeDetail(); });
-document.getElementById('newOverlay').addEventListener('click',     function(e) { if(e.target===this) closeNew(); });
-document.getElementById('clientsOverlay').addEventListener('click', function(e) { if(e.target===this) closeClients(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape') { closeDetail(); closeNew(); closeClients(); } });
+document.getElementById('detailOverlay').addEventListener('click',       function(e) { if(e.target===this) closeDetail(); });
+document.getElementById('newOverlay').addEventListener('click',          function(e) { if(e.target===this) closeNew(); });
+document.getElementById('clientsOverlay').addEventListener('click',      function(e) { if(e.target===this) closeClients(); });
+document.getElementById('clientSubmitOverlay').addEventListener('click', function(e) { if(e.target===this) closeClientSubmit(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') { closeDetail(); closeNew(); closeClients(); closeClientSubmit(); } });
 
 // ── Init ──
 initAuth();
