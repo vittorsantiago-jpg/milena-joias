@@ -1076,7 +1076,7 @@ function filteredOrders() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   return orders.filter(o => {
     const mOk = currentMonth === 'all' || o.month === currentMonth;
-    const qOk = !q || o.id.includes(q) || o.product.toLowerCase().includes(q) || o.client.toLowerCase().includes(q);
+    const qOk = !q || o.id.includes(q) || o.ref.toLowerCase().includes(q) || o.product.toLowerCase().includes(q) || o.client.toLowerCase().includes(q) || o.detail.toLowerCase().includes(q);
     return mOk && qOk;
   });
 }
@@ -1127,7 +1127,7 @@ function renderBoard() {
         const hasArte = (o.files||[]).some(f => f.role==='arte');
         return `<div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${o.prioridade==='urgente'?'#DC2626':st.color}" onclick="openDetail('${o.id}')">
           <div class="card-top">
-            <span class="card-num">#${o.id}</span>
+            <span class="card-num">#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)}</span>
             <div style="display:flex;align-items:center;gap:4px">
               ${o.prioridade==='urgente'?'<span class="priority-urgente">Urgente</span>':''}
               ${o.fromClient&&o.prioridade!=='urgente'?'<span class="new-badge">novo</span>':''}
@@ -1157,7 +1157,7 @@ async function openDetail(id) {
   arteSignedUrls = [];
   const s = getS(o.status); const dark = isDark();
   document.getElementById('mBar').style.background = s.color;
-  document.getElementById('mNum').textContent = `Pedido #${o.id} · ${o.date}`;
+  document.getElementById('mNum').textContent = `Pedido #${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)} · ${o.date}`;
   document.getElementById('mTitle').textContent = o.product;
   document.getElementById('mClient').textContent = o.client;
   const pill = document.getElementById('mPill');
