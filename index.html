@@ -567,14 +567,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="lv-lb-box">
       <div class="lv-lb-img" id="lvLbImg"></div>
       <div class="lv-lb-info">
-        <div class="lv-lb-id" id="lvLbId"></div>
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:6px">
+          <div class="lv-lb-id" id="lvLbId"></div>
+          <div id="lvLbStatus"></div>
+          <div id="lvLbUrg" hidden class="lv-gc-urg" style="position:static;font-size:9px">urgente</div>
+        </div>
         <div class="lv-lb-name" id="lvLbName"></div>
         <div class="lv-lb-sub" id="lvLbSub"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin:6px 0 8px">
+          <div id="lvLbPrazo"></div>
+          <div id="lvLbDate" style="font-size:11px;color:var(--t3)"></div>
+        </div>
+        <div id="lvLbObs"></div>
         <div class="lv-lb-file" id="lvLbFile"></div>
       </div>
       <div class="lv-lb-foot">
         <button class="lv-lb-close" onclick="closeLvLb()">Fechar</button>
-        <button class="lv-lb-open" id="lvLbOpen">↗ Abrir arquivo</button>
+        <button class="lv-lb-open" id="lvLbOpen">↗ Arquivo</button>
+        <button class="lv-lb-open" id="lvLbDetail" style="background:var(--s3);color:var(--text);border:1px solid var(--border)">Ver pedido</button>
       </div>
     </div>
   </div>
@@ -1460,9 +1470,33 @@ async function openLvLb(e, id) {
   const o = orders.find(x => x.id === id); if (!o) return;
   const lb = document.getElementById('lvLb');
   const imgEl = document.getElementById('lvLbImg');
+  const st = getS(o.status);
+  const ps = lvPrazoStatus(o.prazo);
+
+  // Ref + status chip + urgente badge
   document.getElementById('lvLbId').textContent = `#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)}`;
-  document.getElementById('lvLbName').textContent = `${o.client} — ${o.product}`;
-  document.getElementById('lvLbSub').textContent = [o.detail, o.qty ? o.qty+' un.' : '', o.prazo ? 'Prazo '+fmtDateBR(o.prazo) : ''].filter(Boolean).join(' · ');
+  document.getElementById('lvLbStatus').innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;background:${st.color}22;color:${st.color};border-radius:999px;padding:2px 8px;font-size:9px;font-weight:700;letter-spacing:.04em"><span style="width:5px;height:5px;border-radius:50%;background:${st.color};display:inline-block"></span>${st.label}</span>`;
+  document.getElementById('lvLbUrg').hidden = o.prioridade !== 'urgente';
+
+  // Nome + meta
+  document.getElementById('lvLbName').textContent = o.client && o.client !== '—' ? `${o.client} — ${o.product}` : o.product;
+  document.getElementById('lvLbSub').textContent = [o.detail, o.qty ? o.qty+' un.' : ''].filter(Boolean).join(' · ');
+
+  // Prazo chip + data de entrada
+  const prazoEl = document.getElementById('lvLbPrazo');
+  if (o.prazo) {
+    const pCls = ps === 'late' ? 'lv-p-late' : ps === 'warn' ? 'lv-p-warn' : 'lv-p-ok';
+    const pPfx = ps === 'late' ? '⚠ ' : ps === 'warn' ? '◑ ' : '';
+    prazoEl.innerHTML = `<div class="lv-prazo ${pCls}" style="font-size:11px">${pPfx}Prazo ${fmtDateBR(o.prazo)}</div>`;
+  } else { prazoEl.innerHTML = ''; }
+  document.getElementById('lvLbDate').textContent = o.date ? `Entrada: ${o.date}` : '';
+
+  // Observações
+  const obsEl = document.getElementById('lvLbObs');
+  obsEl.innerHTML = o.obs ? `<div style="font-size:11px;color:var(--t2);background:var(--s2);border-radius:var(--rs);padding:7px 10px;margin-bottom:8px;line-height:1.5;max-height:72px;overflow-y:auto">${escHtml(o.obs).replace(/\n/g,'<br>')}</div>` : '';
+
+  // Botão "Ver pedido"
+  document.getElementById('lvLbDetail').onclick = () => { closeLvLb(); openDetail(id); };
 
   const arteFile = (o.files||[]).find(f => f.role === 'arte') || (o.files||[])[0];
   const openBtn  = document.getElementById('lvLbOpen');
