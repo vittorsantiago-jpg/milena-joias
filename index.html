@@ -473,7 +473,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="modal-body" style="padding-top:0">
       <div class="login-error" id="loginError"></div>
       <div class="fld" id="fldName" style="display:none"><label>Nome completo</label><input type="text" id="loginName" placeholder="Seu nome" onkeydown="if(event.key==='Enter')doAuth()"></div>
-      <div class="fld"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div class="fld"><label>E-mail ou usuário</label><input type="text" id="loginEmail" placeholder="usuário ou email@exemplo.com" autocomplete="username" onkeydown="if(event.key==='Enter')doAuth()"></div>
       <div class="fld"><label>Senha</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
@@ -858,7 +858,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         <div style="font-size:11px;font-weight:600;letter-spacing:.05em;color:var(--t2);text-transform:uppercase;margin-bottom:10px">Criar novo cliente</div>
         <div class="form-row" style="margin-bottom:8px">
           <div class="fld"><label>Nome <span class="req">*</span></label><input type="text" id="ncName" placeholder="Nome do cliente"></div>
-          <div class="fld"><label>E-mail <span class="req">*</span></label><input type="email" id="ncEmail" placeholder="email@cliente.com"></div>
+          <div class="fld"><label>Usuário (login) <span class="req">*</span></label><input type="text" id="ncEmail" placeholder="ex: dra-viviane" autocomplete="off" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9._-]/g,'')"></div>
         </div>
         <div class="form-row" style="margin-bottom:10px">
           <div class="fld"><label>Senha temporária <span class="req">*</span></label><input type="password" id="ncPass" placeholder="Mínimo 6 caracteres"></div>
@@ -992,11 +992,13 @@ function setLoginMode(mode, btn) {
 }
 
 async function doAuth() {
-  const email    = document.getElementById('loginEmail').value.trim();
+  const raw      = document.getElementById('loginEmail').value.trim();
+  // Se não tem @, é um usuário simples → converte para email interno
+  const email    = raw.includes('@') ? raw : raw.toLowerCase().replace(/\s+/g, '-') + '@milena.app';
   const password = document.getElementById('loginPassword').value;
   const errEl    = document.getElementById('loginError');
   const btn      = document.getElementById('loginBtn');
-  if (!email || !password) { errEl.textContent = 'Preencha e-mail e senha.'; errEl.style.display = 'block'; return; }
+  if (!raw || !password) { errEl.textContent = 'Preencha usuário e senha.'; errEl.style.display = 'block'; return; }
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled  = true;
   errEl.style.display = 'none';
@@ -1048,19 +1050,21 @@ function toggleNewClientForm(show) {
 }
 
 async function createClient() {
-  const name  = document.getElementById('ncName').value.trim();
-  const email = document.getElementById('ncEmail').value.trim();
-  const pass  = document.getElementById('ncPass').value;
-  const errEl = document.getElementById('ncError');
+  const name     = document.getElementById('ncName').value.trim();
+  const username = document.getElementById('ncEmail').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const email    = username + '@milena.app';
+  const pass     = document.getElementById('ncPass').value;
+  const errEl    = document.getElementById('ncError');
   errEl.style.display = 'none';
 
-  if (!name || !email || !pass) { errEl.textContent = 'Preencha todos os campos.'; errEl.style.display = 'block'; return; }
+  if (!name || !username || !pass) { errEl.textContent = 'Preencha todos os campos.'; errEl.style.display = 'block'; return; }
+  if (!/^[a-z0-9._-]+$/.test(username)) { errEl.textContent = 'Usuário: use apenas letras, números, hífen ou ponto.'; errEl.style.display = 'block'; return; }
   if (pass.length < 6) { errEl.textContent = 'A senha deve ter ao menos 6 caracteres.'; errEl.style.display = 'block'; return; }
 
   const btn = document.getElementById('ncSaveBtn');
   btn.innerHTML = '<span class="spinner"></span> Criando…'; btn.disabled = true;
 
-  // Save admin session before signUp replaces it
+  // Salva sessão admin antes do signUp substituí-la
   const { data: { session: adminSession } } = await sb.auth.getSession();
 
   const { error: signUpErr } = await sb.auth.signUp({
@@ -1068,7 +1072,7 @@ async function createClient() {
     options: { data: { name } }
   });
 
-  // Restore admin session immediately
+  // Restaura sessão admin imediatamente
   if (adminSession) {
     await sb.auth.setSession({ access_token: adminSession.access_token, refresh_token: adminSession.refresh_token });
   }
@@ -1077,7 +1081,7 @@ async function createClient() {
 
   if (signUpErr) {
     let msg = signUpErr.message;
-    if (msg.includes('already registered')) msg = 'Este e-mail já está cadastrado.';
+    if (msg.includes('already registered')) msg = `Usuário "${username}" já está cadastrado.`;
     errEl.textContent = msg; errEl.style.display = 'block';
     return;
   }
@@ -1123,7 +1127,7 @@ function renderClientsList() {
     <div class="client-row" id="crow-${i}">
       <div class="client-row-info">
         <div class="client-row-name">${escHtml(c.name || '(sem nome)')}</div>
-        <div class="client-row-email">${escHtml(c.email || c.id)}</div>
+        <div class="client-row-email">${c.email && c.email.endsWith('@milena.app') ? '👤 ' + escHtml(c.email.replace('@milena.app','')) : escHtml(c.email || c.id)}</div>
         <div id="crow-rename-${i}" style="display:none" class="client-rename-wrap">
           <input class="client-rename-input" id="crow-input-${i}" type="text" value="${escHtml(c.name||'')}" placeholder="Novo nome" onkeydown="if(event.key==='Enter')saveRename(${i})">
           <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="saveRename(${i})">Salvar</button>
