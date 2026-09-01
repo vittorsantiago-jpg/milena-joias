@@ -365,6 +365,70 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .login-tabs{display:flex;gap:3px;background:var(--s2);border-radius:var(--rs);padding:3px;margin:0 20px 16px;}
 .ltab{flex:1;padding:7px;border-radius:5px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:var(--t2);transition:all .14s;text-align:center;}
 .ltab.active{background:var(--surface);color:var(--text);box-shadow:var(--sh-sm);}
+
+/* ══════════════════════════
+   LIST VIEW
+══════════════════════════ */
+.list-view{display:flex;height:calc(100vh - 152px);}
+.lv-sidebar{width:196px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.lv-sb-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px;}
+.lv-st-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--rs);cursor:pointer;transition:background .12s;}
+.lv-st-item:hover{background:var(--s2);}
+.lv-st-item.active{background:var(--gold-f);}
+.lv-st-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.lv-st-name{font-size:12px;font-weight:500;flex:1;color:var(--t2);}
+.lv-st-item.active .lv-st-name{color:var(--gold);}
+.lv-st-cnt{font-size:11px;font-weight:600;color:var(--t3);font-variant-numeric:tabular-nums;}
+.lv-st-item.active .lv-st-cnt{color:var(--gold);}
+.lv-sb-hr{border:none;border-top:1px solid var(--border);margin:6px 0;}
+.lv-summary{padding:4px 8px;display:flex;flex-direction:column;gap:5px;}
+.lv-sum-row{display:flex;justify-content:space-between;font-size:11px;}
+.lv-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.lv-head{padding:9px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.lv-head-title{font-size:13px;font-weight:600;color:var(--text);}
+.lv-head-chip{background:var(--s2);border-radius:var(--rf);padding:2px 8px;font-size:11px;font-weight:600;color:var(--t2);}
+.lv-head-sep{flex:1;}
+.lv-col-heads{display:grid;grid-template-columns:58px 1fr 140px 96px 58px;gap:0 10px;padding:5px 18px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);flex-shrink:0;}
+.lv-scroll{flex:1;overflow-y:auto;}
+.lv-card{display:grid;grid-template-columns:58px 1fr 140px 96px 58px;gap:0 10px;align-items:center;padding:8px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative;}
+.lv-card:hover{background:var(--s2);}
+.lv-card.urg::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#DC2626;}
+.lv-thumb{position:relative;width:58px;height:58px;border-radius:7px;overflow:hidden;flex-shrink:0;}
+.lv-thumb-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:rgba(255,255,255,.75);letter-spacing:.02em;text-transform:uppercase;}
+.lv-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.48);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;font-size:14px;}
+.lv-card:hover .lv-thumb-overlay{opacity:1;}
+.lv-thumb-badge{position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.6);border-radius:3px;font-size:9px;padding:1px 4px;color:#fff;font-weight:600;}
+.lv-info{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.lv-oid{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--gold);}
+.lv-oclient{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lv-ometa{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lv-file{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.lv-fname{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lv-fsize{font-size:10px;color:var(--t3);}
+.lv-prazo{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:var(--rf);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.lv-p-ok{background:rgba(22,163,74,.12);color:#16A34A;}
+.lv-p-warn{background:rgba(202,138,4,.12);color:#B45309;}
+.lv-p-late{background:rgba(220,38,38,.12);color:#DC2626;}
+.lv-urg-tag{font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#DC2626;margin-top:2px;}
+.lv-acts{display:flex;gap:3px;justify-content:flex-end;align-items:center;}
+.lv-act{width:26px;height:26px;border-radius:var(--rs);border:1px solid var(--border);background:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s,background .1s;color:var(--t2);}
+.lv-card:hover .lv-act{opacity:1;}
+.lv-act:hover{background:var(--s3);}
+.lv-empty{padding:60px 20px;text-align:center;color:var(--t3);font-size:13px;}
+/* lightbox */
+.lv-lb{position:fixed;inset:0;background:rgba(20,18,14,.75);backdrop-filter:blur(6px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;}
+.lv-lb.open{display:flex;}
+.lv-lb-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;max-width:440px;width:100%;box-shadow:var(--sh-lg);animation:up .18s ease;}
+.lv-lb-img{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:rgba(255,255,255,.7);position:relative;overflow:hidden;}
+.lv-lb-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;}
+.lv-lb-info{padding:14px 18px 10px;}
+.lv-lb-id{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);margin-bottom:3px;}
+.lv-lb-name{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.lv-lb-sub{font-size:11px;color:var(--t2);margin-bottom:10px;}
+.lv-lb-file{display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:var(--rs);padding:8px 10px;}
+.lv-lb-foot{padding:10px 18px 16px;display:flex;gap:8px;justify-content:flex-end;}
+.lv-lb-close{background:none;border:1px solid var(--border);color:var(--t2);border-radius:var(--rs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.lv-lb-open{background:var(--gold);border:none;color:#fff;border-radius:var(--rs);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 </style>
 </head>
 <body>
@@ -463,8 +527,36 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div id="canceladosList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     </div>
   </div>
-  <div class="board-wrap">
-    <div class="board" id="board"></div>
+  <!-- LIST VIEW -->
+  <div class="list-view">
+    <nav class="lv-sidebar" id="lvSidebar"></nav>
+    <div class="lv-main">
+      <div class="lv-head">
+        <span class="lv-head-title" id="lvTitle">Todos os pedidos</span>
+        <span class="lv-head-chip" id="lvCount"></span>
+        <div class="lv-head-sep"></div>
+      </div>
+      <div class="lv-col-heads">
+        <span>Arte</span><span>Pedido</span><span>Arquivo</span><span>Prazo</span><span></span>
+      </div>
+      <div class="lv-scroll" id="lvList"></div>
+    </div>
+  </div>
+  <!-- Lightbox de prévia -->
+  <div class="lv-lb" id="lvLb" onclick="if(event.target===this)closeLvLb()">
+    <div class="lv-lb-box">
+      <div class="lv-lb-img" id="lvLbImg"></div>
+      <div class="lv-lb-info">
+        <div class="lv-lb-id" id="lvLbId"></div>
+        <div class="lv-lb-name" id="lvLbName"></div>
+        <div class="lv-lb-sub" id="lvLbSub"></div>
+        <div class="lv-lb-file" id="lvLbFile"></div>
+      </div>
+      <div class="lv-lb-foot">
+        <button class="lv-lb-close" onclick="closeLvLb()">Fechar</button>
+        <button class="lv-lb-open" id="lvLbOpen">↗ Abrir arquivo</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1072,6 +1164,7 @@ let currentMonth = _nowMonth(), currentId = null;
 let uploadedFiles = [], refPhotos = new Array(6).fill(null), modelPhoto = null;
 let newOrderFiles = [];
 let arteSignedUrls = [];
+let lvFilterStatus = 'all';
 
 const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -1194,83 +1287,206 @@ function filteredOrders() {
   });
 }
 
+// ── List-view helpers ──
+function lvThumbBg(product) {
+  const map = {
+    'BROCHE':   'linear-gradient(135deg,#7B5200,#BF8920)',
+    'PIN':      'linear-gradient(135deg,#7B5200,#D4A030)',
+    'PINGENTE': 'linear-gradient(135deg,#1A4A3A,#16A34A)',
+    'MEDALHA':  'linear-gradient(135deg,#4A4A1A,#A16207)',
+    'BRINCO':   'linear-gradient(135deg,#4A1A5A,#7C3AED)',
+    'ANEL':     'linear-gradient(135deg,#1A3A5A,#2563EB)',
+    'PULSEIRA': 'linear-gradient(135deg,#5A1A2A,#C0392B)',
+    'COLAR':    'linear-gradient(135deg,#1A4A4A,#0891B2)',
+  };
+  return map[(product||'').toUpperCase()] || 'linear-gradient(135deg,#3A3430,#6E6458)';
+}
+function lvPrazoStatus(iso) {
+  if (!iso) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(iso + 'T00:00:00');
+  const diff = Math.ceil((d - today) / 86400000);
+  if (diff < 0) return 'late';
+  if (diff <= 2) return 'warn';
+  return 'ok';
+}
+function setLvStatus(key) {
+  lvFilterStatus = key;
+  renderBoard();
+}
+
 function renderBoard() {
   const q = (document.getElementById('searchInput')?.value || '').trim();
   const visible = filteredOrders();
+  const isAdmin = currentRole === 'admin';
+
   // Show/hide "Ver cancelados" button for admins
   const canceladosBtn = document.getElementById('showCanceladosBtn');
-  if (canceladosBtn && currentRole === 'admin') {
+  if (canceladosBtn && isAdmin) {
     const hasCancelados = orders.some(o => o.status === 'cancelado');
     const canceladosOpen = document.getElementById('canceladosWrap')?.style.display !== 'none';
     canceladosBtn.style.display = hasCancelados && !canceladosOpen ? '' : 'none';
     const cnt = orders.filter(o => o.status === 'cancelado').length;
     canceladosBtn.textContent = `Ver cancelados (${cnt})`;
   }
+
+  // Count per status
   const cnts = {};
   mainStatuses.forEach(s => cnts[s.key] = 0);
   visible.forEach(o => { if (cnts[o.status] !== undefined) cnts[o.status]++; });
+
+  // KPI bar
   document.getElementById('kpiBar').innerHTML = mainStatuses.map(s =>
     `<div class="kpi"><span class="kpi-dot" style="background:${s.color}"></span><strong>${cnts[s.key]||0}</strong>${s.short}</div>`
   ).join('');
 
-  const boardEl = document.getElementById('board');
-  if (!visible.length) {
+  // Sidebar
+  const atrasados = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'late').length;
+  const urgentes  = visible.filter(o => o.prioridade === 'urgente').length;
+  const warnCnt   = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'warn').length;
+  const emDia     = visible.length - atrasados - warnCnt;
+
+  document.getElementById('lvSidebar').innerHTML = `
+    <div class="lv-sb-label">Status</div>
+    <div class="lv-st-item${lvFilterStatus==='all'?' active':''}" onclick="setLvStatus('all')">
+      <div class="lv-st-dot" style="background:var(--gold)"></div>
+      <span class="lv-st-name">Todos</span>
+      <span class="lv-st-cnt">${visible.length}</span>
+    </div>
+    ${mainStatuses.map(st => `
+    <div class="lv-st-item${lvFilterStatus===st.key?' active':''}" onclick="setLvStatus('${st.key}')">
+      <div class="lv-st-dot" style="background:${st.color}"></div>
+      <span class="lv-st-name">${st.label}</span>
+      <span class="lv-st-cnt">${cnts[st.key]||0}</span>
+    </div>`).join('')}
+    <hr class="lv-sb-hr">
+    <div class="lv-sb-label">Resumo</div>
+    <div class="lv-summary">
+      <div class="lv-sum-row"><span style="color:var(--t2)">Atrasados</span><span style="color:#DC2626;font-weight:600">${atrasados}</span></div>
+      <div class="lv-sum-row"><span style="color:var(--t2)">Urgentes</span><span style="color:#DC2626;font-weight:600">${urgentes}</span></div>
+      <div class="lv-sum-row"><span style="color:var(--t2)">Vencem em breve</span><span style="color:#B45309;font-weight:600">${warnCnt}</span></div>
+      <div class="lv-sum-row"><span style="color:var(--t2)">Em dia</span><span style="color:#16A34A;font-weight:600">${Math.max(0,emDia)}</span></div>
+    </div>
+    ${isAdmin ? `<hr class="lv-sb-hr"><div class="lv-sb-label">Ações</div>
+    <div style="padding:4px 6px"><button class="btn btn-gold" style="width:100%;justify-content:center;font-size:11px;padding:6px" onclick="openNew()">+ Novo Pedido</button></div>` : ''}
+  `;
+
+  // Filter list by selected status
+  const filtered = lvFilterStatus === 'all' ? visible : visible.filter(o => o.status === lvFilterStatus);
+  const st = mainStatuses.find(s => s.key === lvFilterStatus);
+  document.getElementById('lvTitle').textContent = st ? st.label : 'Todos os pedidos';
+  document.getElementById('lvCount').textContent = `${filtered.length} pedido${filtered.length !== 1 ? 's' : ''}`;
+
+  const listEl = document.getElementById('lvList');
+  if (!filtered.length) {
     if (q) {
-      boardEl.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:340px">
-        <div style="text-align:center;color:var(--t3);max-width:280px">
-          <div style="font-size:30px;margin-bottom:10px;opacity:.4">🔍</div>
-          <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum resultado para "${escHtml(q)}"</div>
-          <div style="font-size:12px;line-height:1.5">Tente buscar por número do pedido, cliente ou produto.</div>
-        </div>
-      </div>`;
+      listEl.innerHTML = `<div class="lv-empty"><div style="font-size:28px;margin-bottom:10px;opacity:.4">🔍</div>Nenhum resultado para "<strong>${escHtml(q)}</strong>"</div>`;
+    } else if (lvFilterStatus !== 'all') {
+      listEl.innerHTML = `<div class="lv-empty"><div style="font-size:28px;margin-bottom:10px;opacity:.4">📭</div>Nenhum pedido neste status</div>`;
     } else {
-      const isAdmin = currentRole === 'admin';
-      boardEl.innerHTML = `<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:340px">
-        <div style="text-align:center;color:var(--t3);max-width:280px">
-          <div style="font-size:36px;margin-bottom:12px;opacity:.4">💎</div>
-          <div style="font-size:14px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum pedido ainda</div>
-          <div style="font-size:12px;line-height:1.5;margin-bottom:16px">${isAdmin?'Crie o primeiro pedido clicando em <strong>+ Novo Pedido</strong>.':'Envie o primeiro pedido clicando em <strong>+ Enviar Pedido</strong>.'}</div>
-          ${isAdmin?'<button class="btn btn-gold" onclick="openNew()">+ Novo Pedido</button>':'<button class="btn btn-gold" onclick="openClientSubmit()">+ Enviar Pedido</button>'}
-        </div>
-      </div>`;
+      listEl.innerHTML = `<div class="lv-empty"><div style="font-size:32px;margin-bottom:12px;opacity:.4">💎</div>
+        <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum pedido ainda</div>
+        ${isAdmin?'<button class="btn btn-gold" onclick="openNew()" style="margin-top:8px">+ Novo Pedido</button>':''}</div>`;
     }
     return;
   }
-  const isAdmin = currentRole === 'admin';
-  boardEl.innerHTML = mainStatuses.map(st => {
-    const col = visible.filter(o => o.status === st.key);
-    const arteFiles = col.filter(o => (o.files||[]).some(f => f.role==='arte'));
-    return `<div class="col">
-      <div class="col-head">
-        <div class="col-label"><span class="col-pip" style="background:${st.color}"></span>${st.label}</div>
-        <span class="col-cnt">${col.length}</span>
+
+  // Sort: late → warn → ok, urgentes first within group, then by prazo ASC
+  const sorted = [...filtered].sort((a, b) => {
+    const order = {late:0, warn:1, ok:2, null:3};
+    const pa = order[lvPrazoStatus(a.prazo)] ?? 3;
+    const pb = order[lvPrazoStatus(b.prazo)] ?? 3;
+    if (pa !== pb) return pa - pb;
+    if (a.prioridade === 'urgente' && b.prioridade !== 'urgente') return -1;
+    if (b.prioridade === 'urgente' && a.prioridade !== 'urgente') return 1;
+    if (a.prazo && b.prazo) return a.prazo.localeCompare(b.prazo);
+    return 0;
+  });
+
+  listEl.innerHTML = sorted.map(o => {
+    const arteFile = (o.files||[]).find(f => f.role === 'arte') || (o.files||[])[0];
+    const bg  = lvThumbBg(o.product);
+    const ini = (o.product||'?').slice(0,3);
+    const ps  = lvPrazoStatus(o.prazo);
+    const pCls = ps === 'late' ? 'lv-p-late' : ps === 'warn' ? 'lv-p-warn' : 'lv-p-ok';
+    const pPfx = ps === 'late' ? '⚠ ' : ps === 'warn' ? '◑ ' : '';
+    const ost  = getS(o.status);
+    return `<div class="lv-card${o.prioridade==='urgente'?' urg':''}" onclick="openDetail('${o.id}')">
+      <div class="lv-thumb" onclick="openLvLb(event,'${o.id}')">
+        <div class="lv-thumb-bg" style="background:${bg}">${ini}</div>
+        ${arteFile ? `<div class="lv-thumb-badge">${arteFile.type==='img'?'🖼':'📎'}</div>` : ''}
+        <div class="lv-thumb-overlay">👁</div>
       </div>
-      ${col.map(o => {
-        const hasArte = (o.files||[]).some(f => f.role==='arte');
-        return `<div class="card ${o.fromClient?'is-new':''}" style="border-left-color:${o.prioridade==='urgente'?'#DC2626':st.color}" onclick="openDetail('${o.id}')">
-          <div class="card-top">
-            <span class="card-num">#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)}</span>
-            <div style="display:flex;align-items:center;gap:4px">
-              ${o.prioridade==='urgente'?'<span class="priority-urgente">Urgente</span>':''}
-              ${o.fromClient&&o.prioridade!=='urgente'?'<span class="new-badge">novo</span>':''}
-              <span class="card-qty">${o.qty} un</span>
-            </div>
-          </div>
-          <div class="card-title">${o.product}</div>
-          <div class="card-desc">${o.detail}</div>
-          <div class="card-client">${o.client}</div>
-          ${hasArte?'<div style="margin-top:4px;font-size:10px;color:var(--gold);display:flex;align-items:center;gap:3px">🖼 Arte anexada</div>':''}
-          ${!hasArte&&o.files&&o.files.length?`<div style="margin-top:4px;font-size:10px;color:var(--blue);display:flex;align-items:center;gap:3px">📎 ${o.files.length} arquivo${o.files.length>1?'s':''}</div>`:''}
-          <div class="card-foot">
-            <span class="card-date">${o.prazo?`📅 ${fmtDateBR(o.prazo)}`:o.date}</span>
-            <span class="card-ref">${o.ref}</span>
-          </div>
-        </div>`;
-      }).join('')}
-      ${isAdmin?`<button class="add-btn" onclick="openNew()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Adicionar</button>`:''}
+      <div class="lv-info">
+        <div class="lv-oid">#${o.ref && o.ref!=='—' ? o.ref : o.id.slice(0,8)}</div>
+        <div class="lv-oclient">${o.client}</div>
+        <div class="lv-ometa">${o.product}${o.detail?' · '+o.detail:''} · ${o.qty} un.</div>
+      </div>
+      <div class="lv-file">
+        ${arteFile
+          ? `<div class="lv-fname">${arteFile.type==='img'?'🖼 ':'📄 '}${arteFile.name||'arquivo'}</div><div class="lv-fsize">${arteFile.size||''}</div>`
+          : `<div class="lv-fsize">${(o.files||[]).length ? '📎 '+(o.files||[]).length+' arquivo(s)' : '— sem arquivo'}</div>`}
+      </div>
+      <div>
+        ${o.prazo
+          ? `<div class="lv-prazo ${pCls}">${pPfx}${fmtDateBR(o.prazo)}</div>`
+          : `<div class="lv-fsize">—</div>`}
+        ${o.prioridade==='urgente'?'<div class="lv-urg-tag">🔴 Urgente</div>':''}
+        ${lvFilterStatus==='all'?`<div style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:var(--t3);margin-top:2px"><span style="width:5px;height:5px;border-radius:50%;background:${ost.color};display:inline-block"></span>${ost.short}</div>`:''}
+      </div>
+      <div class="lv-acts">
+        <button class="lv-act" title="Ver arquivo" onclick="event.stopPropagation();openLvLb(event,'${o.id}')">🖼</button>
+        ${isAdmin ? `<button class="lv-act" title="Abrir pedido" onclick="event.stopPropagation();openDetail('${o.id}')">✏</button>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
+
+// ── Lightbox de prévia ──
+async function openLvLb(e, id) {
+  e.stopPropagation();
+  const o = orders.find(x => x.id === id); if (!o) return;
+  const lb = document.getElementById('lvLb');
+  const imgEl = document.getElementById('lvLbImg');
+  document.getElementById('lvLbId').textContent = `#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)}`;
+  document.getElementById('lvLbName').textContent = `${o.client} — ${o.product}`;
+  document.getElementById('lvLbSub').textContent = [o.detail, o.qty ? o.qty+' un.' : '', o.prazo ? 'Prazo '+fmtDateBR(o.prazo) : ''].filter(Boolean).join(' · ');
+
+  const arteFile = (o.files||[]).find(f => f.role === 'arte') || (o.files||[])[0];
+  const openBtn  = document.getElementById('lvLbOpen');
+  const fileEl   = document.getElementById('lvLbFile');
+  openBtn.onclick = null;
+  openBtn.style.display = arteFile ? '' : 'none';
+
+  if (arteFile) {
+    fileEl.innerHTML = `<span style="font-size:18px">${arteFile.type==='img'?'🖼':'📄'}</span>
+      <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${arteFile.name||'arquivo'}</span>
+      <span style="font-size:11px;color:var(--t3)">${arteFile.size||''}</span>`;
+    imgEl.style.background = lvThumbBg(o.product);
+    imgEl.innerHTML = '<span style="font-size:22px;animation:spin .7s linear infinite">⏳</span>';
+    lb.classList.add('open');
+    if (arteFile.path) {
+      try {
+        const bucket = arteFile.role === 'arte' ? 'order-files' : 'order-files';
+        const { data } = await sb.storage.from(bucket).createSignedUrl(arteFile.path, 3600);
+        if (data?.signedUrl) {
+          if (arteFile.type === 'img') {
+            imgEl.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="object-fit:contain">`;
+          } else {
+            imgEl.innerHTML = `<span style="font-size:52px">📄</span>`;
+          }
+          openBtn.onclick = () => window.open(data.signedUrl, '_blank');
+        } else { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
+      } catch(err) { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
+    } else { imgEl.innerHTML = `<span style="font-size:52px">${arteFile.type==='img'?'🖼':'📄'}</span>`; openBtn.style.display='none'; }
+  } else {
+    fileEl.innerHTML = `<span style="font-size:18px">📭</span><span style="font-size:12px;color:var(--t2)">Nenhum arquivo anexado</span>`;
+    imgEl.style.background = lvThumbBg(o.product);
+    imgEl.innerHTML = `<span style="font-size:36px;opacity:.5">${(o.product||'?').slice(0,3)}</span>`;
+    lb.classList.add('open');
+  }
+}
+function closeLvLb() { document.getElementById('lvLb').classList.remove('open'); }
 
 // ── Detail modal ──
 async function openDetail(id) {
@@ -1585,10 +1801,10 @@ function autoCalcPrazo() {
 }
 function openNew() {
   document.getElementById('newOverlay').classList.add('open');
-  // Pre-fill today's date and auto-calc prazo
+  // Always reset date to today and recalculate prazo
   const today = new Date().toISOString().slice(0, 10);
   const dateEl = document.getElementById('mnDate');
-  if (dateEl && !dateEl.value) {
+  if (dateEl) {
     dateEl.value = today;
     autoCalcPrazo();
   }
@@ -1670,7 +1886,7 @@ async function saveNew() {
     btn.textContent='Salvar Pedido'; btn.disabled=false; return;
   }
   closeNew();
-  ['mnId','mnClient','mnSize','mnObs','mnPrazo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  ['mnId','mnClient','mnSize','mnObs','mnPrazo','mnDate'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('mnQty').value = '1';
   resetUrgenteBtn();
   newOrderFiles = []; renderNewOrderFiles();
