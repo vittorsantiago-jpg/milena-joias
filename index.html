@@ -450,9 +450,21 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="ftabs" id="monthTabs">
       <button class="ftab active" onclick="setMonth('all',this)">Todos</button>
     </div>
+    <button id="showCanceladosBtn" onclick="showCancelados()" style="display:none;font-size:11px;color:var(--t3);background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Ver cancelados</button>
   </div>
   <div class="board-wrap">
     <div class="board" id="board"></div>
+  </div>
+  <!-- Cancelados section (admin only) -->
+  <div id="canceladosWrap" style="display:none;max-width:1200px;margin:0 auto 32px;padding:0 20px">
+    <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3)">Pedidos Cancelados</span>
+        <span id="canceladosCnt" style="font-size:11px;background:var(--s3);color:var(--t2);padding:1px 7px;border-radius:99px"></span>
+        <button onclick="hideCancelados()" style="margin-left:auto;font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline">Ocultar</button>
+      </div>
+      <div id="canceladosList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
   </div>
 </div>
 
@@ -1122,6 +1134,7 @@ function renderMonthTabs() {
 function filteredOrders() {
   const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
   return orders.filter(o => {
+    if (o.status === 'cancelado') return false;
     const mOk = currentMonth === 'all' || o.month === currentMonth;
     const qOk = !q || o.id.includes(q) || o.ref.toLowerCase().includes(q) || o.product.toLowerCase().includes(q) || o.client.toLowerCase().includes(q) || o.detail.toLowerCase().includes(q);
     return mOk && qOk;
@@ -1131,6 +1144,15 @@ function filteredOrders() {
 function renderBoard() {
   const q = (document.getElementById('searchInput')?.value || '').trim();
   const visible = filteredOrders();
+  // Show/hide "Ver cancelados" button for admins
+  const canceladosBtn = document.getElementById('showCanceladosBtn');
+  if (canceladosBtn && currentRole === 'admin') {
+    const hasCancelados = orders.some(o => o.status === 'cancelado');
+    const canceladosOpen = document.getElementById('canceladosWrap')?.style.display !== 'none';
+    canceladosBtn.style.display = hasCancelados && !canceladosOpen ? '' : 'none';
+    const cnt = orders.filter(o => o.status === 'cancelado').length;
+    canceladosBtn.textContent = `Ver cancelados (${cnt})`;
+  }
   const cnts = {};
   mainStatuses.forEach(s => cnts[s.key] = 0);
   visible.forEach(o => { if (cnts[o.status] !== undefined) cnts[o.status]++; });
@@ -1315,11 +1337,18 @@ async function openDetail(id) {
   // Dynamic footer
   const mFoot = document.getElementById('mFoot');
   if (currentRole === 'admin') {
-    const nextSt = mainStatuses[si + 1];
-    mFoot.innerHTML = `
-      ${nextSt ? `<button class="btn-adv" onclick="advanceStatus()">→ Mover para ${nextSt.label}</button>` : ''}
-      <button class="btn-danger" onclick="cancelOrder()">Cancelar pedido</button>
-    `;
+    if (o.status === 'cancelado') {
+      mFoot.innerHTML = `
+        <span style="font-size:12px;color:var(--t3);flex:1">Pedido cancelado</span>
+        <button class="btn btn-outline" onclick="reativarOrder()">↺ Reativar pedido</button>
+      `;
+    } else {
+      const nextSt = mainStatuses[si + 1];
+      mFoot.innerHTML = `
+        ${nextSt ? `<button class="btn-adv" onclick="advanceStatus()">→ Mover para ${nextSt.label}</button>` : ''}
+        <button class="btn-danger" onclick="cancelOrder()">Cancelar pedido</button>
+      `;
+    }
   } else if (currentRole === 'cliente' && o.status === 'aprovacao') {
     if (arteFiles.length) {
       mFoot.innerHTML = `
@@ -1358,6 +1387,35 @@ async function cancelOrder() {
   const o = orders.find(x => x.id === currentId);
   if (o) o.status = 'cancelado';
   closeDetail(); renderBoard();
+}
+
+async function reativarOrder() {
+  if (!currentId || currentRole !== 'admin') return;
+  const { error } = await sb.from('orders').update({ status: 'recebido' }).eq('id', currentId);
+  if (error) { alert('Erro: ' + error.message); return; }
+  const o = orders.find(x => x.id === currentId);
+  if (o) o.status = 'recebido';
+  renderBoard();
+  openDetail(currentId);
+}
+
+function showCancelados() {
+  const cancelados = orders.filter(o => o.status === 'cancelado');
+  document.getElementById('canceladosCnt').textContent = cancelados.length;
+  document.getElementById('canceladosList').innerHTML = cancelados.map(o => `
+    <div onclick="openDetail('${o.id}')" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;cursor:pointer;min-width:160px;max-width:200px;transition:background .14s" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--t3)">#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)}</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.product}</div>
+      <div style="font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${o.client || '—'}</div>
+    </div>`).join('') || '<span style="font-size:12px;color:var(--t3)">Nenhum pedido cancelado.</span>';
+  document.getElementById('canceladosWrap').style.display = 'block';
+  document.getElementById('showCanceladosBtn').style.display = 'none';
+}
+
+function hideCancelados() {
+  document.getElementById('canceladosWrap').style.display = 'none';
+  const hasCancelados = orders.some(o => o.status === 'cancelado');
+  if (hasCancelados && currentRole === 'admin') document.getElementById('showCanceladosBtn').style.display = '';
 }
 
 // ── New order modal ──
@@ -1401,8 +1459,31 @@ async function saveNew() {
   if (!valid) { return; }
   btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
 
+  // Check for duplicate ID before inserting
+  const inputId = mnIdEl.value.trim();
+  if (inputId) {
+    const { data: existing } = await sb.from('orders').select('id').eq('id', inputId).maybeSingle();
+    if (existing) {
+      mnIdEl.style.borderColor = '#DC2626';
+      mnIdEl.title = 'Este código já existe';
+      const hint = mnIdEl.parentElement.querySelector('.dup-hint') || (() => {
+        const d = document.createElement('div');
+        d.className = 'dup-hint';
+        d.style.cssText = 'font-size:11px;color:#DC2626;margin-top:3px';
+        mnIdEl.parentElement.appendChild(d);
+        return d;
+      })();
+      hint.textContent = `Código ${inputId} já cadastrado — use um número diferente.`;
+      btn.textContent = 'Salvar Pedido'; btn.disabled = false;
+      return;
+    }
+    // Clear any previous hint
+    const oldHint = mnIdEl.parentElement.querySelector('.dup-hint');
+    if (oldHint) oldHint.remove();
+  }
+
   const order = {
-    id:          mnIdEl.value.trim() || randId(),
+    id:          inputId || randId(),
     product:     document.getElementById('mnProd').value,
     detail:      `${document.getElementById('mnMat').value} · ${document.getElementById('mnSize').value || '—'}`,
     qty:         parseInt(document.getElementById('mnQty').value) || 1,
@@ -1429,7 +1510,16 @@ async function saveNew() {
   order.files = filesData;
 
   const { error } = await sb.from('orders').insert([order]);
-  if (error) { alert('Erro ao salvar: ' + error.message); btn.textContent='Salvar Pedido'; btn.disabled=false; return; }
+  if (error) {
+    const msg = error.message.includes('duplicate key') || error.message.includes('unique')
+      ? `Código "${order.id}" já existe. Altere o número do pedido e tente novamente.`
+      : 'Erro ao salvar: ' + error.message;
+    alert(msg);
+    if (error.message.includes('duplicate key') || error.message.includes('unique')) {
+      mnIdEl.style.borderColor = '#DC2626';
+    }
+    btn.textContent='Salvar Pedido'; btn.disabled=false; return;
+  }
   closeNew();
   ['mnId','mnClient','mnSize','mnObs','mnPrazo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('mnQty').value = '1';
