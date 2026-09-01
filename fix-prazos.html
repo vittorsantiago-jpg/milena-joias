@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Fix Prazos — Milena Joias</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#1a1a1a;display:flex;justify-content:center;padding:40px 16px;min-height:100vh}
+  .card{background:#242424;border-radius:12px;box-shadow:0 2px 24px #0004;padding:32px;width:100%;max-width:520px;height:fit-content}
+  h1{font-size:1.2rem;color:#f0f0f0;margin-bottom:4px}
+  .sub{color:#888;font-size:.88rem;margin-bottom:24px}
+  label{display:block;font-size:.82rem;font-weight:600;color:#aaa;margin-bottom:4px}
+  input{width:100%;border:1.5px solid #333;border-radius:8px;padding:10px 12px;font-size:.95rem;margin-bottom:14px;background:#1a1a1a;color:#f0f0f0;outline:none}
+  input:focus{border-color:#BF8920}
+  .btn{width:100%;padding:12px;background:#BF8920;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer}
+  .btn:hover{background:#A37518}.btn:disabled{background:#555;cursor:default}
+  .info{background:#1e2a1e;border:1px solid #2d5a2d;border-radius:8px;padding:12px 14px;color:#86efac;font-size:.85rem;margin-bottom:20px;line-height:1.5}
+  .progress-wrap{margin-top:24px;display:none}
+  .bar-bg{background:#333;border-radius:99px;height:8px;overflow:hidden}
+  .bar{background:#BF8920;height:8px;border-radius:99px;transition:width .3s;width:0%}
+  .status-txt{font-size:.83rem;color:#999;margin-top:8px}
+  .log{margin-top:14px;max-height:260px;overflow-y:auto;font-size:.76rem;font-family:monospace;background:#111;border:1px solid #2a2a2a;border-radius:6px;padding:10px;color:#ccc}
+  .ok{color:#4ade80}.err{color:#f87171}.info2{color:#60a5fa}
+  #doneMsg{display:none;margin-top:20px;padding:14px;background:#14532d;border-radius:8px;color:#86efac;font-weight:600;text-align:center}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>📅 Calcular Prazos em Lote</h1>
+  <p class="sub">Preenche o prazo de todos os pedidos que ainda não têm (+3 dias úteis da data de entrada)</p>
+
+  <div class="info">
+    ℹ️ Apenas pedidos <strong>sem prazo definido</strong> serão alterados. Pedidos que já têm prazo não são tocados.
+  </div>
+
+  <div id="loginForm">
+    <label>E-mail admin</label>
+    <input id="email" type="email" placeholder="admin@email.com" autocomplete="username">
+    <label>Senha</label>
+    <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn" onclick="startFix()">Entrar e Calcular Prazos</button>
+  </div>
+
+  <div class="progress-wrap" id="progWrap">
+    <div class="bar-bg"><div class="bar" id="bar"></div></div>
+    <div class="status-txt" id="statusTxt">Aguardando...</div>
+    <div class="log" id="log"></div>
+  </div>
+  <div id="doneMsg">✅ Prazos calculados! Recarregue o sistema para ver as mudanças.</div>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://sbwiuceyauophurcofxl.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNid2l1Y2V5YXVvcGh1cmNvZnhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NzkyNTQsImV4cCI6MjEwMzI1NTI1NH0.gYYS6_ANb4mp2mzAmbty3z6THtE814lgerYTWgJjo6A';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+function addLog(msg, cls='info2') {
+  const el = document.getElementById('log');
+  const d = document.createElement('div');
+  d.className = cls; d.textContent = msg;
+  el.appendChild(d); el.scrollTop = el.scrollHeight;
+}
+function setProgress(pct, txt) {
+  document.getElementById('bar').style.width = pct + '%';
+  document.getElementById('statusTxt').textContent = txt;
+}
+
+// Adiciona N dias úteis (seg-sex) a partir de uma data YYYY-MM-DD
+function addBusinessDays(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00');
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+// Converte DD/MM/YYYY ou YYYY-MM-DD para YYYY-MM-DD
+function parseDate(s) {
+  if (!s) return null;
+  s = s.trim();
+  // DD/MM/YYYY
+  const br = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (br) return `${br[3]}-${br[2].padStart(2,'0')}-${br[1].padStart(2,'0')}`;
+  // YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return null;
+}
+
+async function startFix() {
+  const email = document.getElementById('email').value.trim();
+  const pass  = document.getElementById('pass').value;
+  if (!email || !pass) { alert('Preencha e-mail e senha.'); return; }
+
+  const btn = document.querySelector('.btn');
+  btn.disabled = true; btn.textContent = 'Entrando...';
+
+  const { data: authData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (authErr) { alert('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Entrar e Calcular Prazos'; return; }
+
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', authData.user.id).single();
+  if (!profile || profile.role !== 'admin') { alert('Conta não é admin.'); return; }
+
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('progWrap').style.display  = 'block';
+  addLog('✓ Logado como ' + email, 'ok');
+
+  // Buscar pedidos sem prazo
+  setProgress(10, 'Buscando pedidos sem prazo...');
+  addLog('Buscando pedidos sem prazo definido...');
+
+  const { data: semPrazo, error: fetchErr } = await sb
+    .from('orders')
+    .select('id, date, prazo')
+    .or('prazo.is.null,prazo.eq.');
+
+  if (fetchErr) { addLog('Erro ao buscar: ' + fetchErr.message, 'err'); return; }
+
+  const pendentes = (semPrazo || []).filter(o => !o.prazo);
+  addLog(`${pendentes.length} pedido(s) sem prazo encontrado(s).`);
+  setProgress(20, `${pendentes.length} pedidos para atualizar...`);
+
+  if (pendentes.length === 0) {
+    setProgress(100, 'Nenhum pedido precisava de prazo!');
+    document.getElementById('doneMsg').style.display = 'block';
+    return;
+  }
+
+  // Calcular e atualizar em lote de 20
+  const BATCH = 20;
+  let updated = 0, skipped = 0;
+
+  for (let i = 0; i < pendentes.length; i += BATCH) {
+    const batch = pendentes.slice(i, i + BATCH);
+    for (const o of batch) {
+      const iso = parseDate(o.date);
+      if (!iso) {
+        addLog(`⚠ #${o.id.slice(0,8)} — data inválida ("${o.date}"), pulando.`, 'err');
+        skipped++;
+        continue;
+      }
+      const prazo = addBusinessDays(iso, 3);
+      const { error: updErr } = await sb.from('orders').update({ prazo }).eq('id', o.id);
+      if (updErr) {
+        addLog(`✗ #${o.id.slice(0,8)} — erro: ${updErr.message}`, 'err');
+        skipped++;
+      } else {
+        addLog(`✓ #${o.id.slice(0,8)} · data ${o.date} → prazo ${prazo}`, 'ok');
+        updated++;
+      }
+    }
+    const pct = 20 + ((i + batch.length) / pendentes.length) * 75;
+    setProgress(pct, `Atualizando... ${Math.min(i + BATCH, pendentes.length)}/${pendentes.length}`);
+  }
+
+  setProgress(100, 'Concluído!');
+  addLog('');
+  addLog(`✅ ${updated} pedido(s) atualizado(s). ${skipped ? skipped+' pulado(s).' : ''}`, 'ok');
+  document.getElementById('doneMsg').style.display = 'block';
+}
+</script>
+</body>
+</html>
