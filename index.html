@@ -429,6 +429,29 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-lb-foot{padding:10px 18px 16px;display:flex;gap:8px;justify-content:flex-end;}
 .lv-lb-close{background:none;border:1px solid var(--border);color:var(--t2);border-radius:var(--rs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .lv-lb-open{background:var(--gold);border:none;color:#fff;border-radius:var(--rs);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+/* ── Grid card view ── */
+.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;}
+.lv-gcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;}
+.lv-gcard:hover{box-shadow:var(--sh);transform:translateY(-2px);}
+.lv-gcard.urg{box-shadow:0 0 0 1.5px #DC2626;}
+.lv-gcard.urg:hover{box-shadow:0 0 0 1.5px #DC2626,var(--sh);}
+.lv-gc-img{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:zoom-in;}
+.lv-gc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .22s;}
+.lv-gcard:hover .lv-gc-img img{transform:scale(1.05);}
+.lv-gc-abbr{font-size:20px;font-weight:700;color:rgba(255,255,255,.65);letter-spacing:.06em;font-family:'DM Mono',monospace;position:relative;z-index:1;}
+.lv-gc-overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);opacity:0;transition:opacity .15s;display:flex;align-items:center;justify-content:center;font-size:22px;z-index:2;}
+.lv-gc-img:hover .lv-gc-overlay{opacity:1;}
+.lv-gc-st{position:absolute;bottom:7px;left:8px;background:rgba(0,0,0,.58);backdrop-filter:blur(4px);border-radius:var(--rf);padding:2px 7px;font-size:9px;font-weight:600;color:#fff;letter-spacing:.04em;z-index:3;}
+.lv-gc-urg{position:absolute;top:7px;right:8px;background:#DC2626;border-radius:var(--rf);padding:2px 7px;font-size:9px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;z-index:3;}
+.lv-gc-body{padding:10px 12px 11px;display:flex;flex-direction:column;gap:2px;flex:1;}
+.lv-gc-oid{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);}
+.lv-gc-client{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lv-gc-meta{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;}
+.lv-gc-foot{display:flex;align-items:center;gap:6px;margin-top:auto;}
+.lv-gc-foot .lv-prazo{font-size:10px;padding:2px 7px;}
+.lv-gc-edit{margin-left:auto;width:24px;height:24px;border-radius:var(--rs);border:1px solid var(--border);background:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .12s;color:var(--t2);font-family:'DM Sans',sans-serif;}
+.lv-gcard:hover .lv-gc-edit{opacity:1;}
+.lv-gc-edit:hover{background:var(--s3);}
 </style>
 </head>
 <body>
@@ -536,10 +559,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         <span class="lv-head-chip" id="lvCount"></span>
         <div class="lv-head-sep"></div>
       </div>
-      <div class="lv-col-heads">
-        <span>Arte</span><span>Pedido</span><span>Arquivo</span><span>Prazo</span><span></span>
-      </div>
-      <div class="lv-scroll" id="lvList"></div>
+      <div class="lv-grid" id="lvList"></div>
     </div>
   </div>
   <!-- Lightbox de prévia -->
@@ -1405,41 +1425,33 @@ function renderBoard() {
 
   listEl.innerHTML = sorted.map(o => {
     const arteFile = (o.files||[]).find(f => f.role === 'arte') || (o.files||[])[0];
-    const bg  = lvThumbBg(o.product);
-    const ini = (o.product||'?').slice(0,3);
-    const ps  = lvPrazoStatus(o.prazo);
-    const pCls = ps === 'late' ? 'lv-p-late' : ps === 'warn' ? 'lv-p-warn' : 'lv-p-ok';
-    const pPfx = ps === 'late' ? '⚠ ' : ps === 'warn' ? '◑ ' : '';
-    const ost  = getS(o.status);
-    return `<div class="lv-card${o.prioridade==='urgente'?' urg':''}" onclick="openDetail('${o.id}')">
-      <div class="lv-thumb" onclick="openLvLb(event,'${o.id}')">
-        <div class="lv-thumb-bg" style="background:${bg}">${ini}</div>
-        ${arteFile ? `<div class="lv-thumb-badge">${arteFile.type==='img'?'🖼':'📎'}</div>` : ''}
-        <div class="lv-thumb-overlay">👁</div>
+    const bg       = lvThumbBg(o.product);
+    const ini      = (o.product||'?').slice(0,3).toUpperCase();
+    const ps       = lvPrazoStatus(o.prazo);
+    const pCls     = ps === 'late' ? 'lv-p-late' : ps === 'warn' ? 'lv-p-warn' : 'lv-p-ok';
+    const pPfx     = ps === 'late' ? '⚠ ' : ps === 'warn' ? '◑ ' : '';
+    const ost      = getS(o.status);
+    return `<div class="lv-gcard${o.prioridade==='urgente'?' urg':''}" onclick="openDetail('${o.id}')">
+      <div class="lv-gc-img" id="lv-gc-img-${o.id}" style="background:${bg}" onclick="event.stopPropagation();openLvLb(event,'${o.id}')">
+        <span class="lv-gc-abbr">${ini}</span>
+        <div class="lv-gc-overlay">👁</div>
+        <div class="lv-gc-st">${ost.short}</div>
+        ${o.prioridade==='urgente'?'<div class="lv-gc-urg">urgente</div>':''}
       </div>
-      <div class="lv-info">
-        <div class="lv-oid">#${o.ref && o.ref!=='—' ? o.ref : o.id.slice(0,8)}</div>
-        <div class="lv-oclient">${o.client}</div>
-        <div class="lv-ometa">${o.product}${o.detail?' · '+o.detail:''} · ${o.qty} un.</div>
-      </div>
-      <div class="lv-file">
-        ${arteFile
-          ? `<div class="lv-fname">${arteFile.type==='img'?'🖼 ':'📄 '}${arteFile.name||'arquivo'}</div><div class="lv-fsize">${arteFile.size||''}</div>`
-          : `<div class="lv-fsize">${(o.files||[]).length ? '📎 '+(o.files||[]).length+' arquivo(s)' : '— sem arquivo'}</div>`}
-      </div>
-      <div>
-        ${o.prazo
-          ? `<div class="lv-prazo ${pCls}">${pPfx}${fmtDateBR(o.prazo)}</div>`
-          : `<div class="lv-fsize">—</div>`}
-        ${o.prioridade==='urgente'?'<div class="lv-urg-tag">🔴 Urgente</div>':''}
-        ${lvFilterStatus==='all'?`<div style="display:inline-flex;align-items:center;gap:3px;font-size:9px;color:var(--t3);margin-top:2px"><span style="width:5px;height:5px;border-radius:50%;background:${ost.color};display:inline-block"></span>${ost.short}</div>`:''}
-      </div>
-      <div class="lv-acts">
-        <button class="lv-act" title="Ver arquivo" onclick="event.stopPropagation();openLvLb(event,'${o.id}')">🖼</button>
-        ${isAdmin ? `<button class="lv-act" title="Abrir pedido" onclick="event.stopPropagation();openDetail('${o.id}')">✏</button>` : ''}
+      <div class="lv-gc-body">
+        <div class="lv-gc-oid">#${o.ref && o.ref!=='—' ? o.ref : o.id.slice(0,8)}</div>
+        <div class="lv-gc-client">${escHtml(o.client)}</div>
+        <div class="lv-gc-meta">${o.product}${o.detail?' · '+o.detail:''} · ${o.qty} un.</div>
+        <div class="lv-gc-foot">
+          ${o.prazo
+            ? `<div class="lv-prazo ${pCls}">${pPfx}${fmtDateBR(o.prazo)}</div>`
+            : `<div style="font-size:10px;color:var(--t3)">—</div>`}
+          ${isAdmin ? `<button class="lv-gc-edit" title="Editar pedido" onclick="event.stopPropagation();openDetail('${o.id}')">✏</button>` : ''}
+        </div>
       </div>
     </div>`;
   }).join('');
+  loadGridImages(sorted);
 }
 
 // ── Lightbox de prévia ──
@@ -1487,6 +1499,27 @@ async function openLvLb(e, id) {
   }
 }
 function closeLvLb() { document.getElementById('lvLb').classList.remove('open'); }
+
+// Carrega imagens reais nos cards do grid de forma assíncrona
+async function loadGridImages(sorted) {
+  for (const o of sorted) {
+    const arteFile = (o.files||[]).find(f => f.type === 'img' && f.role === 'arte')
+                  || (o.files||[]).find(f => f.type === 'img');
+    if (!arteFile?.path) continue;
+    const wrap = document.getElementById(`lv-gc-img-${o.id}`);
+    if (!wrap) continue;
+    try {
+      const { data } = await sb.storage.from('order-files').createSignedUrl(arteFile.path, 7200);
+      const w2 = document.getElementById(`lv-gc-img-${o.id}`);
+      if (data?.signedUrl && w2) {
+        const img = document.createElement('img');
+        img.alt = 'arte';
+        img.src = data.signedUrl;
+        w2.insertBefore(img, w2.firstChild);
+      }
+    } catch(e) { /* mantém gradiente de fallback */ }
+  }
+}
 
 // ── Detail modal ──
 async function openDetail(id) {
