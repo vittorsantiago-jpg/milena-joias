@@ -1124,7 +1124,7 @@ async function loadClients() {
 function renderClientsList() {
   const listEl = document.getElementById('clientsMgmtList');
   listEl.innerHTML = '<div class="client-mgmt-list">' + clientsList.map((c, i) => `
-    <div class="client-row" id="crow-${i}">
+    <div class="client-row" id="crow-${i}" style="flex-wrap:wrap">
       <div class="client-row-info">
         <div class="client-row-name">${escHtml(c.name || '(sem nome)')}</div>
         <div class="client-row-email">${c.email && c.email.endsWith('@milena.app') ? '👤 ' + escHtml(c.email.replace('@milena.app','')) : escHtml(c.email || c.id)}</div>
@@ -1133,10 +1133,20 @@ function renderClientsList() {
           <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="saveRename(${i})">Salvar</button>
           <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="cancelRename(${i})">×</button>
         </div>
+        <div id="crow-link-${i}" style="display:none;margin-top:8px;flex-direction:column;gap:5px;width:100%">
+          <div style="font-size:11px;color:var(--t2);font-weight:600">🔗 Vincular pedidos ao cliente <strong>${escHtml(c.name||c.email)}</strong></div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input id="crow-link-input-${i}" type="text" placeholder="Nome do cliente nos pedidos" style="flex:1;min-width:160px;padding:5px 9px;font-size:12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s3);color:var(--text)" onkeydown="if(event.key==='Enter')doLinkOrders(${i})">
+            <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="doLinkOrders(${i})">Vincular</button>
+            <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="cancelLinkOrders(${i})">×</button>
+          </div>
+          <div id="crow-link-result-${i}" style="font-size:11px;color:var(--t2)"></div>
+        </div>
       </div>
       <span class="client-row-badge ${c.role==='inativo'?'badge-inativo':'badge-ativo'}">${c.role==='inativo'?'Bloqueado':'Ativo'}</span>
       <div class="client-row-actions">
         <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="startRename(${i})">Renomear</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:var(--gold)" onclick="startLinkOrders(${i})">🔗 Vincular</button>
         ${c.role==='inativo'
           ? `<button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:var(--blue)" onclick="toggleClientAccess(${i},'cliente')">Reativar</button>`
           : `<button class="btn btn-outline" style="padding:4px 10px;font-size:11px;color:#C0392B" onclick="toggleClientAccess(${i},'inativo')">Bloquear</button>`
@@ -1155,6 +1165,46 @@ function startRename(i) {
 }
 function cancelRename(i) {
   document.getElementById(`crow-rename-${i}`).style.display = 'none';
+}
+
+function startLinkOrders(i) {
+  clientsList.forEach((_, j) => {
+    const el = document.getElementById(`crow-link-${j}`);
+    if (el) el.style.display = 'none';
+    const res = document.getElementById(`crow-link-result-${j}`);
+    if (res) res.textContent = '';
+  });
+  const el = document.getElementById(`crow-link-${i}`);
+  if (el) {
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+    const input = document.getElementById(`crow-link-input-${i}`);
+    if (input) { input.value = clientsList[i].name || ''; input.focus(); input.select(); }
+  }
+}
+
+function cancelLinkOrders(i) {
+  const el = document.getElementById(`crow-link-${i}`);
+  if (el) el.style.display = 'none';
+}
+
+async function doLinkOrders(i) {
+  const c = clientsList[i];
+  const searchName = (document.getElementById(`crow-link-input-${i}`)?.value || '').trim();
+  const resultEl = document.getElementById(`crow-link-result-${i}`);
+  if (!searchName) { resultEl.textContent = 'Digite o nome para buscar.'; return; }
+  resultEl.textContent = 'Buscando pedidos…';
+  const { data: matched, error: fetchErr } = await sb
+    .from('orders').select('id, client').ilike('client', `%${searchName}%`);
+  if (fetchErr) { resultEl.textContent = 'Erro: ' + fetchErr.message; return; }
+  if (!matched || !matched.length) {
+    resultEl.innerHTML = `<span style="color:#B45309">Nenhum pedido encontrado com "${escHtml(searchName)}".</span>`;
+    return;
+  }
+  const { error: updErr } = await sb
+    .from('orders').update({ user_id: c.id }).ilike('client', `%${searchName}%`);
+  if (updErr) { resultEl.textContent = 'Erro ao vincular: ' + updErr.message; return; }
+  resultEl.innerHTML = `<span style="color:#16A34A">✓ ${matched.length} pedido(s) vinculado(s) a <strong>${escHtml(c.name || c.email)}</strong>!</span>`;
 }
 
 async function saveRename(i) {
