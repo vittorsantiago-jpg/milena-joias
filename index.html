@@ -452,19 +452,19 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     </div>
     <button id="showCanceladosBtn" onclick="showCancelados()" style="display:none;font-size:11px;color:var(--t3);background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Ver cancelados</button>
   </div>
-  <div class="board-wrap">
-    <div class="board" id="board"></div>
-  </div>
-  <!-- Cancelados section (admin only) -->
-  <div id="canceladosWrap" style="display:none;max-width:1200px;margin:0 auto 32px;padding:0 20px">
-    <div style="border-top:1px solid var(--border);padding-top:18px;margin-top:4px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+  <!-- Cancelados section (admin only) — shown above board -->
+  <div id="canceladosWrap" style="display:none;padding:0 20px 0">
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin:0 0 8px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3)">Pedidos Cancelados</span>
         <span id="canceladosCnt" style="font-size:11px;background:var(--s3);color:var(--t2);padding:1px 7px;border-radius:99px"></span>
-        <button onclick="hideCancelados()" style="margin-left:auto;font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline">Ocultar</button>
+        <button onclick="hideCancelados()" style="margin-left:auto;font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Ocultar</button>
       </div>
       <div id="canceladosList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     </div>
+  </div>
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
   </div>
 </div>
 
@@ -663,6 +663,59 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="modal-foot" style="justify-content:flex-end">
       <button class="btn btn-outline" onclick="closeNew()">Cancelar</button>
       <button class="btn btn-gold" id="saveNewBtn" onclick="saveNew()">Salvar Pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Order Modal ── -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="minfo"><div class="modal-eyebrow">EDITAR PEDIDO</div><div class="modal-title" id="editTitle">Pedido</div></div>
+      <button class="modal-close" onclick="closeEdit()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="fld"><label>Nº Pedido</label><input type="text" id="enId" readonly style="opacity:.6;cursor:not-allowed"></div>
+        <div class="fld"><label>Data de entrada</label><input type="date" id="enDate"></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>Cliente</label><input type="text" id="enClient" placeholder="Nome do cliente (opcional)"></div>
+        <div class="fld"><label>Prazo de entrega</label><input type="date" id="enPrazo"></div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>Produto</label>
+          <select id="enProd">
+            <option>BROCHE</option><option>PIN</option><option>MEDALHA</option>
+            <option>PINGENTE</option><option>BRINCO</option><option>ANEL</option>
+            <option>PULSEIRA</option><option>COLAR</option><option>OUTRO</option>
+          </select>
+        </div>
+        <div class="fld"><label>Material</label>
+          <select id="enMat">
+            <option>Ouro</option><option>Prata</option><option>Rose Gold</option>
+            <option>Prata Envelhecida</option><option>Bronze</option>
+            <option>Acrílico</option><option>Resina</option><option>Colorido</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fld"><label>Tamanho</label><input type="text" id="enSize" placeholder="ex: 4cm"></div>
+        <div class="fld"><label>Quantidade</label><input type="number" min="1" id="enQty"></div>
+      </div>
+      <div class="fld"><label>Prioridade</label>
+        <button type="button" id="enUrgenteBtn" onclick="toggleUrgenteEdit()"
+          style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--t2);font-size:13px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .2s;font-family:'DM Sans',sans-serif">
+          <span id="enUrgenteDot" style="width:9px;height:9px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .2s"></span>
+          <span id="enUrgenteLabel">Normal</span>
+        </button>
+        <input type="hidden" id="enPrioridade" value="normal">
+      </div>
+      <div class="fld"><label>Observações</label><textarea id="enObs" placeholder="Detalhes do design, cores, acabamento…"></textarea></div>
+    </div>
+    <div class="modal-foot" style="justify-content:flex-end">
+      <button class="btn btn-outline" onclick="closeEdit()">Cancelar</button>
+      <button class="btn btn-gold" id="saveEditBtn" onclick="saveEdit()">Salvar Alterações</button>
     </div>
   </div>
 </div>
@@ -1339,14 +1392,19 @@ async function openDetail(id) {
   if (currentRole === 'admin') {
     if (o.status === 'cancelado') {
       mFoot.innerHTML = `
-        <span style="font-size:12px;color:var(--t3);flex:1">Pedido cancelado</span>
-        <button class="btn btn-outline" onclick="reativarOrder()">↺ Reativar pedido</button>
+        <button class="btn btn-outline" style="color:#DC2626;border-color:#DC2626" onclick="deleteOrder()">🗑 Excluir</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-outline" onclick="openEdit()">✏️ Editar</button>
+        <button class="btn btn-outline" onclick="reativarOrder()">↺ Reativar</button>
       `;
     } else {
       const nextSt = mainStatuses[si + 1];
       mFoot.innerHTML = `
-        ${nextSt ? `<button class="btn-adv" onclick="advanceStatus()">→ Mover para ${nextSt.label}</button>` : ''}
-        <button class="btn-danger" onclick="cancelOrder()">Cancelar pedido</button>
+        <button class="btn btn-outline" style="color:#DC2626;border-color:#DC2626" onclick="deleteOrder()">🗑 Excluir</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-outline" onclick="openEdit()">✏️ Editar</button>
+        ${nextSt ? `<button class="btn-adv" onclick="advanceStatus()">→ ${nextSt.label}</button>` : ''}
+        ${o.status !== 'cancelado' ? `<button class="btn-danger" onclick="cancelOrder()">Cancelar</button>` : ''}
       `;
     }
   } else if (currentRole === 'cliente' && o.status === 'aprovacao') {
@@ -1387,6 +1445,97 @@ async function cancelOrder() {
   const o = orders.find(x => x.id === currentId);
   if (o) o.status = 'cancelado';
   closeDetail(); renderBoard();
+}
+
+// ── Edit order ──
+function openEdit() {
+  const o = orders.find(x => x.id === currentId);
+  if (!o) return;
+  document.getElementById('editTitle').textContent = `#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)} · ${o.product}`;
+  document.getElementById('enId').value     = o.id;
+  document.getElementById('enDate').value   = o.date ? o.date.split('/').reverse().join('-') : '';
+  document.getElementById('enPrazo').value  = o.prazo || '';
+  document.getElementById('enClient').value = o.client || '';
+  document.getElementById('enQty').value    = o.qty || 1;
+  document.getElementById('enObs').value    = o.obs || '';
+  // Parse detail: "Material · Tamanho"
+  const parts = (o.detail || '').split(' · ');
+  const mat   = parts[0] || 'Ouro';
+  const size  = parts[1] === '—' ? '' : (parts[1] || '');
+  const prodSel = document.getElementById('enProd');
+  const matSel  = document.getElementById('enMat');
+  [...prodSel.options].forEach(opt => { opt.selected = opt.value === o.product; });
+  [...matSel.options].forEach(opt => { opt.selected = opt.value === mat; });
+  document.getElementById('enSize').value = size;
+  // Urgente
+  const isUrgente = o.prioridade === 'urgente';
+  document.getElementById('enPrioridade').value = isUrgente ? 'urgente' : 'normal';
+  document.getElementById('enUrgenteDot').style.background = isUrgente ? '#DC2626' : 'var(--t3)';
+  document.getElementById('enUrgenteLabel').textContent = isUrgente ? '🔴 Urgente — prazo prioritário' : 'Normal — clique para marcar urgente';
+  document.getElementById('enUrgenteBtn').style.borderColor = isUrgente ? '#DC2626' : 'var(--border)';
+  document.getElementById('enUrgenteBtn').style.background  = isUrgente ? '#FEF2F2' : 'var(--s2)';
+  document.getElementById('enUrgenteBtn').style.color       = isUrgente ? '#991B1B' : 'var(--t2)';
+  document.getElementById('editOverlay').classList.add('open');
+}
+function closeEdit() { document.getElementById('editOverlay').classList.remove('open'); }
+
+function toggleUrgenteEdit() {
+  const hidden = document.getElementById('enPrioridade');
+  const btn    = document.getElementById('enUrgenteBtn');
+  const dot    = document.getElementById('enUrgenteDot');
+  const label  = document.getElementById('enUrgenteLabel');
+  const isU    = hidden.value === 'urgente';
+  if (isU) {
+    hidden.value = 'normal'; dot.style.background='var(--t3)';
+    label.textContent='Normal — clique para marcar urgente';
+    btn.style.borderColor='var(--border)'; btn.style.background='var(--s2)'; btn.style.color='var(--t2)';
+  } else {
+    hidden.value = 'urgente'; dot.style.background='#DC2626';
+    label.textContent='🔴 Urgente — prazo prioritário';
+    btn.style.borderColor='#DC2626'; btn.style.background='#FEF2F2'; btn.style.color='#991B1B';
+  }
+}
+
+async function saveEdit() {
+  const btn = document.getElementById('saveEditBtn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  const o = orders.find(x => x.id === currentId);
+  if (!o) { btn.textContent='Salvar Alterações'; btn.disabled=false; return; }
+  const mat  = document.getElementById('enMat').value;
+  const size = document.getElementById('enSize').value.trim();
+  const updates = {
+    product:    document.getElementById('enProd').value,
+    detail:     `${mat} · ${size || '—'}`,
+    client:     document.getElementById('enClient').value.trim(),
+    qty:        parseInt(document.getElementById('enQty').value) || 1,
+    obs:        document.getElementById('enObs').value,
+    prazo:      document.getElementById('enPrazo').value || null,
+    prioridade: document.getElementById('enPrioridade').value,
+    date:       (() => { const v=document.getElementById('enDate').value; return v ? v.split('-').reverse().join('/') : o.date; })(),
+  };
+  const { error } = await sb.from('orders').update(updates).eq('id', currentId);
+  if (error) { alert('Erro ao salvar: ' + error.message); btn.textContent='Salvar Alterações'; btn.disabled=false; return; }
+  Object.assign(o, updates);
+  closeEdit();
+  renderBoard();
+  openDetail(currentId);
+  btn.textContent = 'Salvar Alterações'; btn.disabled = false;
+}
+
+async function deleteOrder() {
+  const o = orders.find(x => x.id === currentId);
+  if (!o) return;
+  const label = `#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)} · ${o.product}`;
+  if (!confirm(`Excluir permanentemente o pedido ${label}?\n\nEsta ação não pode ser desfeita.`)) return;
+  // Delete storage files
+  const filePaths = (o.files||[]).filter(f=>f.path).map(f=>f.path);
+  if (filePaths.length) await sb.storage.from('order-files').remove(filePaths);
+  const { error } = await sb.from('orders').delete().eq('id', currentId);
+  if (error) { alert('Erro ao excluir: ' + error.message); return; }
+  orders = orders.filter(x => x.id !== currentId);
+  closeDetail();
+  renderBoard();
+  showToast('🗑 Pedido excluído.');
 }
 
 async function reativarOrder() {
