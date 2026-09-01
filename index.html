@@ -1133,12 +1133,11 @@ function renderClientsList() {
           <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="saveRename(${i})">Salvar</button>
           <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="cancelRename(${i})">×</button>
         </div>
-        <div id="crow-link-${i}" style="display:none;margin-top:8px;flex-direction:column;gap:5px;width:100%">
-          <div style="font-size:11px;color:var(--t2);font-weight:600">🔗 Vincular pedidos ao cliente <strong>${escHtml(c.name||c.email)}</strong></div>
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <input id="crow-link-input-${i}" type="text" placeholder="Nome do cliente nos pedidos" style="flex:1;min-width:160px;padding:5px 9px;font-size:12px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s3);color:var(--text)" onkeydown="if(event.key==='Enter')doLinkOrders(${i})">
-            <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="doLinkOrders(${i})">Vincular</button>
-            <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="cancelLinkOrders(${i})">×</button>
+        <div id="crow-link-${i}" style="display:none;margin-top:8px;flex-direction:column;gap:6px;width:100%">
+          <div style="font-size:11px;color:var(--t2)">Isso vai vincular <strong>todos os pedidos</strong> ao login de <strong>${escHtml(c.name||c.email)}</strong>. Confirma?</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button class="btn btn-gold" style="padding:4px 10px;font-size:11px" onclick="doLinkOrders(${i})">✓ Confirmar</button>
+            <button class="btn btn-outline" style="padding:4px 10px;font-size:11px" onclick="cancelLinkOrders(${i})">Cancelar</button>
           </div>
           <div id="crow-link-result-${i}" style="font-size:11px;color:var(--t2)"></div>
         </div>
@@ -1175,12 +1174,7 @@ function startLinkOrders(i) {
     if (res) res.textContent = '';
   });
   const el = document.getElementById(`crow-link-${i}`);
-  if (el) {
-    el.style.display = 'flex';
-    el.style.flexDirection = 'column';
-    const input = document.getElementById(`crow-link-input-${i}`);
-    if (input) { input.value = clientsList[i].name || ''; input.focus(); input.select(); }
-  }
+  if (el) { el.style.display = 'flex'; el.style.flexDirection = 'column'; }
 }
 
 function cancelLinkOrders(i) {
@@ -1190,21 +1184,14 @@ function cancelLinkOrders(i) {
 
 async function doLinkOrders(i) {
   const c = clientsList[i];
-  const searchName = (document.getElementById(`crow-link-input-${i}`)?.value || '').trim();
   const resultEl = document.getElementById(`crow-link-result-${i}`);
-  if (!searchName) { resultEl.textContent = 'Digite o nome para buscar.'; return; }
-  resultEl.textContent = 'Buscando pedidos…';
-  const { data: matched, error: fetchErr } = await sb
-    .from('orders').select('id, client').ilike('client', `%${searchName}%`);
+  resultEl.textContent = 'Vinculando…';
+  const { data: matched, error: fetchErr } = await sb.from('orders').select('id', { count: 'exact' });
   if (fetchErr) { resultEl.textContent = 'Erro: ' + fetchErr.message; return; }
-  if (!matched || !matched.length) {
-    resultEl.innerHTML = `<span style="color:#B45309">Nenhum pedido encontrado com "${escHtml(searchName)}".</span>`;
-    return;
-  }
-  const { error: updErr } = await sb
-    .from('orders').update({ user_id: c.id }).ilike('client', `%${searchName}%`);
+  const { error: updErr } = await sb.from('orders').update({ user_id: c.id }).neq('id', '00000000-0000-0000-0000-000000000000');
   if (updErr) { resultEl.textContent = 'Erro ao vincular: ' + updErr.message; return; }
-  resultEl.innerHTML = `<span style="color:#16A34A">✓ ${matched.length} pedido(s) vinculado(s) a <strong>${escHtml(c.name || c.email)}</strong>!</span>`;
+  const total = matched?.length ?? '?';
+  resultEl.innerHTML = `<span style="color:#16A34A">✓ ${total} pedido(s) vinculado(s) a <strong>${escHtml(c.name || c.email)}</strong>!</span>`;
 }
 
 async function saveRename(i) {
