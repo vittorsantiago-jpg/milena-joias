@@ -302,6 +302,25 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .alert-row-text{flex:1;font-size:12px;color:var(--text);}
 .alert-row-detail{font-size:11px;color:var(--t2);}
 
+/* ── Toast notification ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1C1A16;color:#fff;font-size:12px;font-weight:500;padding:10px 18px;border-radius:var(--rf);box-shadow:var(--sh-lg);z-index:9999;opacity:0;transition:opacity .2s,transform .25s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.atrasados-section{background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.25);border-radius:var(--r);padding:16px 18px;margin-bottom:20px;}
+.atrasados-section-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.atrasados-section-icon{width:30px;height:30px;background:#DC2626;border-radius:var(--rs);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.atrasados-section-title{font-size:13px;font-weight:600;color:#DC2626;}
+.atrasados-section-sub{font-size:11px;color:var(--t2);margin-top:1px;}
+.atrasados-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+.atrasado-card{background:var(--surface);border:1px solid rgba(220,38,38,.2);border-left:3px solid #DC2626;border-radius:var(--rs);padding:10px 12px;cursor:pointer;transition:background .14s;}
+.atrasado-card:hover{background:var(--s2);}
+.atrasado-card-ref{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);margin-bottom:2px;}
+.atrasado-card-prod{font-size:12px;font-weight:600;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.atrasado-card-client{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.atrasado-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:6px;gap:4px;}
+.atrasado-dias{font-size:11px;font-weight:600;color:#DC2626;}
+.atrasado-status{font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(220,38,38,.1);color:#DC2626;}
+
 /* ── Print / PDF ── */
 .print-header{display:none;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #BF8920;}
 .print-logo-box{width:32px;height:32px;background:#BF8920;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -585,11 +604,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
     <div class="modal-body">
       <div class="form-row">
         <div class="fld"><label>Nº Pedido <span class="req">*</span></label><input type="text" placeholder="ex: 570990" id="mnId"></div>
-        <div class="fld"><label>Data de entrada</label><input type="date" id="mnDate"></div>
+        <div class="fld"><label>Data de entrada</label><input type="date" id="mnDate" onchange="autoCalcPrazo()"></div>
       </div>
       <div class="form-row">
-        <div class="fld"><label>Cliente <span class="req">*</span></label><input type="text" placeholder="Nome do cliente ou empresa" id="mnClient"></div>
-        <div class="fld"><label>Prazo de entrega</label><input type="date" id="mnPrazo"></div>
+        <div class="fld"><label>Cliente</label><input type="text" placeholder="Nome do cliente ou empresa (opcional)" id="mnClient"></div>
+        <div class="fld"><label>Prazo de entrega <span style="font-size:.75rem;color:var(--t3);font-weight:400">(auto: +3 dias)</span></label><input type="date" id="mnPrazo"></div>
       </div>
       <div class="form-row">
         <div class="fld"><label>Produto <span class="req">*</span></label>
@@ -612,10 +631,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         <div class="fld"><label>Quantidade <span class="req">*</span></label><input type="number" min="1" value="1" id="mnQty"></div>
       </div>
       <div class="fld"><label>Prioridade</label>
-        <select id="mnPrioridade">
-          <option value="normal">Normal</option>
-          <option value="urgente">⚡ Urgente</option>
-        </select>
+        <button type="button" id="mnUrgenteBtn" onclick="toggleUrgente()"
+          style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--t2);font-size:13px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .2s;font-family:'DM Sans',sans-serif">
+          <span id="mnUrgenteDot" style="width:9px;height:9px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .2s"></span>
+          <span id="mnUrgenteLabel">Normal — clique para marcar urgente</span>
+        </button>
+        <input type="hidden" id="mnPrioridade" value="normal">
       </div>
       <div class="fld"><label>Observações</label><textarea placeholder="Detalhes do design, cores, acabamento…" id="mnObs"></textarea></div>
       <div class="fld">
@@ -1340,7 +1361,31 @@ async function cancelOrder() {
 }
 
 // ── New order modal ──
-function openNew()  { document.getElementById('newOverlay').classList.add('open'); }
+function addBusinessDays(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00');
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) added++; // pula fim de semana
+  }
+  return d.toISOString().slice(0, 10);
+}
+function autoCalcPrazo() {
+  const dateEl  = document.getElementById('mnDate');
+  const prazoEl = document.getElementById('mnPrazo');
+  if (dateEl && dateEl.value) prazoEl.value = addBusinessDays(dateEl.value, 3);
+}
+function openNew() {
+  document.getElementById('newOverlay').classList.add('open');
+  // Pre-fill today's date and auto-calc prazo
+  const today = new Date().toISOString().slice(0, 10);
+  const dateEl = document.getElementById('mnDate');
+  if (dateEl && !dateEl.value) {
+    dateEl.value = today;
+    autoCalcPrazo();
+  }
+}
 function closeNew() { document.getElementById('newOverlay').classList.remove('open'); }
 
 async function saveNew() {
@@ -1349,7 +1394,7 @@ async function saveNew() {
   const mnClientEl = document.getElementById('mnClient');
   // Validation with red border
   let valid = true;
-  [mnIdEl, mnClientEl].forEach(el => {
+  [mnIdEl].forEach(el => {
     if (!el.value.trim()) { el.style.borderColor = '#DC2626'; valid = false; }
     else el.style.borderColor = '';
   });
@@ -1388,7 +1433,7 @@ async function saveNew() {
   closeNew();
   ['mnId','mnClient','mnSize','mnObs','mnPrazo'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('mnQty').value = '1';
-  document.getElementById('mnPrioridade').value = 'normal';
+  resetUrgenteBtn();
   newOrderFiles = []; renderNewOrderFiles();
   btn.textContent = 'Salvar Pedido'; btn.disabled = false;
 }
@@ -1683,9 +1728,92 @@ function renderNewOrderFiles() {
 }
 function removeNewOrderFile(i) { newOrderFiles.splice(i,1); renderNewOrderFiles(); }
 
+// ── Urgente toggle ──
+function toggleUrgente() {
+  const hidden  = document.getElementById('mnPrioridade');
+  const btn     = document.getElementById('mnUrgenteBtn');
+  const dot     = document.getElementById('mnUrgenteDot');
+  const label   = document.getElementById('mnUrgenteLabel');
+  const isUrgente = hidden.value === 'urgente';
+  if (isUrgente) {
+    hidden.value = 'normal';
+    dot.style.background = 'var(--t3)';
+    label.textContent = 'Normal — clique para marcar urgente';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background  = 'var(--s2)';
+    btn.style.color       = 'var(--t2)';
+  } else {
+    hidden.value = 'urgente';
+    dot.style.background = '#DC2626';
+    label.textContent = '🔴 Urgente — prazo prioritário';
+    btn.style.borderColor = '#DC2626';
+    btn.style.background  = '#FEF2F2';
+    btn.style.color       = '#991B1B';
+  }
+}
+function resetUrgenteBtn() {
+  const hidden = document.getElementById('mnPrioridade');
+  const btn    = document.getElementById('mnUrgenteBtn');
+  const dot    = document.getElementById('mnUrgenteDot');
+  const label  = document.getElementById('mnUrgenteLabel');
+  if (!hidden) return;
+  hidden.value = 'normal';
+  dot.style.background = 'var(--t3)';
+  label.textContent = 'Normal — clique para marcar urgente';
+  btn.style.borderColor = 'var(--border)';
+  btn.style.background  = 'var(--s2)';
+  btn.style.color       = 'var(--t2)';
+}
+
+// ── Toast ──
+let _toastTimer;
+function showToast(msg, ms=2800) {
+  let el = document.getElementById('_toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_toast'; el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+// ── Clipboard paste → file upload ──
+document.addEventListener('paste', function(e) {
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+  const newOpen    = document.getElementById('newOverlay')?.classList.contains('open');
+  const clientOpen = document.getElementById('clientSubmitOverlay')?.classList.contains('open');
+  if (!newOpen && !clientOpen) return;
+  const images = Array.from(items).filter(i => i.kind === 'file' && i.type.startsWith('image/'));
+  if (!images.length) return;
+  images.forEach(item => {
+    const file = item.getAsFile();
+    if (!file) return;
+    const ext  = file.type.split('/')[1] || 'png';
+    const name = `colado-${Date.now()}.${ext}`;
+    if (newOpen) {
+      newOrderFiles.push({ name, size: formatSize(file.size), type: getType(name), file });
+      renderNewOrderFiles();
+    } else if (clientOpen) {
+      uploadedFiles.push({ name, size: formatSize(file.size), type: getType(name), file });
+      renderUploadedFiles();
+    }
+  });
+  showToast('📋 Imagem colada com Ctrl+V!');
+});
+
 // ══════════════════════════════════════
 //  DASHBOARD
 // ══════════════════════════════════════
+
+function goToOrder(id) {
+  const milenaTab = document.querySelector(".mtab");
+  if (milenaTab) setView("milena", milenaTab);
+  setTimeout(() => openDetail(id), 50);
+}
 
 function renderDashboard() {
   if (!orders) return;
@@ -1703,17 +1831,38 @@ function renderDashboard() {
     `${orders.length} pedido${orders.length!==1?'s':''} registrado${orders.length!==1?'s':''} · atualizado agora`;
   document.getElementById('printDate').textContent = `Gerado em ${fmtDate()}`;
 
-  // Alerts
+  // Atrasados section
   const alertsEl = document.getElementById('dashAlerts');
-  alertsEl.innerHTML = atrasados.length ? atrasados.map(o =>
-    `<div class="alert-row">
-      <div class="alert-row-icon">⚠️</div>
-      <div class="alert-row-text">
-        <strong>#${o.id} · ${o.product}</strong> — ${o.client}
-        <div class="alert-row-detail">Prazo: ${fmtDateBR(o.prazo)} · Status atual: ${getS(o.status).label}</div>
-      </div>
-    </div>`
-  ).join('') : '';
+  if (atrasados.length) {
+    const diasAtraso = o => {
+      const diff = Math.round((new Date(hoje) - new Date(o.prazo)) / 86400000);
+      return diff === 1 ? '1 dia' : `${diff} dias`;
+    };
+    alertsEl.innerHTML = `
+      <div class="atrasados-section">
+        <div class="atrasados-section-head">
+          <div class="atrasados-section-icon">⚠️</div>
+          <div>
+            <div class="atrasados-section-title">${atrasados.length} pedido${atrasados.length>1?'s':''} em atraso</div>
+            <div class="atrasados-section-sub">Prazo de entrega ultrapassado — ação necessária</div>
+          </div>
+        </div>
+        <div class="atrasados-grid">
+          ${atrasados.map(o => `
+            <div class="atrasado-card" onclick="goToOrder('${o.id}')" title="${o.product}${o.client?' · '+o.client:''}">
+              <div class="atrasado-card-ref">#${o.ref && o.ref !== '—' ? o.ref : o.id.slice(0,8)}</div>
+              <div class="atrasado-card-prod">${o.product}</div>
+              <div class="atrasado-card-client">${o.client || '—'}</div>
+              <div class="atrasado-card-footer">
+                <span class="atrasado-dias">+${diasAtraso(o)} atrasado</span>
+                <span class="atrasado-status">${getS(o.status).label}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  } else {
+    alertsEl.innerHTML = '';
+  }
 
   // KPIs
   const taxa = orders.length ? Math.round(entregues.length/orders.length*100) : 0;
