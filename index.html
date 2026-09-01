@@ -980,7 +980,9 @@ const STATUSES = [
 const mainStatuses = STATUSES.filter(s => s.key !== 'cancelado');
 
 let orders = [];
-let currentMonth = 'all', currentId = null;
+const _nowMonth = () => String(new Date().getMonth()+1).padStart(2,'0');
+const _nowYear  = () => String(new Date().getFullYear());
+let currentMonth = _nowMonth(), currentId = null;
 let uploadedFiles = [], refPhotos = new Array(6).fill(null), modelPhoto = null;
 let newOrderFiles = [];
 let arteSignedUrls = [];
@@ -1044,7 +1046,7 @@ const fmtDateBR = (iso) => {
   const [y,m,d] = iso.split('-');
   return `${d}/${m}/${y}`;
 };
-const fmtMonth = () => String(new Date().getMonth()+1).padStart(2,'0');
+const fmtMonth = _nowMonth;
 const randId   = () => String(Math.floor(Math.random()*900000+100000));
 
 // ── View switch ──
@@ -1064,11 +1066,35 @@ function setMonth(m, btn) {
 }
 
 // ── Month tabs (dynamic) ──
+// Normaliza formatos antigos (ex: 'agosto-2026') para 'MM' numérico
+const MONTH_LEGACY = {
+  'janeiro':1,'fevereiro':2,'março':3,'abril':4,'maio':5,'junho':6,
+  'julho':7,'agosto':8,'setembro':9,'outubro':10,'novembro':11,'dezembro':12
+};
+function normalizeMonth(m) {
+  if (!m) return null;
+  // já está no formato numérico '08'
+  if (/^\d{1,2}$/.test(m)) return String(parseInt(m)).padStart(2,'0');
+  // formato 'agosto-2026'
+  const parts = m.toLowerCase().split('-');
+  const num = MONTH_LEGACY[parts[0]];
+  if (num) return String(num).padStart(2,'0');
+  return m;
+}
+
 function renderMonthTabs() {
-  const months = [...new Set(orders.map(o => o.month).filter(Boolean))].sort();
-  const tabs   = document.getElementById('monthTabs');
+  // Normaliza todos os meses dos pedidos
+  orders.forEach(o => { o.month = normalizeMonth(o.month) || o.month; });
+
+  const now = _nowMonth();
+  const monthSet = new Set(orders.map(o => o.month).filter(Boolean));
+  monthSet.add(now); // garante que o mês atual sempre aparece
+  const months = [...monthSet].sort();
+
+  const tabs = document.getElementById('monthTabs');
+  const label = m => MONTH_NAMES[parseInt(m)-1] ? `${MONTH_NAMES[parseInt(m)-1]} ${m === now ? '·' : ''}` : m;
   tabs.innerHTML = `<button class="ftab ${currentMonth==='all'?'active':''}" onclick="setMonth('all',this)">Todos</button>`
-    + months.map(m => `<button class="ftab ${currentMonth===m?'active':''}" onclick="setMonth('${m}',this)">${MONTH_NAMES[parseInt(m)-1]||m}</button>`).join('');
+    + months.map(m => `<button class="ftab ${currentMonth===m?'active':''}" onclick="setMonth('${m}',this)">${label(m).trim()}</button>`).join('');
 }
 
 // ── Board ──
