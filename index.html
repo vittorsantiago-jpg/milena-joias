@@ -1645,13 +1645,14 @@ async function openDetail(id) {
     arteHtml = `<div class="mf full">
       <label>Arte para aprovação</label>
       ${existingArte}
-      <div class="upload-area" id="arteUploadArea" tabindex="0"
-        style="position:relative;overflow:hidden;outline:none"
-        onpaste="handleArtePaste(event,'${o.id}')"
-        onfocus="this.style.borderColor='var(--gold)';this.style.background='var(--gold-f)'"
-        onblur="this.style.borderColor='';this.style.background=''">
-        <input type="file" accept="image/*,.pdf" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadArtImages(this.files,'${o.id}')">
-        🖼 Clique para anexar · ou aperte <kbd style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;font-family:'DM Mono',monospace">Ctrl+V</kbd> para colar captura de tela
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <div class="upload-area" id="arteUploadArea" style="position:relative;overflow:hidden;flex:1">
+          <input type="file" accept="image/*,.pdf" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadArtImages(this.files,'${o.id}')">
+          🖼 Clique para anexar arquivo
+        </div>
+        <button class="btn btn-outline" id="artePasteBtn" onclick="pasteArteFromClipboard('${o.id}')" style="white-space:nowrap;display:flex;align-items:center;gap:6px;padding:0 14px">
+          📋 Colar imagem
+        </button>
       </div>
     </div>`;
   } else if (arteFiles.length) {
@@ -2222,76 +2223,32 @@ async function uploadArtImages(files, orderId) {
   openDetail(orderId);
 }
 
-// ── Paste (Ctrl+V) para colar arte ──
-// Usa keydown + navigator.clipboard.read() para funcionar mesmo com foco no input[file]
-async function handleArtePaste(e, orderId) { /* mantido para compatibilidade */ }
-
-// ── Paste handler compartilhado ──
-async function processArtePaste(clipboardData, orderId) {
-  const arteArea = document.getElementById('arteUploadArea');
-  if (!arteArea) return false;
-  // Tenta via clipboardData (evento paste nativo)
-  if (clipboardData) {
-    const items = Array.from(clipboardData.items || []);
-    const imgItem = items.find(it => it.type.startsWith('image/'));
-    if (imgItem) {
-      const blob = imgItem.getAsFile();
-      if (blob) {
-        const file = new File([blob], `arte-colada-${Date.now()}.png`, { type: blob.type || 'image/png' });
-        arteArea.innerHTML = '<span class="spinner" style="border-top-color:var(--gold)"></span> Colando arte…';
+// ── Colar arte via botão "📋 Colar imagem" ──
+async function pasteArteFromClipboard(orderId) {
+  const btn = document.getElementById('artePasteBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Colando…'; }
+  try {
+    const clipItems = await navigator.clipboard.read();
+    let found = false;
+    for (const item of clipItems) {
+      const imgType = item.types.find(t => t.startsWith('image/'));
+      if (imgType) {
+        const blob = await item.getType(imgType);
+        const file = new File([blob], `arte-colada-${Date.now()}.png`, { type: imgType });
         await uploadArtImages([file], orderId);
-        return true;
+        found = true;
+        break;
       }
     }
+    if (!found) {
+      if (btn) { btn.disabled = false; btn.innerHTML = '📋 Colar imagem'; }
+      alert('Nenhuma imagem encontrada na área de transferência. Copie a imagem primeiro (Ctrl+C na ferramenta de captura).');
+    }
+  } catch(err) {
+    if (btn) { btn.disabled = false; btn.innerHTML = '📋 Colar imagem'; }
+    alert('Permissão negada. Clique em "Permitir" quando o navegador pedir acesso à área de transferência.');
   }
-  // Tenta via Clipboard API (requer permissão do navegador)
-  if (navigator.clipboard && navigator.clipboard.read) {
-    try {
-      const clipItems = await navigator.clipboard.read();
-      for (const item of clipItems) {
-        const imgType = item.types.find(t => t.startsWith('image/'));
-        if (imgType) {
-          const blob = await item.getType(imgType);
-          const file = new File([blob], `arte-colada-${Date.now()}.png`, { type: imgType });
-          arteArea.innerHTML = '<span class="spinner" style="border-top-color:var(--gold)"></span> Colando arte…';
-          await uploadArtImages([file], orderId);
-          return true;
-        }
-      }
-    } catch(err) { /* sem permissão ou sem imagem */ }
-  }
-  return false;
 }
-
-// Ctrl+V global (captura mesmo com foco no input[file])
-document.addEventListener('keydown', async (e) => {
-  if (!((e.ctrlKey || e.metaKey) && e.key === 'v')) return;
-  if (!currentId || currentRole !== 'admin') return;
-  const overlay = document.getElementById('detailOverlay');
-  if (!overlay || !overlay.classList.contains('open')) return;
-  const arteArea = document.getElementById('arteUploadArea');
-  if (!arteArea) return;
-  e.preventDefault();
-  const ok = await processArtePaste(null, currentId);
-  if (!ok) {
-    // Mostra dica: precisa clicar fora do botão de arquivo antes de colar
-    arteArea.style.borderColor = 'var(--gold)';
-    const orig = arteArea.innerHTML;
-    arteArea.innerHTML = '<span style="font-size:12px;color:var(--gold)">⚠️ Clique aqui primeiro, depois cole novamente (Ctrl+V)</span>';
-    setTimeout(() => { arteArea.innerHTML = orig; arteArea.style.borderColor = ''; }, 3000);
-  }
-});
-
-// Evento paste nativo (funciona quando o foco não está em input[file])
-document.addEventListener('paste', async (e) => {
-  if (!currentId || currentRole !== 'admin') return;
-  const overlay = document.getElementById('detailOverlay');
-  if (!overlay || !overlay.classList.contains('open')) return;
-  const arteArea = document.getElementById('arteUploadArea');
-  if (!arteArea) return;
-  e.preventDefault();
-  await processArtePaste(e.clipboardData, currentId);
-});
 
 // ── Approve order (client) ──
 async function approveOrder() {
