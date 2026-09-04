@@ -1645,9 +1645,13 @@ async function openDetail(id) {
     arteHtml = `<div class="mf full">
       <label>Arte para aprovação</label>
       ${existingArte}
-      <div class="upload-area" id="arteUploadArea" style="position:relative;overflow:hidden">
+      <div class="upload-area" id="arteUploadArea" tabindex="0"
+        style="position:relative;overflow:hidden;outline:none"
+        onpaste="handleArtePaste(event,'${o.id}')"
+        onfocus="this.style.borderColor='var(--gold)';this.style.background='var(--gold-f)'"
+        onblur="this.style.borderColor='';this.style.background=''">
         <input type="file" accept="image/*,.pdf" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadArtImages(this.files,'${o.id}')">
-        🖼 Clique para anexar · ou <kbd style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;font-family:'DM Mono',monospace">Ctrl+V</kbd> para colar
+        🖼 Clique para anexar · ou aperte <kbd style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;font-family:'DM Mono',monospace">Ctrl+V</kbd> para colar captura de tela
       </div>
     </div>`;
   } else if (arteFiles.length) {
@@ -2219,10 +2223,24 @@ async function uploadArtImages(files, orderId) {
 }
 
 // ── Paste (Ctrl+V) para colar arte ──
+async function handleArtePaste(e, orderId) {
+  const items = Array.from(e.clipboardData?.items || []);
+  const imgItem = items.find(it => it.type.startsWith('image/'));
+  if (!imgItem) return;
+  e.preventDefault();
+  const blob = imgItem.getAsFile();
+  if (!blob) return;
+  const file = new File([blob], `arte-colada-${Date.now()}.png`, { type: blob.type || 'image/png' });
+  const uploadArea = document.getElementById('arteUploadArea');
+  if (uploadArea) uploadArea.innerHTML = '<span class="spinner" style="border-top-color:var(--gold)"></span> Colando arte…';
+  await uploadArtImages([file], orderId);
+}
+// Fallback: paste global quando o modal está aberto
 document.addEventListener('paste', async (e) => {
   if (!currentId || currentRole !== 'admin') return;
   const overlay = document.getElementById('detailOverlay');
   if (!overlay || !overlay.classList.contains('open')) return;
+  if (document.activeElement?.id === 'arteUploadArea') return; // já tratado pelo onpaste
   const items = Array.from(e.clipboardData?.items || []);
   const imgItem = items.find(it => it.type.startsWith('image/'));
   if (!imgItem) return;
