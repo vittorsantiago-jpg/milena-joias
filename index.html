@@ -1647,7 +1647,7 @@ async function openDetail(id) {
       ${existingArte}
       <div class="upload-area" id="arteUploadArea" style="position:relative;overflow:hidden">
         <input type="file" accept="image/*,.pdf" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="uploadArtImages(this.files,'${o.id}')">
-        🖼 Clique para anexar arte (imagem ou PDF)
+        🖼 Clique para anexar · ou <kbd style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-size:10px;font-family:'DM Mono',monospace">Ctrl+V</kbd> para colar
       </div>
     </div>`;
   } else if (arteFiles.length) {
@@ -2217,6 +2217,23 @@ async function uploadArtImages(files, orderId) {
   renderBoard();
   openDetail(orderId);
 }
+
+// ── Paste (Ctrl+V) para colar arte ──
+document.addEventListener('paste', async (e) => {
+  if (!currentId || currentRole !== 'admin') return;
+  const overlay = document.getElementById('detailOverlay');
+  if (!overlay || !overlay.classList.contains('open')) return;
+  const items = Array.from(e.clipboardData?.items || []);
+  const imgItem = items.find(it => it.type.startsWith('image/'));
+  if (!imgItem) return;
+  e.preventDefault();
+  const blob = imgItem.getAsFile();
+  if (!blob) return;
+  const file = new File([blob], `arte-colada-${Date.now()}.png`, { type: blob.type || 'image/png' });
+  const uploadArea = document.getElementById('arteUploadArea');
+  if (uploadArea) uploadArea.innerHTML = '<span class="spinner" style="border-top-color:var(--gold)"></span> Colando arte…';
+  await uploadArtImages([file], currentId);
+});
 
 // ── Approve order (client) ──
 async function approveOrder() {
