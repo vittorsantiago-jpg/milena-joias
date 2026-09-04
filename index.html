@@ -834,6 +834,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         <input type="hidden" id="enPrioridade" value="normal">
       </div>
       <div class="fld"><label>Observações</label><textarea id="enObs" placeholder="Detalhes do design, cores, acabamento…"></textarea></div>
+      <div class="fld"><label>Ref. Fotolito</label><input type="text" id="enFotolito" placeholder="ex: F-4821" style="font-family:'DM Mono',monospace"></div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
       <button class="btn btn-outline" onclick="closeEdit()">Cancelar</button>
@@ -1259,6 +1260,7 @@ function dbToOrder(row) {
     prazo:       row.prazo   || '',
     prioridade:  row.prioridade || 'normal',
     valor:       row.valor   || null,
+    fotolitoRef: row.fotolito_ref || '',
   };
 }
 
@@ -1534,7 +1536,7 @@ async function openLvLb(e, id) {
 
   // Observações
   const obsEl = document.getElementById('lvLbObs');
-  obsEl.innerHTML = o.obs ? `<div style="font-size:11px;color:var(--t2);background:var(--s2);border-radius:var(--rs);padding:7px 10px;margin-bottom:8px;line-height:1.5;max-height:72px;overflow-y:auto">${escHtml(o.obs).replace(/\n/g,'<br>')}</div>` : '';
+  obsEl.innerHTML = o.obs ? `<div style="background:var(--s2);border-left:3px solid var(--gold);border-radius:var(--rs);padding:10px 13px;margin-bottom:8px"><div style="font-size:9px;font-weight:700;letter-spacing:.07em;color:var(--gold);text-transform:uppercase;margin-bottom:6px">Detalhes do pedido</div><div style="font-size:13px;color:var(--text);line-height:1.6;white-space:pre-line">${escHtml(o.obs)}</div></div>` : '';
 
   // Botão "Ver pedido"
   document.getElementById('lvLbDetail').onclick = () => { closeLvLb(); openDetail(id); };
@@ -1673,7 +1675,7 @@ async function openDetail(id) {
     <div class="mf"><label>Produto</label><div class="val">${o.product}</div></div>
     <div class="mf"><label>Quantidade</label><div class="val">${o.qty} unidades</div></div>
     <div class="mf full"><label>Descrição</label><div class="val">${o.detail}</div></div>
-    <div class="mf"><label>Ref. Fotolito</label><div class="val" style="font-family:'DM Mono',monospace;color:var(--gold)">${o.ref}</div></div>
+    <div class="mf"><label>Ref. Fotolito</label><div class="val" style="font-family:'DM Mono',monospace;color:${o.fotolitoRef?'var(--gold)':'var(--t3)'}">${o.fotolitoRef || '—'}</div></div>
     <div class="mf"><label>Data de entrada</label><div class="val">${o.date}</div></div>
     ${o.prazo ? `<div class="mf"><label>Prazo de entrega</label><div class="val" style="font-weight:600">${fmtDateBR(o.prazo)}</div></div>` : ''}
     ${o.prioridade === 'urgente' ? `<div class="mf"><label>Prioridade</label><div class="val"><span class="priority-urgente">Urgente</span></div></div>` : ''}
@@ -1698,14 +1700,18 @@ async function openDetail(id) {
     });
   }
 
-  // Sign photo URLs
+  // Sign photo URLs (tenta order-photos, fallback order-files)
   if (photoEntries.length) {
     photoEntries.forEach(async (p, i) => {
       try {
-        const { data } = await sb.storage.from('order-photos').createSignedUrl(p.path, 3600);
+        let signedUrl = null;
+        for (const bucket of ['order-photos', 'order-files']) {
+          const { data } = await sb.storage.from(bucket).createSignedUrl(p.path, 3600);
+          if (data?.signedUrl) { signedUrl = data.signedUrl; break; }
+        }
         const slot = document.getElementById(`mPhoto${i}`);
-        if (slot && data?.signedUrl) {
-          slot.innerHTML = `<img src="${data.signedUrl}" alt="${p.name||'foto'}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer" onclick="window.open('${data.signedUrl}','_blank')">`;
+        if (slot && signedUrl) {
+          slot.innerHTML = `<img src="${signedUrl}" alt="${p.name||'foto'}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer" onclick="window.open('${signedUrl}','_blank')">`;
         }
       } catch(e) {}
     });
@@ -1781,7 +1787,8 @@ function openEdit() {
   document.getElementById('enPrazo').value  = o.prazo || '';
   document.getElementById('enClient').value = o.client || '';
   document.getElementById('enQty').value    = o.qty || 1;
-  document.getElementById('enObs').value    = o.obs || '';
+  document.getElementById('enObs').value      = o.obs || '';
+  document.getElementById('enFotolito').value = o.fotolitoRef || '';
   // Parse detail: "Material · Tamanho"
   const parts = (o.detail || '').split(' · ');
   const mat   = parts[0] || 'Ouro';
@@ -1834,12 +1841,13 @@ async function saveEdit() {
     qty:        parseInt(document.getElementById('enQty').value) || 1,
     obs:        document.getElementById('enObs').value,
     prazo:      document.getElementById('enPrazo').value || null,
-    prioridade: document.getElementById('enPrioridade').value,
-    date:       (() => { const v=document.getElementById('enDate').value; return v ? v.split('-').reverse().join('/') : o.date; })(),
+    prioridade:    document.getElementById('enPrioridade').value,
+    date:          (() => { const v=document.getElementById('enDate').value; return v ? v.split('-').reverse().join('/') : o.date; })(),
+    fotolito_ref:  document.getElementById('enFotolito').value.trim() || null,
   };
   const { error } = await sb.from('orders').update(updates).eq('id', currentId);
   if (error) { alert('Erro ao salvar: ' + error.message); btn.textContent='Salvar Alterações'; btn.disabled=false; return; }
-  Object.assign(o, updates);
+  Object.assign(o, updates, { fotolitoRef: updates.fotolito_ref || '' });
   closeEdit();
   renderBoard();
   openDetail(currentId);
