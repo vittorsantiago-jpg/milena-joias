@@ -431,10 +431,13 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-lb-open{background:var(--gold);border:none;color:#fff;border-radius:var(--rs);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 /* ── Grid card view ── */
 .lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;}
-.lv-gcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;}
+.lv-gcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;}
 .lv-gcard:hover{box-shadow:var(--sh);transform:translateY(-2px);}
 .lv-gcard.urg{box-shadow:0 0 0 1.5px #DC2626;}
 .lv-gcard.urg:hover{box-shadow:0 0 0 1.5px #DC2626,var(--sh);}
+.lv-gcard.late{border-left-color:#DC2626;}
+.lv-gcard.warn{border-left-color:#B45309;}
+.lv-gc-nome{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .lv-gc-img{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:zoom-in;}
 .lv-gc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .22s;}
 .lv-gcard:hover .lv-gc-img img{transform:scale(1.05);}
@@ -833,11 +836,12 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         </button>
         <input type="hidden" id="enPrioridade" value="normal">
       </div>
+      <div class="fld"><label>Nome da peça / Texto personalizado</label><input type="text" id="enNomePeca" placeholder="ex: IVY, Julia, Adriane M."></div>
       <div class="fld"><label>Observações</label><textarea id="enObs" placeholder="Detalhes do design, cores, acabamento…"></textarea></div>
       <div class="fld"><label>Ref. Fotolito</label><input type="text" id="enFotolito" placeholder="ex: F-4821" style="font-family:'DM Mono',monospace"></div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
-      <button class="btn btn-outline" onclick="closeEdit()">Cancelar</button>
+      <button class="btn btn-outline" onclick="closeEdit()">Fechar</button>
       <button class="btn btn-gold" id="saveEditBtn" onclick="saveEdit()">Salvar Alterações</button>
     </div>
   </div>
@@ -1261,6 +1265,7 @@ function dbToOrder(row) {
     prioridade:  row.prioridade || 'normal',
     valor:       row.valor   || null,
     fotolitoRef: row.fotolito_ref || '',
+    nomePeca:    row.nome_peca    || '',
   };
 }
 
@@ -1484,7 +1489,9 @@ function renderBoard() {
     const pCls     = ps === 'late' ? 'lv-p-late' : ps === 'warn' ? 'lv-p-warn' : 'lv-p-ok';
     const pPfx     = ps === 'late' ? '⚠ ' : ps === 'warn' ? '◑ ' : '';
     const ost      = getS(o.status);
-    return `<div class="lv-gcard${o.prioridade==='urgente'?' urg':''}" onclick="openDetail('${o.id}')">
+    const lateCls = ps === 'late' ? ' late' : ps === 'warn' ? ' warn' : '';
+    const nomePeca = o.nomePeca || '';
+    return `<div class="lv-gcard${o.prioridade==='urgente'?' urg':''}${lateCls}" onclick="openDetail('${o.id}')">
       <div class="lv-gc-img" id="lv-gc-img-${o.id}" style="background:${bg}" onclick="event.stopPropagation();openLvLb(event,'${o.id}')">
         <span class="lv-gc-abbr">${ini}</span>
         <div class="lv-gc-overlay">👁</div>
@@ -1493,6 +1500,7 @@ function renderBoard() {
       </div>
       <div class="lv-gc-body">
         <div class="lv-gc-oid">#${o.ref && o.ref!=='—' ? o.ref : o.id.slice(0,8)}</div>
+        ${nomePeca ? `<div class="lv-gc-nome">${escHtml(nomePeca)}</div>` : ''}
         <div class="lv-gc-client">${escHtml(o.client)}</div>
         <div class="lv-gc-meta">${o.product}${o.detail?' · '+o.detail:''} · ${o.qty} un.</div>
         <div class="lv-gc-foot">
@@ -1637,7 +1645,7 @@ async function openDetail(id) {
 
   // Arte section (admin in aprovacao: upload; client in aprovacao: view; others: just list)
   let arteHtml = '';
-  if (currentRole === 'admin' && o.status === 'aprovacao') {
+  if (currentRole === 'admin' && (o.status === 'aprovacao' || o.status === 'desenhando')) {
     const existingArte = arteFiles.length ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="arteImgRow">
         ${arteFiles.map((f,i) => `<div id="arteImg${i}" style="width:80px;height:80px;border-radius:var(--rs);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>`).join('')}
@@ -1680,6 +1688,7 @@ async function openDetail(id) {
     <div class="mf"><label>Produto</label><div class="val">${o.product}</div></div>
     <div class="mf"><label>Quantidade</label><div class="val">${o.qty} unidades</div></div>
     <div class="mf full"><label>Descrição</label><div class="val">${o.detail}</div></div>
+    ${o.nomePeca ? `<div class="mf full"><label>Nome da peça</label><div class="val" style="font-weight:600;color:var(--gold)">${escHtml(o.nomePeca)}</div></div>` : ''}
     <div class="mf"><label>Ref. Fotolito</label><div class="val" style="font-family:'DM Mono',monospace;color:${o.fotolitoRef?'var(--gold)':'var(--t3)'}">${o.fotolitoRef || '—'}</div></div>
     <div class="mf"><label>Data de entrada</label><div class="val">${o.date}</div></div>
     ${o.prazo ? `<div class="mf"><label>Prazo de entrega</label><div class="val" style="font-weight:600">${fmtDateBR(o.prazo)}</div></div>` : ''}
@@ -1793,7 +1802,8 @@ function openEdit() {
   document.getElementById('enClient').value = o.client || '';
   document.getElementById('enQty').value    = o.qty || 1;
   document.getElementById('enObs').value      = o.obs || '';
-  document.getElementById('enFotolito').value = o.fotolitoRef || '';
+  document.getElementById('enFotolito').value  = o.fotolitoRef || '';
+  document.getElementById('enNomePeca').value  = o.nomePeca   || '';
   // Parse detail: "Material · Tamanho"
   const parts = (o.detail || '').split(' · ');
   const mat   = parts[0] || 'Ouro';
@@ -1849,10 +1859,11 @@ async function saveEdit() {
     prioridade:    document.getElementById('enPrioridade').value,
     date:          (() => { const v=document.getElementById('enDate').value; return v ? v.split('-').reverse().join('/') : o.date; })(),
     fotolito_ref:  document.getElementById('enFotolito').value.trim() || null,
+    nome_peca:     document.getElementById('enNomePeca').value.trim() || null,
   };
   const { error } = await sb.from('orders').update(updates).eq('id', currentId);
   if (error) { alert('Erro ao salvar: ' + error.message); btn.textContent='Salvar Alterações'; btn.disabled=false; return; }
-  Object.assign(o, updates, { fotolitoRef: updates.fotolito_ref || '' });
+  Object.assign(o, updates, { fotolitoRef: updates.fotolito_ref || '', nomePeca: updates.nome_peca || '' });
   closeEdit();
   renderBoard();
   openDetail(currentId);
