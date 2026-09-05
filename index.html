@@ -202,11 +202,15 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .pipe-step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-width:50px;position:relative;font-size:9px;text-align:center;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;line-height:1.2;}
 .pipe-step:not(:last-child)::after{content:'';position:absolute;top:8px;left:calc(50% + 9px);right:calc(-50% + 9px);height:2px;background:var(--border);}
 .pipe-step.done::after{background:var(--gold-l);}
-.pipe-dot{width:17px;height:17px;border-radius:50%;background:var(--s2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;}
+.pipe-dot{width:17px;height:17px;border-radius:50%;background:var(--s2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;position:relative;z-index:1;transition:transform .15s,border-color .15s,box-shadow .15s;}
 .pipe-step.done .pipe-dot{background:var(--gold);border-color:var(--gold);}
 .pipe-step.done .pipe-dot::after{content:'';width:5px;height:3px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px);display:block;}
 .pipe-step.active .pipe-dot{border-color:var(--gold);background:var(--gold-f);box-shadow:0 0 0 3px var(--gold-f);}
 .pipe-step.active .pipe-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);display:block;}
+.pipe-step.clickable{cursor:pointer;}
+.pipe-step.clickable:hover .pipe-dot{transform:scale(1.2);border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-f);}
+.pipe-step.clickable:hover{color:var(--gold);}
+.pipe-step.jumping .pipe-dot{opacity:.5;}
 
 .mfields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .mf label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:3px;}
@@ -1624,7 +1628,10 @@ async function openDetail(id) {
   const si = mainStatuses.findIndex(x => x.key === o.status);
   document.getElementById('mPipeline').innerHTML = mainStatuses.map((st, i) => {
     const cls = i < si ? 'done' : i === si ? 'active' : '';
-    return `<div class="pipe-step ${cls}"><div class="pipe-dot"></div>${st.short}</div>`;
+    const clickable = isAdmin && cls !== 'active' ? ' clickable' : '';
+    const onclick   = isAdmin && cls !== 'active' ? ` onclick="jumpToStatus('${st.key}')"` : '';
+    const tip       = isAdmin && cls !== 'active' ? ` title="${i < si ? 'Reverter para' : 'Avançar para'} ${st.label}"` : '';
+    return `<div class="pipe-step ${cls}${clickable}"${onclick}${tip}><div class="pipe-dot"></div>${st.short}</div>`;
   }).join('');
 
   // Separate arte files from other files
@@ -1779,6 +1786,21 @@ async function advanceStatus() {
   o.status = newStatus; o.fromClient = false;
   renderBoard();
   openDetail(o.id);
+}
+
+async function jumpToStatus(key) {
+  if (!currentId || currentRole !== 'admin') return;
+  const o = orders.find(x => x.id === currentId); if (!o) return;
+  if (o.status === key) return;
+  // Mark step as loading
+  const steps = document.querySelectorAll('.pipe-step.clickable');
+  steps.forEach(el => el.classList.add('jumping'));
+  const { error } = await sb.from('orders').update({ status: key, from_client: false }).eq('id', o.id);
+  if (error) { steps.forEach(el => el.classList.remove('jumping')); alert('Erro: ' + error.message); return; }
+  o.status = key; o.fromClient = false;
+  renderBoard();
+  openDetail(o.id);
+  showToast(`Status → ${getS(key).label}`);
 }
 
 async function cancelOrder() {
