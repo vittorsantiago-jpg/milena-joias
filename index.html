@@ -1625,6 +1625,7 @@ async function openDetail(id) {
   pill.innerHTML = `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${s.color};margin-right:4px"></span>${s.label}`;
   document.getElementById('mNewBadge').innerHTML = o.fromClient ? '<span class="new-badge" style="font-size:10px;padding:2px 8px">via cliente</span>' : '';
 
+  const isAdmin = currentRole === 'admin';
   const si = mainStatuses.findIndex(x => x.key === o.status);
   document.getElementById('mPipeline').innerHTML = mainStatuses.map((st, i) => {
     const cls = i < si ? 'done' : i === si ? 'active' : '';
