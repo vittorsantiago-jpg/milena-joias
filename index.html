@@ -1957,14 +1957,36 @@ function autoCalcPrazo() {
   if (dateEl && dateEl.value) prazoEl.value = addBusinessDays(dateEl.value, 3);
 }
 function openNew() {
-  document.getElementById('newOverlay').classList.add('open');
-  // Always reset date to today and recalculate prazo
+  // Reset all fields
+  document.getElementById('mnId').value       = '';
+  document.getElementById('mnClient').value   = '';
+  document.getElementById('mnSize').value     = '';
+  document.getElementById('mnQty').value      = '1';
+  document.getElementById('mnObs').value      = '';
+  document.getElementById('mnNomePeca').value = '';
+  document.getElementById('mnFotolito').value = '';
+  document.getElementById('mnProd').selectedIndex = 0;
+  document.getElementById('mnMat').selectedIndex  = 0;
+  // Reset prioridade
+  document.getElementById('mnPrioridade').value = 'normal';
+  const dot = document.getElementById('mnUrgenteDot');
+  const lbl = document.getElementById('mnUrgenteLabel');
+  const btn = document.getElementById('mnUrgenteBtn');
+  if (dot) dot.style.background = 'var(--t3)';
+  if (lbl) lbl.textContent = 'Normal — clique para marcar urgente';
+  if (btn) { btn.style.borderColor='var(--border)'; btn.style.background='var(--s2)'; btn.style.color='var(--t2)'; }
+  // Reset files
+  newOrderFiles = [];
+  const fl = document.getElementById('newOrderFilesList');
+  if (fl) fl.innerHTML = '';
+  // Remove any duplicate-ID hints
+  document.querySelectorAll('.dup-hint').forEach(el => el.remove());
+  document.getElementById('mnId').style.borderColor = '';
+  // Set date to today and recalculate prazo
   const today = new Date().toISOString().slice(0, 10);
-  const dateEl = document.getElementById('mnDate');
-  if (dateEl) {
-    dateEl.value = today;
-    autoCalcPrazo();
-  }
+  document.getElementById('mnDate').value = today;
+  autoCalcPrazo();
+  document.getElementById('newOverlay').classList.add('open');
 }
 function closeNew() { document.getElementById('newOverlay').classList.remove('open'); }
 
