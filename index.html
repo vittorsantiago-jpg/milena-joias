@@ -779,7 +779,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
         </button>
         <input type="hidden" id="mnPrioridade" value="normal">
       </div>
+      <div class="fld"><label>Nome da peça / Texto personalizado</label><input type="text" placeholder="ex: IVY, Julia, Adriane M." id="mnNomePeca"></div>
       <div class="fld"><label>Observações</label><textarea placeholder="Detalhes do design, cores, acabamento…" id="mnObs"></textarea></div>
+      <div class="fld"><label>Ref. Fotolito</label><input type="text" id="mnFotolito" placeholder="ex: F-4821" style="font-family:'DM Mono',monospace"></div>
       <div class="fld">
         <label>Arquivos anexados</label>
         <div class="upload-area" id="newOrderUploadArea" style="position:relative;overflow:hidden">
@@ -2012,8 +2014,10 @@ async function saveNew() {
     client:      mnClientEl.value.trim(),
     obs:         document.getElementById('mnObs').value || '',
     from_client: false, files: [], photos: [],
-    prazo:       document.getElementById('mnPrazo').value || null,
-    prioridade:  document.getElementById('mnPrioridade').value || 'normal',
+    prazo:        document.getElementById('mnPrazo').value || null,
+    prioridade:   document.getElementById('mnPrioridade').value || 'normal',
+    nome_peca:    document.getElementById('mnNomePeca').value.trim() || null,
+    fotolito_ref: document.getElementById('mnFotolito').value.trim() || null,
   };
 
   // Upload attached files
