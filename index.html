@@ -871,6 +871,10 @@ body.detail-open #detailBackdrop{display:none!important;}
         <div class="dash-subtitle" id="dashSubtitle">Visão geral da produção</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center" class="dash-header-btn">
+        <button class="btn btn-outline" onclick="setView('milena', document.querySelectorAll('.mtab')[0]);updateSbNav('milena')">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Pedidos
+        </button>
         <button class="btn btn-outline" onclick="renderDashboard()">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           Atualizar
