@@ -4,51 +4,89 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Milena Joias · Gestão de Pedidos</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <style>
 :root {
-  --gold:#BF8920;--gold-h:#A37518;--gold-l:#DFB55A;--gold-f:#F7EED8;
-  --bg:#F7F5F0;--surface:#FFF;--s2:#F0ECE4;--s3:#E4DFD4;
-  --text:#1C1A16;--t2:#6B6252;--t3:#9E9080;
-  --border:#E2DDD2;--border2:#CBC3B5;
-  --sh-sm:0 1px 3px rgba(28,26,22,.07),0 1px 2px rgba(28,26,22,.04);
-  --sh:0 4px 14px rgba(28,26,22,.09),0 2px 5px rgba(28,26,22,.05);
-  --sh-lg:0 20px 56px rgba(28,26,22,.18),0 4px 12px rgba(28,26,22,.08);
-  --r:10px;--rs:6px;--rf:999px;
-  --blue:#2563EB;--blue-f:#EFF6FF;
-}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --gold:#D4A840;--gold-h:#C09030;--gold-l:#A07C28;--gold-f:#2C2414;
-  --bg:#141210;--surface:#1E1B17;--s2:#2A2620;--s3:#343028;
-  --text:#F0EAE0;--t2:#A89E90;--t3:#6E6458;
-  --border:#3A3428;--border2:#504840;
-  --blue:#3B82F6;--blue-f:#1E3A5F33;
-}}
-:root[data-theme="dark"]{
-  --gold:#D4A840;--gold-h:#C09030;--gold-l:#A07C28;--gold-f:#2C2414;
-  --bg:#141210;--surface:#1E1B17;--s2:#2A2620;--s3:#343028;
-  --text:#F0EAE0;--t2:#A89E90;--t3:#6E6458;
-  --border:#3A3428;--border2:#504840;
-  --blue:#3B82F6;--blue-f:#1E3A5F33;
+  /* ── Dark theme forced ── */
+  --gold:#C9973C;--gold-h:#B8852E;--gold-l:#DBA84A;--gold-f:#1E180A;
+  --bg:#0B0B0B;--surface:#141414;--s2:#1A1A1A;--s3:#222222;
+  --text:#F0EAE0;--t2:#8A8070;--t3:#555555;
+  --border:#2A2A2A;--border2:#383838;
+  --sh-sm:0 1px 4px rgba(0,0,0,.4);
+  --sh:0 4px 20px rgba(0,0,0,.5);
+  --sh-lg:0 24px 64px rgba(0,0,0,.6);
+  --r:8px;--rs:5px;--rf:999px;
+  --blue:#5B8CF8;--blue-f:#1E2A48;
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.5;min-height:100vh;}
 
-/* ── Mode bar ── */
-.mode-bar{position:sticky;top:0;z-index:200;background:#1C1A16;padding:0 20px;display:flex;align-items:center;gap:0;height:38px;}
-.mode-bar-brand{font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:500;color:rgba(255,255,255,.65);margin-right:18px;white-space:nowrap;}
-.mode-bar-brand strong{color:#fff;}
-.mode-tabs{display:flex;gap:3px;background:rgba(255,255,255,.1);border-radius:var(--rs);padding:3px;}
-.mtab{padding:4px 13px;border-radius:4px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:rgba(255,255,255,.5);background:transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
-.mtab.active{background:#fff;color:#1C1A16;}
-.mtab:not(.active):hover{color:#fff;background:rgba(255,255,255,.12);}
-.mode-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
-.mode-user{font-size:11px;color:rgba(255,255,255,.45);}
-.mode-logout{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:11px;padding:3px 9px;border-radius:var(--rs);cursor:pointer;transition:all .14s;}
-.mode-logout:hover{border-color:rgba(255,255,255,.4);color:#fff;}
+/* ── Mode bar (hidden — navigation moved to sidebar) ── */
+.mode-bar{display:none;}
+.mode-tabs{display:none;}
+.mtab{display:none;}
+
+/* ── Sidebar app layout ── */
+#viewMilena[style*="display: block"]{display:flex!important;}
+#viewMilena{height:100vh;overflow:hidden;}
+
+.app-sidebar{
+  width:200px;flex-shrink:0;background:#111111;border-right:1px solid #1E1E1E;
+  display:flex;flex-direction:column;padding:0;overflow:hidden;height:100vh;
+}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:18px 14px 14px;border-bottom:1px solid #1E1E1E;flex-shrink:0;}
+.sb-brand-icon{width:30px;height:30px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-brand-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;line-height:1.2;}
+.sb-brand-sub{font-size:10px;color:#555;margin-top:1px;}
+
+.sb-nav{display:flex;flex-direction:column;gap:2px;padding:10px 8px 4px;flex-shrink:0;}
+.sb-nav-btn{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;color:#666;transition:all .14s;text-align:left;width:100%;}
+.sb-nav-btn:hover{background:#1A1A1A;color:#ccc;}
+.sb-nav-btn.active{background:#1E1E1E;color:var(--gold);}
+.sb-nav-btn svg{opacity:.6;}
+.sb-nav-btn.active svg{opacity:1;color:var(--gold);}
+
+.sb-section{padding:14px 8px 4px;flex-shrink:0;}
+.sb-section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#3A3A3A;padding:0 6px 6px;}
+
+.sb-lv-sidebar{flex:1;overflow-y:auto;padding:0 8px;}
+.sb-lv-sidebar .lv-st-item{padding:6px 8px;border-radius:5px;}
+.sb-lv-sidebar .lv-st-name{font-size:12px;}
+
+.sb-kpis{padding:8px;display:flex;flex-direction:column;gap:3px;flex-shrink:0;border-top:1px solid #1E1E1E;}
+.sb-kpi-row{display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:4px;font-size:11px;color:#555;}
+.sb-kpi-row strong{color:#ccc;font-weight:600;font-variant-numeric:tabular-nums;margin-left:auto;}
+.sb-kpi-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+.sb-actions{padding:10px 8px;border-top:1px solid #1E1E1E;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.sb-actions .btn{width:100%;justify-content:center;font-size:12px;}
+.sb-actions .btn-gold{background:var(--gold);color:#0B0B0B;}
+.sb-actions .btn-gold:hover{background:var(--gold-h);}
+
+.sb-user{padding:10px 14px;border-top:1px solid #1E1E1E;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sb-user-label{font-size:11px;color:#444;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-logout{background:transparent;border:1px solid #2A2A2A;color:#444;font-family:'DM Sans',sans-serif;font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .14s;white-space:nowrap;}
+.sb-logout:hover{border-color:#555;color:#ccc;}
+
+/* ── Main content area ── */
+.lv-main-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);}
+
+/* ── Toolbar (dark redesign) ── */
+.toolbar{background:#111111;border-bottom:1px solid #1E1E1E;padding:8px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sw{position:relative;flex:0 0 240px;}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#444;pointer-events:none;}
+.si{width:100%;padding:6px 10px 6px 29px;border:1px solid #1E1E1E;border-radius:5px;background:#1A1A1A;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .14s;}
+.si::placeholder{color:#3A3A3A;}.si:focus{border-color:var(--gold);}
+.ftabs{display:flex;gap:2px;}
+.ftab{padding:4px 10px;border-radius:4px;border:1px solid transparent;background:transparent;color:#555;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;}
+.ftab:hover{background:#1A1A1A;color:#ccc;}.ftab.active{background:var(--gold-f);color:var(--gold);border-color:rgba(201,151,60,.3);}
+.lv-view-toggle{display:flex;gap:2px;background:#1A1A1A;border-radius:4px;padding:2px;margin-left:auto;}
+.lv-view-btn{width:26px;height:26px;border-radius:3px;border:none;background:transparent;color:#444;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .14s;}
+.lv-view-btn.active{background:#2A2A2A;color:#ccc;}
+.lv-view-btn:hover{color:#ccc;}
 
 /* ── Buttons ── */
 .btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:background .14s,color .14s;white-space:nowrap;}
@@ -59,7 +97,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 
 /* ── Overlay / Modal ── */
-.overlay{position:fixed;inset:0;z-index:300;background:rgba(20,18,14,.55);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:20px;}
+.overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;}
 .overlay.open{display:flex;}
 .modal{background:var(--surface);border-radius:14px;width:520px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--sh-lg);border:1px solid var(--border);animation:up .2s ease;}
 @keyframes up{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
@@ -113,7 +151,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .login-logo-icon{width:48px;height:48px;background:var(--gold);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
 .login-logo-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text);}
 .login-logo-sub{font-size:11px;color:var(--t3);margin-top:2px;}
-.login-error{color:#C0392B;font-size:12px;margin-bottom:10px;padding:8px 10px;background:#FEE;border-radius:6px;border:1px solid #FCC;display:none;}
+.login-error{color:#F87171;font-size:12px;margin-bottom:10px;padding:8px 10px;background:rgba(220,38,38,.12);border-radius:6px;border:1px solid rgba(220,38,38,.3);display:none;}
 
 /* ── Toggle tabs (form / doc) ── */
 .input-mode-toggle{display:flex;background:var(--s2);border-radius:var(--rs);padding:3px;margin-bottom:16px;gap:3px;}
@@ -169,28 +207,11 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .upload-area:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-f);}
 
 /* ══════════════════════════
-   PRODUCTION PANEL
+   PRODUCTION PANEL (old header — hidden, integrated into sidebar)
 ══════════════════════════ */
-.header{position:sticky;top:38px;z-index:100;background:var(--surface);border-bottom:1px solid var(--border);height:52px;display:flex;align-items:center;padding:0 20px;gap:16px;}
-.brand{display:flex;align-items:center;gap:9px;flex-shrink:0;}
-.brand-icon{width:28px;height:28px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;}
-.brand-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--text);}
-.brand-sub{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
-.dv{width:1px;height:26px;background:var(--border);}
-.header-kpis{display:flex;gap:5px;overflow-x:auto;}
-.kpi{display:flex;align-items:center;gap:5px;padding:3px 9px;background:var(--s2);border-radius:var(--rf);font-size:11px;color:var(--t2);white-space:nowrap;}
-.kpi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.kpi strong{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
-
-.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:10px;}
-.sw{position:relative;flex:0 0 250px;}
-.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none;}
-.si{width:100%;padding:6px 10px 6px 29px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .14s;}
-.si::placeholder{color:var(--t3);}.si:focus{border-color:var(--gold);}
-.ftabs{display:flex;gap:3px;}
-.ftab{padding:5px 11px;border-radius:var(--rs);border:1px solid transparent;background:transparent;color:var(--t2);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;}
-.ftab:hover{background:var(--s2);color:var(--text);}.ftab.active{background:var(--gold-f);color:var(--gold);border-color:var(--gold-l);}
+.header{display:none;}
+.header-kpis{display:none;}
+.dv{display:none;}
 
 .board-wrap{position:relative;}
 .board-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:48px;background:linear-gradient(to left,var(--bg),transparent);pointer-events:none;z-index:2;}
@@ -218,8 +239,38 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .add-btn{display:flex;align-items:center;gap:5px;width:100%;padding:7px 9px;background:transparent;border:1px dashed var(--border);border-radius:var(--r);color:var(--t3);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;}
 .add-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-f);}
 
+/* ── Detail panel (right slide-in) ── */
+#detailOverlay{
+  position:fixed;right:0;top:0;bottom:0;width:380px;z-index:250;
+  background:#141414;border-left:1px solid #1E1E1E;
+  display:flex;flex-direction:column;overflow:hidden;
+  transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+#detailOverlay.open{transform:translateX(0);pointer-events:all;}
+#detailOverlay .modal{
+  width:100%;height:100%;border-radius:0;border:none;
+  background:transparent;box-shadow:none;
+  max-height:100%;display:flex;flex-direction:column;animation:none;
+}
+#detailOverlay .modal-head{
+  background:#111111;border-bottom:1px solid #1E1E1E;
+  padding:14px 16px;flex-shrink:0;
+}
+#detailOverlay .modal-body{flex:1;overflow-y:auto;padding:16px;}
+#detailOverlay .modal-foot{
+  border-top:1px solid #1E1E1E;background:#111111;
+  border-radius:0;padding:10px 16px;flex-wrap:wrap;gap:6px;
+}
+#detailOverlay .modal-title{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;}
+#detailOverlay .modal-eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gold);}
+/* Backdrop for detail panel */
+#detailBackdrop{position:fixed;inset:0;z-index:249;background:rgba(0,0,0,.4);display:none;cursor:pointer;}
+#detailOverlay.open ~ #detailBackdrop,
+body.detail-open #detailBackdrop{display:block;}
+
 /* ── Detail modal ── */
-.mbar{width:4px;flex-shrink:0;border-radius:4px;align-self:stretch;margin-top:2px;}
+.mbar{width:3px;flex-shrink:0;border-radius:3px;align-self:stretch;margin-top:2px;}
 .minfo{flex:1;min-width:0;}
 .mclient-sub{font-size:12px;color:var(--t2);margin-top:3px;}
 .spill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--rf);font-size:12px;font-weight:500;}
@@ -358,8 +409,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .print-date{margin-left:auto;font-size:11px;color:#6B6252;text-align:right;}
 
 @media print {
-  .mode-bar,.header,.toolbar,.client-header,
-  #loginOverlay,#detailOverlay,#newOverlay,#clientsOverlay,
+  .app-sidebar,.toolbar,.client-header,
+  #loginOverlay,#detailOverlay,#detailBackdrop,#newOverlay,#clientsOverlay,
   #viewMilena,
   .dash-header-btn { display:none!important; }
   body { background:#fff!important; color:#1C1A16!important; font-size:11px; }
@@ -398,8 +449,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 /* ══════════════════════════
    LIST VIEW
 ══════════════════════════ */
-.list-view{display:flex;height:calc(100vh - 152px);}
-.lv-sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.list-view{display:flex;flex:1;overflow:hidden;min-height:0;}
+.lv-sidebar{display:none;/* status nav moved to app-sidebar */}
 .lv-sb-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px;}
 .lv-st-item{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:var(--rs);cursor:pointer;transition:background .12s;}
 .lv-st-item:hover{background:var(--s2);}
@@ -421,13 +472,13 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-gcard.lv-selectable:hover{box-shadow:0 0 0 2px var(--gold-l);}
 .lv-card-check{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:4px;border:2px solid rgba(255,255,255,.7);background:transparent;display:flex;align-items:center;justify-content:center;z-index:5;font-size:11px;color:#fff;transition:all .12s;}
 .lv-selected .lv-card-check{background:var(--gold);border-color:var(--gold);}
-.lv-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
-.lv-head{padding:9px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.lv-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:var(--bg);}
+.lv-head{padding:8px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #1E1E1E;flex-shrink:0;background:#111111;}
 .lv-head-title{font-size:13px;font-weight:600;color:var(--text);}
 .lv-head-chip{background:var(--s2);border-radius:var(--rf);padding:2px 8px;font-size:11px;font-weight:600;color:var(--t2);}
 .lv-head-sep{flex:1;}
 .lv-col-heads{display:grid;grid-template-columns:58px 1fr 140px 96px 58px;gap:0 10px;padding:5px 18px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);border-bottom:1px solid var(--border);flex-shrink:0;}
-.lv-scroll{flex:1;overflow-y:auto;}
+.lv-scroll{flex:1;overflow-y:auto;background:var(--bg);}
 .lv-card{display:grid;grid-template-columns:58px 1fr 140px 96px 58px;gap:0 10px;align-items:center;padding:8px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;position:relative;}
 .lv-card:hover{background:var(--s2);}
 .lv-card.urg::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#DC2626;}
@@ -454,7 +505,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-act:hover{background:var(--s3);}
 .lv-empty{padding:60px 20px;text-align:center;color:var(--t3);font-size:13px;}
 /* lightbox */
-.lv-lb{position:fixed;inset:0;background:rgba(20,18,14,.75);backdrop-filter:blur(6px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;}
+.lv-lb{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px;}
 .lv-lb.open{display:flex;}
 .lv-lb-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;max-width:440px;width:100%;box-shadow:var(--sh-lg);animation:up .18s ease;}
 .lv-lb-img{width:100%;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:rgba(255,255,255,.7);position:relative;overflow:hidden;}
@@ -468,8 +519,10 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-lb-close{background:none;border:1px solid var(--border);color:var(--t2);border-radius:var(--rs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .lv-lb-open{background:var(--gold);border:none;color:#fff;border-radius:var(--rs);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 /* ── Grid card view ── */
-.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,220px));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;min-height:0;}
-.lv-gcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;min-height:200px;}
+.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,220px));gap:10px;padding:12px 14px;overflow-y:auto;flex:1;align-content:start;min-height:0;}
+/* List view override */
+.lv-grid.lv-grid-list{grid-template-columns:1fr;gap:6px;}
+.lv-gcard{background:#181818;border:1px solid #222;border-left:3px solid #333;border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;min-height:200px;}
 .lv-gcard:hover{box-shadow:var(--sh);transform:translateY(-2px);}
 .lv-gcard.urg{box-shadow:0 0 0 1.5px #DC2626;}
 .lv-gcard.urg:hover{box-shadow:0 0 0 1.5px #DC2626,var(--sh);}
@@ -523,86 +576,131 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- ── Mode bar ── -->
-<div class="mode-bar">
-  <span class="mode-bar-brand"><strong>Milena Joias</strong> · Sistema</span>
-  <div class="mode-tabs" id="modeTabs">
-    <button class="mtab active" onclick="setView('milena',this)">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10.5" y="3" width="5" height="12" rx="1"/></svg>
-      Painel Milena Joias
-    </button>
-    <button class="mtab" onclick="setView('dashboard',this)">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      Dashboard
-    </button>
-  </div>
-  <div class="mode-right">
-    <span class="mode-user" id="userLabel"></span>
-    <button class="mode-logout" id="logoutBtn" onclick="doLogout()" style="display:none">Sair</button>
-  </div>
+<!-- Hidden mode-bar (JS references modeTabs/userLabel/logoutBtn) -->
+<div style="display:none" id="modeTabs">
+  <button class="mtab active" onclick="setView('milena',this)">Pedidos</button>
+  <button class="mtab" onclick="setView('dashboard',this)">Dashboard</button>
 </div>
+<span style="display:none" id="userLabel"></span>
+<button style="display:none" id="logoutBtn" onclick="doLogout()">Sair</button>
 
 <!-- ════════ VIEW: MILENA ════════ -->
 <div id="viewMilena" style="display:none">
-  <header class="header">
-    <div class="brand">
-      <div class="brand-icon"><svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M8 2L11 6H13L8 14L3 6H5L8 2Z" fill="white" opacity=".9"/><path d="M5 6L8 14L3 6H5Z" fill="white" opacity=".45"/><path d="M11 6L8 14L13 6H11Z" fill="white" opacity=".45"/></svg></div>
-      <div><div class="brand-name">Milena Joias</div><div class="brand-sub">Produção · 2026</div></div>
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <aside class="app-sidebar">
+    <!-- Brand -->
+    <div class="sb-brand">
+      <div class="sb-brand-icon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2L11 6H13L8 14L3 6H5L8 2Z" fill="white" opacity=".95"/><path d="M5 6L8 14L3 6H5Z" fill="white" opacity=".45"/><path d="M11 6L8 14L13 6H11Z" fill="white" opacity=".45"/></svg>
+      </div>
+      <div>
+        <div class="sb-brand-name">Milena Joias</div>
+        <div class="sb-brand-sub">Gestão · 2026</div>
+      </div>
     </div>
-    <div class="dv"></div>
-    <div class="header-kpis" id="kpiBar"></div>
-    <div class="header-right">
-      <div id="adminHeaderBtns" style="display:none;gap:8px;align-items:center">
-        <button class="btn btn-outline" onclick="openClients()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Clientes
+
+    <!-- Nav buttons (visual, delegate to hidden mtabs) -->
+    <div class="sb-nav">
+      <button class="sb-nav-btn active" id="sbBtnMilena" onclick="setView('milena', document.querySelector('.mtab'));updateSbNav('milena')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10.5" y="3" width="5" height="12" rx="1"/></svg>
+        Pedidos
+      </button>
+      <button class="sb-nav-btn" id="sbBtnDash" onclick="setView('dashboard', document.querySelectorAll('.mtab')[1]);updateSbNav('dashboard')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+    </div>
+
+    <!-- Status filter (populated by JS as #lvSidebar) -->
+    <div class="sb-section">
+      <div class="sb-section-label">Filtro por status</div>
+    </div>
+    <nav class="sb-lv-sidebar" id="lvSidebar"></nav>
+
+    <!-- KPIs (populated by JS as #kpiBar) -->
+    <div class="sb-kpis" id="kpiBar"></div>
+
+    <!-- Spacer -->
+    <div style="flex:1"></div>
+
+    <!-- Action buttons -->
+    <div class="sb-actions" id="adminHeaderBtns" style="display:none">
+      <button class="btn btn-outline" style="font-size:11px" onclick="openClients()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Clientes
+      </button>
+      <button class="btn btn-gold" style="font-size:12px" onclick="openNew()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo Pedido
+      </button>
+    </div>
+    <div class="sb-actions" id="clientHeaderBtns" style="display:none">
+      <button class="btn btn-gold" style="font-size:12px" onclick="openClientSubmit()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Enviar Pedido
+      </button>
+    </div>
+
+    <!-- User info -->
+    <div class="sb-user">
+      <span class="sb-user-label" id="sbUserLabel">—</span>
+      <button class="sb-logout" id="sbLogoutBtn" onclick="doLogout()">Sair</button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="lv-main-wrap">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="sw">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="si" type="search" placeholder="Buscar pedido, cliente, produto…" id="searchInput" oninput="renderBoard()">
+      </div>
+      <div class="ftabs" id="monthTabs">
+        <button class="ftab active" onclick="setMonth('all',this)">Todos</button>
+      </div>
+      <button id="showCanceladosBtn" onclick="showCancelados()" style="display:none;font-size:11px;color:var(--t3);background:none;border:1px solid #2A2A2A;border-radius:4px;padding:4px 10px;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Ver cancelados</button>
+      <!-- View toggle -->
+      <div class="lv-view-toggle" style="margin-left:auto">
+        <button class="lv-view-btn active" id="btnGridView" title="Grade" onclick="setLvView('grid',this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         </button>
-        <button class="btn btn-gold" onclick="openNew()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Novo Pedido
-        </button>
-      </div>
-      <div id="clientHeaderBtns" style="display:none;gap:8px;align-items:center">
-        <button class="btn btn-gold" onclick="openClientSubmit()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          + Enviar Pedido
+        <button class="lv-view-btn" id="btnListView" title="Lista" onclick="setLvView('list',this)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         </button>
       </div>
     </div>
-  </header>
-  <div class="toolbar">
-    <div class="sw">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input class="si" type="search" placeholder="Buscar pedido, cliente, produto…" id="searchInput" oninput="renderBoard()">
-    </div>
-    <div class="ftabs" id="monthTabs">
-      <button class="ftab active" onclick="setMonth('all',this)">Todos</button>
-    </div>
-    <button id="showCanceladosBtn" onclick="showCancelados()" style="display:none;font-size:11px;color:var(--t3);background:none;border:1px solid var(--border);border-radius:var(--rs);padding:4px 10px;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Ver cancelados</button>
-  </div>
-  <!-- Cancelados section (admin only) — shown above board -->
-  <div id="canceladosWrap" style="display:none;padding:0 20px 0">
-    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin:0 0 8px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3)">Pedidos Cancelados</span>
-        <span id="canceladosCnt" style="font-size:11px;background:var(--s3);color:var(--t2);padding:1px 7px;border-radius:99px"></span>
-        <button onclick="hideCancelados()" style="margin-left:auto;font-size:11px;color:var(--t3);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Ocultar</button>
+
+    <!-- Cancelados section (admin only) -->
+    <div id="canceladosWrap" style="display:none;padding:0 14px">
+      <div style="background:#1A1A1A;border:1px solid #2A2A2A;border-radius:6px;padding:12px 14px;margin:0 0 8px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#444">Pedidos Cancelados</span>
+          <span id="canceladosCnt" style="font-size:11px;background:#222;color:#666;padding:1px 7px;border-radius:99px"></span>
+          <button onclick="hideCancelados()" style="margin-left:auto;font-size:11px;color:#555;background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif">Ocultar</button>
+        </div>
+        <div id="canceladosList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
       </div>
-      <div id="canceladosList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     </div>
-  </div>
-  <!-- LIST VIEW -->
-  <div class="list-view">
-    <nav class="lv-sidebar" id="lvSidebar"></nav>
-    <div class="lv-main">
-      <div class="lv-head">
-        <span class="lv-head-title" id="lvTitle">Todos os pedidos</span>
-        <span class="lv-head-chip" id="lvCount"></span>
-        <div class="lv-head-sep"></div>
+
+    <!-- List/Grid view area -->
+    <div class="list-view" id="lvViewArea">
+      <div class="lv-main" id="lvMainInner">
+        <div class="lv-head">
+          <span class="lv-head-title" id="lvTitle">Todos os pedidos</span>
+          <span class="lv-head-chip" id="lvCount"></span>
+          <div class="lv-head-sep"></div>
+        </div>
+        <!-- List header (shown in list mode) -->
+        <div class="lv-col-heads" id="lvColHeads" style="display:none">
+          <span>Pedido</span><span>Detalhes</span><span>Arquivo</span><span>Prazo</span><span></span>
+        </div>
+        <div class="lv-grid" id="lvList"></div>
       </div>
-      <div class="lv-grid" id="lvList"></div>
     </div>
   </div>
+
   <!-- Lightbox de prévia -->
   <div class="lv-lb" id="lvLb" onclick="if(event.target===this)closeLvLb()">
     <div class="lv-lb-box">
@@ -798,8 +896,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- ── Detail Modal (Milena) ── -->
-<div class="overlay" id="detailOverlay">
+<!-- ── Detail Panel (right slide-in) ── -->
+<div id="detailBackdrop" onclick="closeDetail()"></div>
+<div id="detailOverlay">
   <div class="modal">
     <div class="modal-head">
       <div class="mbar" id="mBar"></div>
@@ -1105,6 +1204,9 @@ async function onSignIn(user) {
   document.getElementById('loginOverlay').classList.remove('open');
   document.getElementById('logoutBtn').style.display = '';
   document.getElementById('userLabel').textContent = profile?.name || user.email;
+  // Sidebar user label
+  const sbUL = document.getElementById('sbUserLabel');
+  if (sbUL) sbUL.textContent = profile?.name || user.email;
 
   if (currentRole === 'admin') {
     document.getElementById('modeTabs').style.display = '';
@@ -1478,10 +1580,31 @@ function setView(v, btn) {
   document.getElementById('viewMilena').style.display    = v==='milena'    ? 'block' : 'none';
   document.getElementById('viewDashboard').style.display = v==='dashboard' ? 'block' : 'none';
   document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
+  updateSbNav(v);
   // Clean up bulk mode when switching views
   if (lvBulkMode) { lvBulkMode = false; lvSelected.clear(); const bb = document.getElementById('lvBulkBar'); if (bb) bb.remove(); }
   if (v === 'dashboard') { renderDashboard(); }
+}
+
+function updateSbNav(v) {
+  const b1 = document.getElementById('sbBtnMilena');
+  const b2 = document.getElementById('sbBtnDash');
+  if (b1) b1.classList.toggle('active', v === 'milena');
+  if (b2) b2.classList.toggle('active', v === 'dashboard');
+}
+
+let lvCurrentView = 'grid'; // 'grid' or 'list'
+function setLvView(mode, btn) {
+  lvCurrentView = mode;
+  document.querySelectorAll('.lv-view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const listEl = document.getElementById('lvList');
+  if (mode === 'grid') {
+    listEl.classList.remove('lv-grid-list');
+  } else {
+    listEl.classList.add('lv-grid-list');
+  }
 }
 
 function setMonth(m, btn) {
@@ -1615,11 +1738,11 @@ function renderBoard() {
   const warnCnt   = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'warn').length;
   const emDia     = visible.length - atrasados - warnCnt;
 
-  // KPI bar — compact summary (sidebar has per-status details)
+  // KPI bar in sidebar — vertical compact summary
   document.getElementById('kpiBar').innerHTML =
-    `<div class="kpi" style="font-weight:600"><strong style="font-size:15px">${visible.length}</strong>&nbsp;pedido${visible.length!==1?'s':''} ativos</div>
-     <div class="kpi" style="color:#DC2626"><span class="kpi-dot" style="background:#DC2626"></span><strong>${atrasados}</strong>&nbsp;atrasado${atrasados!==1?'s':''}</div>
-     <div class="kpi" style="color:#B45309"><span class="kpi-dot" style="background:#B45309"></span><strong>${warnCnt}</strong>&nbsp;vencem em breve</div>`;
+    `<div class="sb-kpi-row"><span class="sb-kpi-dot" style="background:var(--gold)"></span>Ativos<strong>${visible.length}</strong></div>
+     <div class="sb-kpi-row"><span class="sb-kpi-dot" style="background:#DC2626"></span>Atrasados<strong style="color:#DC2626">${atrasados}</strong></div>
+     <div class="sb-kpi-row"><span class="sb-kpi-dot" style="background:#B45309"></span>Vencem em breve<strong style="color:#B45309">${warnCnt}</strong></div>`;
 
   document.getElementById('lvSidebar').innerHTML = `
     <div class="lv-sb-label">Status</div>
@@ -1643,10 +1766,9 @@ function renderBoard() {
       <div class="lv-sum-row${lvFilterPrazo==='warn'?' active':''}" onclick="setLvPrazo('warn')"><span>◑ Vencem em breve</span><span style="color:#B45309;font-weight:600">${warnCnt}</span></div>
       <div class="lv-sum-row${lvFilterPrazo==='ok'?' active':''}" onclick="setLvPrazo('ok')"><span>✓ Em dia</span><span style="color:#16A34A;font-weight:600">${Math.max(0,emDia)}</span></div>
     </div>
-    ${isAdmin ? `<hr class="lv-sb-hr"><div class="lv-sb-label">Ações</div>
-    <div style="padding:4px 6px;display:flex;flex-direction:column;gap:5px">
-      <button class="btn btn-gold" style="width:100%;justify-content:center;font-size:11px;padding:6px" onclick="openNew()">+ Novo Pedido</button>
-      <button class="btn" style="width:100%;justify-content:center;font-size:11px;padding:6px;${lvBulkMode?'background:var(--gold-f);border-color:var(--gold);color:var(--gold);':''}" onclick="toggleBulkMode()">
+    ${isAdmin ? `<hr class="lv-sb-hr">
+    <div style="padding:4px 6px">
+      <button class="btn" style="width:100%;justify-content:center;font-size:11px;padding:5px;${lvBulkMode?'background:var(--gold-f);border-color:var(--gold);color:var(--gold);background:var(--gold-f);':''}" onclick="toggleBulkMode()">
         ${lvBulkMode ? `✕ Cancelar seleção` : `☑ Alterar em massa`}
       </button>
     </div>` : ''}
@@ -2104,7 +2226,16 @@ async function openDetail(id) {
       `;
     } else {
       const nextSt = mainStatuses[si + 1];
+      const fotolitoInline = o.status === 'aprovado' ? `
+        <div style="display:flex;align-items:center;gap:6px;width:100%;margin-bottom:8px">
+          <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);white-space:nowrap">Ref. Fotolito</label>
+          <input type="text" id="inlineFotolito" value="${o.fotolitoRef||''}" placeholder="ex: F-4821"
+            style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--text);font-family:'JetBrains Mono','DM Mono',monospace;font-size:12px;outline:none;transition:border-color .14s"
+            onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"
+            onchange="saveInlineFotolito(this.value)">
+        </div>` : '';
       mFoot.innerHTML = `
+        ${fotolitoInline}
         <button class="btn btn-outline" style="color:#DC2626;border-color:#DC2626" onclick="deleteOrder()">🗑 Excluir</button>
         <span style="flex:1"></span>
         <button class="btn btn-outline" onclick="openEdit()">✏️ Editar</button>
@@ -2123,12 +2254,33 @@ async function openDetail(id) {
       mFoot.innerHTML = `<span style="font-size:12px;color:var(--t3)">⏳ Aguardando envio da arte pela Milena Joias…</span>`;
     }
   } else {
-    mFoot.innerHTML = '';
+    if (currentRole === 'cliente') {
+      mFoot.innerHTML = `<button class="btn btn-outline" onclick="openEdit()">✏️ Editar pedido</button>`;
+    } else {
+      mFoot.innerHTML = '';
+    }
   }
 
   document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailBackdrop').style.display = 'block';
 }
-function closeDetail() { document.getElementById('detailOverlay').classList.remove('open'); currentId = null; }
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailBackdrop').style.display = 'none';
+  currentId = null;
+}
+
+// ── Inline fotolito ref save (admin, aprovado status) ──
+async function saveInlineFotolito(value) {
+  if (!currentId || currentRole !== 'admin') return;
+  const trimmed = value.trim() || null;
+  const { error } = await sb.from('orders').update({ fotolito_ref: trimmed }).eq('id', currentId);
+  if (!error) {
+    const o = orders.find(x => x.id === currentId);
+    if (o) o.fotolitoRef = trimmed || '';
+    showToast('Ref. Fotolito salva');
+  }
+}
 
 // ── File preview modal ──
 function openFilePreview(url, name) {
