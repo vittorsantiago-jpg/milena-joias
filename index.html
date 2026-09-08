@@ -976,9 +976,13 @@ body.detail-open #detailBackdrop{display:none!important;}
     <div class="np-col-right">
       <div class="np-col-head">Detalhes</div>
 
-      <!-- Tamanho + Prazo -->
-      <div class="form-row" style="margin-bottom:0">
+      <!-- Tamanho + Data de entrada + Prazo -->
+      <div class="form-row" style="margin-bottom:0;grid-template-columns:1fr 1fr 1fr">
         <div class="fld" style="margin-bottom:0"><label>Tamanho</label><input type="text" placeholder="ex: 4cm" id="mnSize"></div>
+        <div class="fld" style="margin-bottom:0">
+          <label>Data de entrada</label>
+          <input type="date" id="mnDate" onchange="autoCalcPrazo()">
+        </div>
         <div class="fld" style="margin-bottom:0">
           <label>Prazo <span style="font-size:.72rem;color:var(--t3);font-weight:400">(auto +3 dias)</span></label>
           <input type="date" id="mnPrazo">
@@ -1016,8 +1020,6 @@ body.detail-open #detailBackdrop{display:none!important;}
         <div id="newOrderFilesList"></div>
       </div>
 
-      <!-- Data de entrada (oculta) -->
-      <input type="hidden" id="mnDate">
     </div>
   </div>
 
@@ -1714,9 +1716,9 @@ function renderBoard() {
   visible.forEach(o => { if (cnts[o.status] !== undefined) cnts[o.status]++; });
 
   // Sidebar stats
-  const atrasados = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'late').length;
+  const atrasados = visible.filter(o => o.prazo && o.status !== 'enviado' && lvPrazoStatus(o.prazo) === 'late').length;
   const urgentes  = visible.filter(o => o.prioridade === 'urgente').length;
-  const warnCnt   = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'warn').length;
+  const warnCnt   = visible.filter(o => o.prazo && o.status !== 'enviado' && lvPrazoStatus(o.prazo) === 'warn').length;
   const emDia     = visible.length - atrasados - warnCnt;
 
   // KPI bar in sidebar — vertical compact summary
@@ -1758,7 +1760,7 @@ function renderBoard() {
   // Filter list by selected status
   let filtered = lvFilterStatus === 'all' ? visible : visible.filter(o => o.status === lvFilterStatus);
   // Filter by prazo category
-  if (lvFilterPrazo === 'late')    filtered = filtered.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'late');
+  if (lvFilterPrazo === 'late')    filtered = filtered.filter(o => o.prazo && o.status !== 'enviado' && lvPrazoStatus(o.prazo) === 'late');
   else if (lvFilterPrazo === 'warn')    filtered = filtered.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'warn');
   else if (lvFilterPrazo === 'ok')      filtered = filtered.filter(o => lvPrazoStatus(o.prazo) === 'ok');
   else if (lvFilterPrazo === 'urgente') filtered = filtered.filter(o => o.prioridade === 'urgente');
