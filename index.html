@@ -1767,25 +1767,30 @@ async function openLvLb(e, id) {
   // Botão "Ver pedido"
   document.getElementById('lvLbDetail').onclick = () => { closeLvLb(); openDetail(id); };
 
-  const arteFile = (o.files||[]).find(f => f.role === 'arte') || (o.files||[])[0];
+  const arteFile    = (o.files||[]).find(f => f.role === 'arte') || (o.files||[]).find(f => f.type === 'img') || (o.files||[])[0];
+  const clientPhoto = (o.photos||[]).find(f => f.path);
+  const sourceFile  = arteFile || clientPhoto;
+  const isClientPhoto = !arteFile && !!clientPhoto;
   const openBtn  = document.getElementById('lvLbOpen');
   const fileEl   = document.getElementById('lvLbFile');
   openBtn.onclick = null;
-  openBtn.style.display = arteFile ? '' : 'none';
+  openBtn.style.display = sourceFile ? '' : 'none';
 
-  if (arteFile) {
-    fileEl.innerHTML = `<span style="font-size:18px">${arteFile.type==='img'?'🖼':'📄'}</span>
-      <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${arteFile.name||'arquivo'}</span>
-      <span style="font-size:11px;color:var(--t3)">${arteFile.size||''}</span>`;
+  if (sourceFile) {
+    const displayName = isClientPhoto ? (clientPhoto.name || 'foto do cliente') : (arteFile.name || 'arquivo');
+    const displayType = isClientPhoto ? 'img' : arteFile.type;
+    fileEl.innerHTML = `<span style="font-size:18px">${displayType==='img'?'🖼':'📄'}</span>
+      <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</span>
+      <span style="font-size:11px;color:var(--t3)">${(!isClientPhoto && arteFile.size)||''}</span>`;
     imgEl.style.background = lvThumbBg(o.product);
     imgEl.innerHTML = '<span style="font-size:22px;animation:spin .7s linear infinite">⏳</span>';
     lb.classList.add('open');
-    if (arteFile.path) {
+    if (sourceFile.path) {
       try {
-        const bucket = arteFile.role === 'arte' ? 'order-files' : 'order-files';
-        const { data } = await sb.storage.from(bucket).createSignedUrl(arteFile.path, 3600);
+        const bucket = isClientPhoto ? 'order-photos' : 'order-files';
+        const { data } = await sb.storage.from(bucket).createSignedUrl(sourceFile.path, 3600);
         if (data?.signedUrl) {
-          if (arteFile.type === 'img') {
+          if (displayType === 'img') {
             imgEl.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="object-fit:contain">`;
           } else {
             imgEl.innerHTML = `<span style="font-size:52px">📄</span>`;
@@ -1793,7 +1798,7 @@ async function openLvLb(e, id) {
           openBtn.onclick = () => window.open(data.signedUrl, '_blank');
         } else { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
       } catch(err) { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
-    } else { imgEl.innerHTML = `<span style="font-size:52px">${arteFile.type==='img'?'🖼':'📄'}</span>`; openBtn.style.display='none'; }
+    } else { imgEl.innerHTML = `<span style="font-size:52px">${displayType==='img'?'🖼':'📄'}</span>`; openBtn.style.display='none'; }
   } else {
     fileEl.innerHTML = `<span style="font-size:18px">📭</span><span style="font-size:12px;color:var(--t2)">Nenhum arquivo anexado</span>`;
     imgEl.style.background = lvThumbBg(o.product);
@@ -1806,13 +1811,19 @@ function closeLvLb() { document.getElementById('lvLb').classList.remove('open');
 // Carrega imagens reais nos cards do grid de forma assíncrona
 async function loadGridImages(sorted) {
   for (const o of sorted) {
+    // Prioridade: arte anexada pelo admin → qualquer imagem em files → foto do modelo do cliente
     const arteFile = (o.files||[]).find(f => f.type === 'img' && f.role === 'arte')
                   || (o.files||[]).find(f => f.type === 'img');
-    if (!arteFile?.path) continue;
+    const clientPhoto = (o.photos||[]).find(f => f.path); // foto modelo ou ref do cliente
+
+    const source = arteFile || clientPhoto;
+    if (!source?.path) continue;
+
+    const bucket = arteFile ? 'order-files' : 'order-photos';
     const wrap = document.getElementById(`lv-gc-img-${o.id}`);
     if (!wrap) continue;
     try {
-      const { data } = await sb.storage.from('order-files').createSignedUrl(arteFile.path, 7200);
+      const { data } = await sb.storage.from(bucket).createSignedUrl(source.path, 7200);
       const w2 = document.getElementById(`lv-gc-img-${o.id}`);
       if (data?.signedUrl && w2) {
         const img = document.createElement('img');
