@@ -387,19 +387,28 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
    LIST VIEW
 ══════════════════════════ */
 .list-view{display:flex;height:calc(100vh - 152px);}
-.lv-sidebar{width:196px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
-.lv-sb-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px;}
-.lv-st-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:var(--rs);cursor:pointer;transition:background .12s;}
+.lv-sidebar{width:210px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:10px 7px;display:flex;flex-direction:column;gap:1px;overflow-y:auto;}
+.lv-sb-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);padding:6px 8px 4px;}
+.lv-st-item{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:var(--rs);cursor:pointer;transition:background .12s;}
 .lv-st-item:hover{background:var(--s2);}
 .lv-st-item.active{background:var(--gold-f);}
-.lv-st-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.lv-st-name{font-size:12px;font-weight:500;flex:1;color:var(--t2);}
+.lv-st-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lv-st-name{font-size:13px;font-weight:500;flex:1;color:var(--t2);}
 .lv-st-item.active .lv-st-name{color:var(--gold);}
-.lv-st-cnt{font-size:11px;font-weight:600;color:var(--t3);font-variant-numeric:tabular-nums;}
+.lv-st-cnt{font-size:12px;font-weight:600;color:var(--t3);font-variant-numeric:tabular-nums;}
 .lv-st-item.active .lv-st-cnt{color:var(--gold);}
 .lv-sb-hr{border:none;border-top:1px solid var(--border);margin:6px 0;}
-.lv-summary{padding:4px 8px;display:flex;flex-direction:column;gap:5px;}
-.lv-sum-row{display:flex;justify-content:space-between;font-size:11px;}
+.lv-summary{padding:2px 0;display:flex;flex-direction:column;gap:1px;}
+.lv-sum-row{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 8px;border-radius:var(--rs);cursor:pointer;transition:background .12s;}
+.lv-sum-row:hover{background:var(--s2);}
+.lv-sum-row.active{background:var(--gold-f);}
+.lv-sum-row.active span:first-child{color:var(--gold)!important;font-weight:600;}
+/* Bulk select */
+.bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface);border:1.5px solid var(--gold);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,.35);z-index:200;font-size:13px;}
+.lv-gcard.lv-selected{box-shadow:0 0 0 2.5px var(--gold)!important;transform:none!important;}
+.lv-gcard.lv-selectable:hover{box-shadow:0 0 0 2px var(--gold-l);}
+.lv-card-check{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:4px;border:2px solid rgba(255,255,255,.7);background:transparent;display:flex;align-items:center;justify-content:center;z-index:5;font-size:11px;color:#fff;transition:all .12s;}
+.lv-selected .lv-card-check{background:var(--gold);border-color:var(--gold);}
 .lv-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
 .lv-head{padding:9px 18px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .lv-head-title{font-size:13px;font-weight:600;color:var(--text);}
@@ -447,7 +456,7 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-lb-close{background:none;border:1px solid var(--border);color:var(--t2);border-radius:var(--rs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .lv-lb-open{background:var(--gold);border:none;color:#fff;border-radius:var(--rs);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 /* ── Grid card view ── */
-.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;}
+.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,220px));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;}
 .lv-gcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;}
 .lv-gcard:hover{box-shadow:var(--sh);transform:translateY(-2px);}
 .lv-gcard.urg{box-shadow:0 0 0 1.5px #DC2626;}
@@ -1294,6 +1303,9 @@ let uploadedFiles = [], refPhotos = new Array(6).fill(null), modelPhoto = null;
 let newOrderFiles = [];
 let arteSignedUrls = [];
 let lvFilterStatus = 'all';
+let lvFilterPrazo  = 'all';
+let lvBulkMode     = false;
+let lvSelected     = new Set();
 
 const MONTH_NAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -1365,6 +1377,8 @@ function setView(v, btn) {
   document.getElementById('viewDashboard').style.display = v==='dashboard' ? 'block' : 'none';
   document.querySelectorAll('.mtab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  // Clean up bulk mode when switching views
+  if (lvBulkMode) { lvBulkMode = false; lvSelected.clear(); const bb = document.getElementById('lvBulkBar'); if (bb) bb.remove(); }
   if (v === 'dashboard') { renderDashboard(); }
 }
 
@@ -1445,6 +1459,33 @@ function setLvStatus(key) {
   lvFilterStatus = key;
   renderBoard();
 }
+function setLvPrazo(key) {
+  lvFilterPrazo = key;
+  renderBoard();
+}
+function toggleBulkMode() {
+  lvBulkMode = !lvBulkMode;
+  if (!lvBulkMode) lvSelected.clear();
+  renderBoard();
+}
+function toggleCardSel(id, e) {
+  if (e) e.stopPropagation();
+  if (lvSelected.has(id)) lvSelected.delete(id);
+  else lvSelected.add(id);
+  renderBoard();
+}
+async function applyBulkStatus(key) {
+  if (!lvSelected.size) return;
+  const label = getS(key).label;
+  const ids = [...lvSelected];
+  const { error } = await sb.from('orders').update({ status: key, from_client: false }).in('id', ids);
+  if (error) { alert('Erro: ' + error.message); return; }
+  ids.forEach(id => { const o = orders.find(x => x.id === id); if (o) { o.status = key; o.fromClient = false; } });
+  lvSelected.clear();
+  lvBulkMode = false;
+  renderBoard();
+  showToast(`${ids.length} pedido${ids.length>1?'s':''} → ${label}`);
+}
 
 function renderBoard() {
   const q = (document.getElementById('searchInput')?.value || '').trim();
@@ -1466,16 +1507,17 @@ function renderBoard() {
   mainStatuses.forEach(s => cnts[s.key] = 0);
   visible.forEach(o => { if (cnts[o.status] !== undefined) cnts[o.status]++; });
 
-  // KPI bar
-  document.getElementById('kpiBar').innerHTML = mainStatuses.map(s =>
-    `<div class="kpi"><span class="kpi-dot" style="background:${s.color}"></span><strong>${cnts[s.key]||0}</strong>${s.short}</div>`
-  ).join('');
-
-  // Sidebar
+  // Sidebar stats
   const atrasados = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'late').length;
   const urgentes  = visible.filter(o => o.prioridade === 'urgente').length;
   const warnCnt   = visible.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'warn').length;
   const emDia     = visible.length - atrasados - warnCnt;
+
+  // KPI bar — compact summary (sidebar has per-status details)
+  document.getElementById('kpiBar').innerHTML =
+    `<div class="kpi" style="font-weight:600"><strong style="font-size:15px">${visible.length}</strong>&nbsp;pedido${visible.length!==1?'s':''} ativos</div>
+     <div class="kpi" style="color:#DC2626"><span class="kpi-dot" style="background:#DC2626"></span><strong>${atrasados}</strong>&nbsp;atrasado${atrasados!==1?'s':''}</div>
+     <div class="kpi" style="color:#B45309"><span class="kpi-dot" style="background:#B45309"></span><strong>${warnCnt}</strong>&nbsp;vencem em breve</div>`;
 
   document.getElementById('lvSidebar').innerHTML = `
     <div class="lv-sb-label">Status</div>
@@ -1493,27 +1535,41 @@ function renderBoard() {
     <hr class="lv-sb-hr">
     <div class="lv-sb-label">Resumo</div>
     <div class="lv-summary">
-      <div class="lv-sum-row"><span style="color:var(--t2)">Atrasados</span><span style="color:#DC2626;font-weight:600">${atrasados}</span></div>
-      <div class="lv-sum-row"><span style="color:var(--t2)">Urgentes</span><span style="color:#DC2626;font-weight:600">${urgentes}</span></div>
-      <div class="lv-sum-row"><span style="color:var(--t2)">Vencem em breve</span><span style="color:#B45309;font-weight:600">${warnCnt}</span></div>
-      <div class="lv-sum-row"><span style="color:var(--t2)">Em dia</span><span style="color:#16A34A;font-weight:600">${Math.max(0,emDia)}</span></div>
+      <div class="lv-sum-row${lvFilterPrazo==='all'?' active':''}" onclick="setLvPrazo('all')"><span>Todos</span><span style="font-weight:600">${visible.length}</span></div>
+      <div class="lv-sum-row${lvFilterPrazo==='late'?' active':''}" onclick="setLvPrazo('late')"><span>⚠ Atrasados</span><span style="color:#DC2626;font-weight:600">${atrasados}</span></div>
+      <div class="lv-sum-row${lvFilterPrazo==='urgente'?' active':''}" onclick="setLvPrazo('urgente')"><span>🔴 Urgentes</span><span style="color:#DC2626;font-weight:600">${urgentes}</span></div>
+      <div class="lv-sum-row${lvFilterPrazo==='warn'?' active':''}" onclick="setLvPrazo('warn')"><span>◑ Vencem em breve</span><span style="color:#B45309;font-weight:600">${warnCnt}</span></div>
+      <div class="lv-sum-row${lvFilterPrazo==='ok'?' active':''}" onclick="setLvPrazo('ok')"><span>✓ Em dia</span><span style="color:#16A34A;font-weight:600">${Math.max(0,emDia)}</span></div>
     </div>
     ${isAdmin ? `<hr class="lv-sb-hr"><div class="lv-sb-label">Ações</div>
-    <div style="padding:4px 6px"><button class="btn btn-gold" style="width:100%;justify-content:center;font-size:11px;padding:6px" onclick="openNew()">+ Novo Pedido</button></div>` : ''}
+    <div style="padding:4px 6px;display:flex;flex-direction:column;gap:5px">
+      <button class="btn btn-gold" style="width:100%;justify-content:center;font-size:11px;padding:6px" onclick="openNew()">+ Novo Pedido</button>
+      <button class="btn" style="width:100%;justify-content:center;font-size:11px;padding:6px;${lvBulkMode?'background:var(--gold-f);border-color:var(--gold);color:var(--gold);':''}" onclick="toggleBulkMode()">
+        ${lvBulkMode ? `✕ Cancelar seleção` : `☑ Alterar em massa`}
+      </button>
+    </div>` : ''}
   `;
 
   // Filter list by selected status
-  const filtered = lvFilterStatus === 'all' ? visible : visible.filter(o => o.status === lvFilterStatus);
+  let filtered = lvFilterStatus === 'all' ? visible : visible.filter(o => o.status === lvFilterStatus);
+  // Filter by prazo category
+  if (lvFilterPrazo === 'late')    filtered = filtered.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'late');
+  else if (lvFilterPrazo === 'warn')    filtered = filtered.filter(o => o.prazo && lvPrazoStatus(o.prazo) === 'warn');
+  else if (lvFilterPrazo === 'ok')      filtered = filtered.filter(o => lvPrazoStatus(o.prazo) === 'ok');
+  else if (lvFilterPrazo === 'urgente') filtered = filtered.filter(o => o.prioridade === 'urgente');
   const st = mainStatuses.find(s => s.key === lvFilterStatus);
-  document.getElementById('lvTitle').textContent = st ? st.label : 'Todos os pedidos';
+  const prazoLabels = {late:'Atrasados', warn:'Vencem em breve', ok:'Em dia', urgente:'Urgentes', all:''};
+  const prazoLbl = lvFilterPrazo !== 'all' ? prazoLabels[lvFilterPrazo] : '';
+  const baseTitle = st ? st.label : 'Todos os pedidos';
+  document.getElementById('lvTitle').textContent = prazoLbl ? `${baseTitle} · ${prazoLbl}` : baseTitle;
   document.getElementById('lvCount').textContent = `${filtered.length} pedido${filtered.length !== 1 ? 's' : ''}`;
 
   const listEl = document.getElementById('lvList');
   if (!filtered.length) {
     if (q) {
       listEl.innerHTML = `<div class="lv-empty"><div style="font-size:28px;margin-bottom:10px;opacity:.4">🔍</div>Nenhum resultado para "<strong>${escHtml(q)}</strong>"</div>`;
-    } else if (lvFilterStatus !== 'all') {
-      listEl.innerHTML = `<div class="lv-empty"><div style="font-size:28px;margin-bottom:10px;opacity:.4">📭</div>Nenhum pedido neste status</div>`;
+    } else if (lvFilterStatus !== 'all' || lvFilterPrazo !== 'all') {
+      listEl.innerHTML = `<div class="lv-empty"><div style="font-size:28px;margin-bottom:10px;opacity:.4">📭</div>Nenhum pedido neste filtro</div>`;
     } else {
       listEl.innerHTML = `<div class="lv-empty"><div style="font-size:32px;margin-bottom:12px;opacity:.4">💎</div>
         <div style="font-size:13px;font-weight:600;color:var(--t2);margin-bottom:6px">Nenhum pedido ainda</div>
@@ -1534,6 +1590,27 @@ function renderBoard() {
     return 0;
   });
 
+  // Bulk mode bar
+  let bulkBarEl = document.getElementById('lvBulkBar');
+  if (lvBulkMode && isAdmin) {
+    if (!bulkBarEl) {
+      bulkBarEl = document.createElement('div');
+      bulkBarEl.id = 'lvBulkBar';
+      bulkBarEl.className = 'bulk-bar';
+      document.body.appendChild(bulkBarEl);
+    }
+    const selCount = lvSelected.size;
+    bulkBarEl.innerHTML = `
+      <span style="color:var(--t2)">${selCount} selecionado${selCount!==1?'s':''}</span>
+      <span style="color:var(--border2)">|</span>
+      <span style="font-size:11px;color:var(--t2)">Mover para:</span>
+      ${mainStatuses.map(s => `<button onclick="applyBulkStatus('${s.key}')" style="padding:5px 10px;border:1.5px solid ${s.color};color:${s.color};background:transparent;border-radius:var(--rs);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif" title="${s.label}">${s.short}</button>`).join('')}
+      <button onclick="toggleBulkMode()" style="padding:5px 10px;border:1px solid var(--border2);color:var(--t2);background:transparent;border-radius:var(--rs);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">✕</button>
+    `;
+  } else if (bulkBarEl) {
+    bulkBarEl.remove();
+  }
+
   listEl.innerHTML = sorted.map(o => {
     const arteFile = (o.files||[]).find(f => f.role === 'arte') || (o.files||[])[0];
     const bg       = lvThumbBg(o.product);
@@ -1542,12 +1619,17 @@ function renderBoard() {
     const pCls     = ps === 'late' ? 'lv-p-late' : ps === 'warn' ? 'lv-p-warn' : 'lv-p-ok';
     const pPfx     = ps === 'late' ? '⚠ ' : ps === 'warn' ? '◑ ' : '';
     const ost      = getS(o.status);
-    const lateCls = ps === 'late' ? ' late' : ps === 'warn' ? ' warn' : '';
+    const lateCls  = ps === 'late' ? ' late' : ps === 'warn' ? ' warn' : '';
+    const selCls   = lvBulkMode ? ' lv-selectable' + (lvSelected.has(o.id) ? ' lv-selected' : '') : '';
     const nomePeca = o.nomePeca || '';
-    return `<div class="lv-gcard${o.prioridade==='urgente'?' urg':''}${lateCls}" onclick="openDetail('${o.id}')">
-      <div class="lv-gc-img" id="lv-gc-img-${o.id}" style="background:${bg}" onclick="event.stopPropagation();openLvLb(event,'${o.id}')">
+    const cardClick = lvBulkMode
+      ? `toggleCardSel('${o.id}', event)`
+      : `openDetail('${o.id}')`;
+    return `<div class="lv-gcard${o.prioridade==='urgente'?' urg':''}${lateCls}${selCls}" onclick="${cardClick}">
+      ${lvBulkMode ? `<div class="lv-card-check">${lvSelected.has(o.id)?'✓':''}</div>` : ''}
+      <div class="lv-gc-img" id="lv-gc-img-${o.id}" style="background:${bg}" onclick="${lvBulkMode ? `toggleCardSel('${o.id}',event)` : `event.stopPropagation();openLvLb(event,'${o.id}')`}">
         <span class="lv-gc-abbr">${ini}</span>
-        <div class="lv-gc-overlay">👁</div>
+        ${!lvBulkMode ? `<div class="lv-gc-overlay">👁</div>` : ''}
         <div class="lv-gc-st">${ost.short}</div>
         ${o.prioridade==='urgente'?'<div class="lv-gc-urg">urgente</div>':''}
       </div>
@@ -1560,7 +1642,7 @@ function renderBoard() {
           ${o.prazo
             ? `<div class="lv-prazo ${pCls}">${pPfx}${fmtDateBR(o.prazo)}</div>`
             : `<div style="font-size:10px;color:var(--t3)">—</div>`}
-          ${isAdmin ? `<button class="lv-gc-edit" title="Editar pedido" onclick="event.stopPropagation();openDetail('${o.id}')">✏</button>` : ''}
+          ${isAdmin && !lvBulkMode ? `<button class="lv-gc-edit" title="Editar pedido" onclick="event.stopPropagation();openDetail('${o.id}')">✏</button>` : ''}
         </div>
       </div>
     </div>`;
