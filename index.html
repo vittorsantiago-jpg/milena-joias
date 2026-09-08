@@ -1767,43 +1767,62 @@ async function openLvLb(e, id) {
   // Botão "Ver pedido"
   document.getElementById('lvLbDetail').onclick = () => { closeLvLb(); openDetail(id); };
 
-  const arteFile    = (o.files||[]).find(f => f.role === 'arte') || (o.files||[]).find(f => f.type === 'img') || (o.files||[])[0];
-  const clientPhoto = (o.photos||[]).find(f => f.path);
-  const sourceFile  = arteFile || clientPhoto;
-  const isClientPhoto = !arteFile && !!clientPhoto;
+  // Fonte da IMAGEM: só arquivos que são efetivamente imagens
+  const arteImgFile  = (o.files||[]).find(f => f.role === 'arte' && f.type === 'img')
+                    || (o.files||[]).find(f => f.type === 'img');
+  const clientPhoto  = (o.photos||[]).find(f => f.path);
+  const imgSource    = arteImgFile || clientPhoto;   // o que renderiza na área de imagem
+  const imgBucket    = arteImgFile ? 'order-files' : 'order-photos';
+
+  // Linha de arquivo (pode ser PDF ou qualquer tipo de o.files)
+  const anyAdminFile = (o.files||[])[0];
+  const rowSource    = anyAdminFile || clientPhoto;
+  const rowType      = anyAdminFile ? (anyAdminFile.type || 'doc') : 'img';
+  const rowName      = anyAdminFile ? (anyAdminFile.name || 'arquivo') : (clientPhoto?.name || 'foto do cliente');
+  const rowSize      = anyAdminFile ? (anyAdminFile.size || '') : '';
+
   const openBtn  = document.getElementById('lvLbOpen');
   const fileEl   = document.getElementById('lvLbFile');
   openBtn.onclick = null;
-  openBtn.style.display = sourceFile ? '' : 'none';
+  openBtn.style.display = rowSource ? '' : 'none';
 
-  if (sourceFile) {
-    const displayName = isClientPhoto ? (clientPhoto.name || 'foto do cliente') : (arteFile.name || 'arquivo');
-    const displayType = isClientPhoto ? 'img' : arteFile.type;
-    fileEl.innerHTML = `<span style="font-size:18px">${displayType==='img'?'🖼':'📄'}</span>
-      <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${displayName}</span>
-      <span style="font-size:11px;color:var(--t3)">${(!isClientPhoto && arteFile.size)||''}</span>`;
-    imgEl.style.background = lvThumbBg(o.product);
-    imgEl.innerHTML = '<span style="font-size:22px;animation:spin .7s linear infinite">⏳</span>';
-    lb.classList.add('open');
-    if (sourceFile.path) {
-      try {
-        const bucket = isClientPhoto ? 'order-photos' : 'order-files';
-        const { data } = await sb.storage.from(bucket).createSignedUrl(sourceFile.path, 3600);
-        if (data?.signedUrl) {
-          if (displayType === 'img') {
-            imgEl.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="object-fit:contain">`;
-          } else {
-            imgEl.innerHTML = `<span style="font-size:52px">📄</span>`;
-          }
-          openBtn.onclick = () => window.open(data.signedUrl, '_blank');
-        } else { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
-      } catch(err) { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
-    } else { imgEl.innerHTML = `<span style="font-size:52px">${displayType==='img'?'🖼':'📄'}</span>`; openBtn.style.display='none'; }
+  if (rowSource) {
+    fileEl.innerHTML = `<span style="font-size:18px">${rowType==='img'?'🖼':'📄'}</span>
+      <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${rowName}</span>
+      <span style="font-size:11px;color:var(--t3)">${rowSize}</span>`;
   } else {
     fileEl.innerHTML = `<span style="font-size:18px">📭</span><span style="font-size:12px;color:var(--t2)">Nenhum arquivo anexado</span>`;
-    imgEl.style.background = lvThumbBg(o.product);
+  }
+
+  imgEl.style.background = lvThumbBg(o.product);
+  lb.classList.add('open');
+
+  if (imgSource?.path) {
+    imgEl.innerHTML = '<span style="font-size:22px;animation:spin .7s linear infinite">⏳</span>';
+    try {
+      const { data } = await sb.storage.from(imgBucket).createSignedUrl(imgSource.path, 3600);
+      if (data?.signedUrl) {
+        imgEl.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="object-fit:contain">`;
+        // botão Arquivo abre a URL assinada (usa rowSource para o link, se disponível)
+        if (rowSource?.path) {
+          const rowBucket = anyAdminFile ? 'order-files' : 'order-photos';
+          const { data: rd } = await sb.storage.from(rowBucket).createSignedUrl(rowSource.path, 3600);
+          if (rd?.signedUrl) openBtn.onclick = () => window.open(rd.signedUrl, '_blank');
+        } else { openBtn.onclick = () => window.open(data.signedUrl, '_blank'); }
+      } else { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
+    } catch(err) { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
+  } else if (rowSource && rowType !== 'img') {
+    // Arquivo existe mas não é imagem (PDF etc)
+    imgEl.innerHTML = `<span style="font-size:52px">📄</span>`;
+    if (rowSource.path) {
+      try {
+        const rowBucket = anyAdminFile ? 'order-files' : 'order-photos';
+        const { data } = await sb.storage.from(rowBucket).createSignedUrl(rowSource.path, 3600);
+        if (data?.signedUrl) openBtn.onclick = () => window.open(data.signedUrl, '_blank');
+      } catch(e) {}
+    }
+  } else {
     imgEl.innerHTML = `<span style="font-size:36px;opacity:.5">${(o.product||'?').slice(0,3)}</span>`;
-    lb.classList.add('open');
   }
 }
 function closeLvLb() { document.getElementById('lvLb').classList.remove('open'); }
