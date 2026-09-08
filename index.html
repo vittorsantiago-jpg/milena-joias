@@ -80,18 +80,30 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .fld textarea{resize:vertical;min-height:60px;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 /* ── Novo Pedido chips ── */
-.np-section{margin-bottom:14px;}
-.np-section-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
-.np-prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
-.np-chip{padding:8px 4px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--t2);font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all .14s;letter-spacing:.03em;user-select:none;}
+.np-section{margin-bottom:16px;}
+.np-section-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.np-prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.np-chip{padding:10px 4px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--t2);font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all .14s;letter-spacing:.03em;user-select:none;}
 .np-chip:hover{border-color:var(--gold);color:var(--gold);}
 .np-chip.sel{border-color:var(--gold);background:var(--gold-f);color:var(--gold);}
-.np-mat-row{display:flex;flex-wrap:wrap;gap:5px;}
-.np-mat{padding:4px 11px;border:1.5px solid var(--border);border-radius:20px;background:var(--s2);color:var(--t2);font-size:11px;cursor:pointer;transition:all .14s;user-select:none;}
+.np-mat-row{display:flex;flex-wrap:wrap;gap:6px;}
+.np-mat{padding:6px 13px;border:1.5px solid var(--border);border-radius:20px;background:var(--s2);color:var(--t2);font-size:12px;cursor:pointer;transition:all .14s;user-select:none;}
 .np-mat:hover{border-color:var(--gold);color:var(--gold);}
 .np-mat.sel{border-color:var(--gold);background:var(--gold-f);color:var(--gold);}
-.np-divider{border:none;border-top:1px solid var(--border);margin:12px 0;}
-.np-row3{display:grid;grid-template-columns:1fr 1fr 80px;gap:8px;}
+.np-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.np-row3{display:grid;grid-template-columns:1fr 1fr 90px;gap:8px;}
+/* ── Full-screen Novo Pedido page ── */
+#newOverlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:none;flex-direction:column;overflow:hidden;}
+#newOverlay.open{display:flex;}
+.np-page-head{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;}
+.np-page-head-left{display:flex;align-items:center;gap:16px;}
+.np-page-eyebrow{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);}
+.np-page-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--text);}
+.np-page-body{flex:1;display:flex;overflow:hidden;}
+.np-col-left{width:44%;border-right:1px solid var(--border);padding:24px 28px;overflow-y:auto;display:flex;flex-direction:column;}
+.np-col-right{flex:1;padding:24px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;}
+.np-col-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.np-page-foot{height:60px;background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 28px;flex-shrink:0;}
 .section-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--t3);margin-bottom:8px;}
 
 /* ── Login modal specific ── */
@@ -456,15 +468,15 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .lv-lb-close{background:none;border:1px solid var(--border);color:var(--t2);border-radius:var(--rs);padding:6px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .lv-lb-open{background:var(--gold);border:none;color:#fff;border-radius:var(--rs);padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
 /* ── Grid card view ── */
-.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,220px));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;}
-.lv-gcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;}
+.lv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,220px));gap:12px;padding:14px 16px;overflow-y:auto;flex:1;align-content:start;min-height:0;}
+.lv-gcard{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:box-shadow .15s,transform .12s;position:relative;display:flex;flex-direction:column;min-height:200px;}
 .lv-gcard:hover{box-shadow:var(--sh);transform:translateY(-2px);}
 .lv-gcard.urg{box-shadow:0 0 0 1.5px #DC2626;}
 .lv-gcard.urg:hover{box-shadow:0 0 0 1.5px #DC2626,var(--sh);}
 .lv-gcard.late{border-left-color:#DC2626;}
 .lv-gcard.warn{border-left-color:#B45309;}
 .lv-gc-nome{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.lv-gc-img{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:zoom-in;}
+.lv-gc-img{width:100%;aspect-ratio:4/3;min-height:130px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:zoom-in;}
 .lv-gc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .22s;}
 .lv-gcard:hover .lv-gc-img img{transform:scale(1.05);}
 .lv-gc-abbr{font-size:20px;font-weight:700;color:rgba(255,255,255,.65);letter-spacing:.06em;font-family:'DM Mono',monospace;position:relative;z-index:1;}
@@ -757,23 +769,30 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- ── New Order Modal (Milena manual) ── -->
-<div class="overlay" id="newOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <div class="minfo"><div class="modal-eyebrow">CADASTRO MANUAL</div><div class="modal-title">Novo Pedido</div></div>
-      <button class="modal-close" onclick="closeNew()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<!-- ── New Order Full-Screen Page ── -->
+<div id="newOverlay">
+  <!-- Header -->
+  <div class="np-page-head">
+    <div class="np-page-head-left">
+      <span class="np-page-eyebrow">Cadastro Manual</span>
+      <span class="np-page-title">Novo Pedido</span>
     </div>
-    <div class="modal-body" style="padding-top:14px">
+    <button class="modal-close" onclick="closeNew()" style="width:32px;height:32px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
 
-      <!-- Linha 1: Nº + Cliente + Qty -->
-      <div class="np-row3">
+  <!-- Two-column body -->
+  <div class="np-page-body">
+
+    <!-- LEFT: identidade do pedido -->
+    <div class="np-col-left">
+      <div class="np-col-head">Identificação</div>
+
+      <!-- Nº + Cliente + Qty -->
+      <div class="np-row3" style="margin-bottom:20px">
         <div class="fld" style="margin-bottom:0"><label>Nº Pedido <span class="req">*</span></label><input type="text" placeholder="ex: 570990" id="mnId" autocomplete="off"></div>
         <div class="fld" style="margin-bottom:0"><label>Cliente</label><input type="text" placeholder="Nome ou empresa" id="mnClient" autocomplete="off"></div>
         <div class="fld" style="margin-bottom:0"><label>Qtd <span class="req">*</span></label><input type="number" min="1" value="1" id="mnQty"></div>
       </div>
-
-      <hr class="np-divider">
 
       <!-- Produto chips -->
       <div class="np-section">
@@ -796,61 +815,72 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
       <div class="np-section">
         <div class="np-section-label">Material</div>
         <div class="np-mat-row">
-          <div class="np-mat sel" data-val="Ouro"             onclick="npSelMat(this)">Ouro</div>
-          <div class="np-mat"     data-val="Prata"            onclick="npSelMat(this)">Prata</div>
-          <div class="np-mat"     data-val="Rose Gold"        onclick="npSelMat(this)">Rose Gold</div>
+          <div class="np-mat sel" data-val="Ouro"              onclick="npSelMat(this)">Ouro</div>
+          <div class="np-mat"     data-val="Prata"             onclick="npSelMat(this)">Prata</div>
+          <div class="np-mat"     data-val="Rose Gold"         onclick="npSelMat(this)">Rose Gold</div>
           <div class="np-mat"     data-val="Prata Envelhecida" onclick="npSelMat(this)">Prata Envelhecida</div>
-          <div class="np-mat"     data-val="Bronze"           onclick="npSelMat(this)">Bronze</div>
-          <div class="np-mat"     data-val="Acrílico"         onclick="npSelMat(this)">Acrílico</div>
-          <div class="np-mat"     data-val="Resina"           onclick="npSelMat(this)">Resina</div>
-          <div class="np-mat"     data-val="Colorido"         onclick="npSelMat(this)">Colorido</div>
+          <div class="np-mat"     data-val="Bronze"            onclick="npSelMat(this)">Bronze</div>
+          <div class="np-mat"     data-val="Acrílico"          onclick="npSelMat(this)">Acrílico</div>
+          <div class="np-mat"     data-val="Resina"            onclick="npSelMat(this)">Resina</div>
+          <div class="np-mat"     data-val="Colorido"          onclick="npSelMat(this)">Colorido</div>
         </div>
         <input type="hidden" id="mnMat" value="Ouro">
       </div>
+    </div>
 
-      <hr class="np-divider">
+    <!-- RIGHT: detalhes -->
+    <div class="np-col-right">
+      <div class="np-col-head">Detalhes</div>
 
-      <!-- Linha 2: Tamanho + Prazo -->
-      <div class="form-row" style="margin-bottom:12px">
+      <!-- Tamanho + Prazo -->
+      <div class="form-row" style="margin-bottom:0">
         <div class="fld" style="margin-bottom:0"><label>Tamanho</label><input type="text" placeholder="ex: 4cm" id="mnSize"></div>
-        <div class="fld" style="margin-bottom:0"><label>Prazo <span style="font-size:.72rem;color:var(--t3);font-weight:400">(auto +3 dias)</span></label><input type="date" id="mnPrazo"></div>
+        <div class="fld" style="margin-bottom:0">
+          <label>Prazo <span style="font-size:.72rem;color:var(--t3);font-weight:400">(auto +3 dias)</span></label>
+          <input type="date" id="mnPrazo">
+        </div>
       </div>
 
       <!-- Nome da peça -->
-      <div class="fld"><label>Nome da peça / Texto personalizado</label><input type="text" placeholder="ex: IVY, Julia, Adriane M." id="mnNomePeca" autocomplete="off"></div>
+      <div class="fld" style="margin-bottom:0">
+        <label>Nome da peça / Texto personalizado</label>
+        <input type="text" placeholder="ex: IVY, Julia, Adriane M." id="mnNomePeca" autocomplete="off">
+      </div>
 
       <!-- Prioridade toggle -->
-      <div class="fld">
+      <div class="fld" style="margin-bottom:0">
         <button type="button" id="mnUrgenteBtn" onclick="toggleUrgente()"
-          style="width:100%;padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--t2);font-size:12px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .2s;font-family:'DM Sans',sans-serif">
-          <span id="mnUrgenteDot" style="width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .2s"></span>
+          style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--t2);font-size:13px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px;transition:all .2s;font-family:'DM Sans',sans-serif">
+          <span id="mnUrgenteDot" style="width:9px;height:9px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .2s"></span>
           <span id="mnUrgenteLabel">Normal — clique para marcar urgente</span>
         </button>
         <input type="hidden" id="mnPrioridade" value="normal">
       </div>
 
-      <!-- Obs + Fotolito numa linha -->
-      <div class="form-row">
-        <div class="fld" style="margin-bottom:0"><label>Observações</label><textarea placeholder="Cores, acabamento, detalhes…" id="mnObs" style="min-height:52px;resize:none"></textarea></div>
+      <!-- Obs + Fotolito -->
+      <div class="form-row" style="margin-bottom:0">
+        <div class="fld" style="margin-bottom:0"><label>Observações</label><textarea placeholder="Cores, acabamento, detalhes…" id="mnObs" style="min-height:80px;resize:none"></textarea></div>
         <div class="fld" style="margin-bottom:0"><label>Ref. Fotolito</label><input type="text" id="mnFotolito" placeholder="ex: F-4821" style="font-family:'DM Mono',monospace"></div>
       </div>
 
-      <!-- Data de entrada (oculta, usada internamente) -->
-      <input type="hidden" id="mnDate">
-
       <!-- Arquivos -->
-      <div class="fld" style="margin-top:10px;margin-bottom:0">
-        <div class="upload-area" id="newOrderUploadArea" style="position:relative;overflow:hidden;padding:10px 18px">
+      <div class="fld" style="margin-bottom:0">
+        <div class="upload-area" id="newOrderUploadArea" style="position:relative;overflow:hidden;padding:12px 18px">
           <input type="file" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="handleNewOrderFiles(this.files)">
           📎 Anexar arquivos
         </div>
         <div id="newOrderFilesList"></div>
       </div>
+
+      <!-- Data de entrada (oculta) -->
+      <input type="hidden" id="mnDate">
     </div>
-    <div class="modal-foot" style="justify-content:flex-end">
-      <button class="btn btn-outline" onclick="closeNew()">Cancelar</button>
-      <button class="btn btn-gold" id="saveNewBtn" onclick="saveNew()">Salvar Pedido</button>
-    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="np-page-foot">
+    <button class="btn btn-outline" onclick="closeNew()">Cancelar</button>
+    <button class="btn btn-gold" id="saveNewBtn" onclick="saveNew()">Salvar Pedido</button>
   </div>
 </div>
 
