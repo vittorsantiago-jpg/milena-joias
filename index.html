@@ -1844,7 +1844,6 @@ function renderBoard() {
           ${o.fromClient?'<span class="new-badge">novo</span>':''}
         </div>
         ${nomePeca ? `<div class="lv-row-nome">${escHtml(nomePeca)}</div>` : ''}
-        <div class="lv-row-client">${escHtml(o.client)}</div>
         <div class="lv-row-meta">${escHtml(o.product)}${o.detail?' · '+escHtml(o.detail):''} · ${o.qty} un.</div>
       </div>
       <div class="lv-row-status">
