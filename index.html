@@ -1767,62 +1767,72 @@ async function openLvLb(e, id) {
   // Botão "Ver pedido"
   document.getElementById('lvLbDetail').onclick = () => { closeLvLb(); openDetail(id); };
 
-  // Fonte da IMAGEM: só arquivos que são efetivamente imagens
-  const arteImgFile  = (o.files||[]).find(f => f.role === 'arte' && f.type === 'img')
-                    || (o.files||[]).find(f => f.type === 'img');
-  const clientPhoto  = (o.photos||[]).find(f => f.path);
-  const imgSource    = arteImgFile || clientPhoto;   // o que renderiza na área de imagem
-  const imgBucket    = arteImgFile ? 'order-files' : 'order-photos';
+  // Helper: detecta se um arquivo é imagem pelo tipo ou extensão do nome
+  const isImgFile = f => f && (f.type === 'img' || /^image\//i.test(f.type||'') || /\.(png|jpg|jpeg|webp|gif)$/i.test(f.name||''));
 
-  // Linha de arquivo (pode ser PDF ou qualquer tipo de o.files)
+  // Candidatos à exibição de imagem (ordenados por prioridade)
+  const imgCandidates = [];
+  for (const f of (o.files||[])) {
+    if (f?.path && isImgFile(f)) imgCandidates.push({ source: f, bucket: 'order-files' });
+  }
+  for (const f of (o.photos||[])) {
+    if (f?.path) imgCandidates.push({ source: f, bucket: 'order-photos' });
+  }
+  // Cliente: prefere fotos próprias (sem risco de RLS)
+  if (currentRole === 'cliente') imgCandidates.reverse();
+
+  // Linha de arquivo (qualquer arquivo, incluindo PDF)
   const anyAdminFile = (o.files||[])[0];
+  const clientPhoto  = (o.photos||[]).find(f => f?.path);
   const rowSource    = anyAdminFile || clientPhoto;
-  const rowType      = anyAdminFile ? (anyAdminFile.type || 'doc') : 'img';
+  const rowIsImg     = rowSource === clientPhoto ? true : isImgFile(anyAdminFile);
   const rowName      = anyAdminFile ? (anyAdminFile.name || 'arquivo') : (clientPhoto?.name || 'foto do cliente');
   const rowSize      = anyAdminFile ? (anyAdminFile.size || '') : '';
+  const rowBucket    = anyAdminFile ? 'order-files' : 'order-photos';
 
   const openBtn  = document.getElementById('lvLbOpen');
   const fileEl   = document.getElementById('lvLbFile');
   openBtn.onclick = null;
   openBtn.style.display = rowSource ? '' : 'none';
 
-  if (rowSource) {
-    fileEl.innerHTML = `<span style="font-size:18px">${rowType==='img'?'🖼':'📄'}</span>
-      <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${rowName}</span>
-      <span style="font-size:11px;color:var(--t3)">${rowSize}</span>`;
-  } else {
-    fileEl.innerHTML = `<span style="font-size:18px">📭</span><span style="font-size:12px;color:var(--t2)">Nenhum arquivo anexado</span>`;
-  }
+  fileEl.innerHTML = rowSource
+    ? `<span style="font-size:18px">${rowIsImg?'🖼':'📄'}</span>
+       <span style="font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${rowName}</span>
+       <span style="font-size:11px;color:var(--t3)">${rowSize}</span>`
+    : `<span style="font-size:18px">📭</span><span style="font-size:12px;color:var(--t2)">Nenhum arquivo anexado</span>`;
 
   imgEl.style.background = lvThumbBg(o.product);
   lb.classList.add('open');
 
-  if (imgSource?.path) {
+  // Tenta cada candidato de imagem até obter uma URL assinada válida
+  let loadedUrl = null;
+  if (imgCandidates.length) {
     imgEl.innerHTML = '<span style="font-size:22px;animation:spin .7s linear infinite">⏳</span>';
-    try {
-      const { data } = await sb.storage.from(imgBucket).createSignedUrl(imgSource.path, 3600);
-      if (data?.signedUrl) {
-        imgEl.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="object-fit:contain">`;
-        // botão Arquivo abre a URL assinada (usa rowSource para o link, se disponível)
-        if (rowSource?.path) {
-          const rowBucket = anyAdminFile ? 'order-files' : 'order-photos';
-          const { data: rd } = await sb.storage.from(rowBucket).createSignedUrl(rowSource.path, 3600);
-          if (rd?.signedUrl) openBtn.onclick = () => window.open(rd.signedUrl, '_blank');
-        } else { openBtn.onclick = () => window.open(data.signedUrl, '_blank'); }
-      } else { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
-    } catch(err) { imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`; }
-  } else if (rowSource && rowType !== 'img') {
-    // Arquivo existe mas não é imagem (PDF etc)
-    imgEl.innerHTML = `<span style="font-size:52px">📄</span>`;
-    if (rowSource.path) {
+    for (const { source, bucket } of imgCandidates) {
       try {
-        const rowBucket = anyAdminFile ? 'order-files' : 'order-photos';
-        const { data } = await sb.storage.from(rowBucket).createSignedUrl(rowSource.path, 3600);
-        if (data?.signedUrl) openBtn.onclick = () => window.open(data.signedUrl, '_blank');
+        const { data } = await sb.storage.from(bucket).createSignedUrl(source.path, 3600);
+        if (data?.signedUrl) { loadedUrl = data.signedUrl; break; }
       } catch(e) {}
     }
+    if (loadedUrl) {
+      imgEl.innerHTML = `<img src="${loadedUrl}" alt="arte" style="object-fit:contain">`;
+    } else {
+      imgEl.innerHTML = `<span style="font-size:52px">🖼</span>`;
+    }
+  } else if (rowSource && !rowIsImg) {
+    imgEl.innerHTML = `<span style="font-size:52px">📄</span>`;
   } else {
     imgEl.innerHTML = `<span style="font-size:36px;opacity:.5">${(o.product||'?').slice(0,3)}</span>`;
+  }
+
+  // Botão Arquivo: usa URL da imagem carregada ou tenta rowSource
+  if (loadedUrl) {
+    openBtn.onclick = () => window.open(loadedUrl, '_blank');
+  } else if (rowSource?.path) {
+    try {
+      const { data } = await sb.storage.from(rowBucket).createSignedUrl(rowSource.path, 3600);
+      if (data?.signedUrl) openBtn.onclick = () => window.open(data.signedUrl, '_blank');
+    } catch(e) {}
   }
 }
 function closeLvLb() { document.getElementById('lvLb').classList.remove('open'); }
