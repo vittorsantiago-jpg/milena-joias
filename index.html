@@ -1837,36 +1837,52 @@ async function openLvLb(e, id) {
 }
 function closeLvLb() { document.getElementById('lvLb').classList.remove('open'); }
 
+// Detecta arquivo de imagem pelo tipo ou extensão
+function isImgEntry(f) {
+  return f && (f.type === 'img' || /^image\//i.test(f.type||'') || /\.(png|jpg|jpeg|webp|gif)$/i.test(f.name||''));
+}
+
+// Tenta carregar imagem no card com fallback entre buckets via onerror
+function tryGridImg(wrap, candidates, idx) {
+  if (idx >= candidates.length || !wrap) return;
+  const { path, bucket } = candidates[idx];
+  sb.storage.from(bucket).createSignedUrl(path, 7200).then(({ data }) => {
+    if (!data?.signedUrl) { tryGridImg(wrap, candidates, idx+1); return; }
+    const w2 = document.getElementById(wrap.id);
+    if (!w2) return;
+    const img = document.createElement('img');
+    img.alt = 'arte';
+    img.onerror = () => { img.remove(); tryGridImg(wrap, candidates, idx+1); };
+    img.src = data.signedUrl;
+    w2.insertBefore(img, w2.firstChild);
+  }).catch(() => tryGridImg(wrap, candidates, idx+1));
+}
+
 // Carrega imagens reais nos cards do grid de forma assíncrona
 async function loadGridImages(sorted) {
   for (const o of sorted) {
-    const arteFile    = (o.files||[]).find(f => f.type === 'img' && f.role === 'arte')
-                     || (o.files||[]).find(f => f.type === 'img');
-    const clientPhoto = (o.photos||[]).find(f => f.path);
-
-    // Admin: arte primeiro (order-files); Cliente: foto do cliente primeiro (order-photos — acesso garantido)
-    let source, bucket;
-    if (currentRole === 'cliente') {
-      source = clientPhoto || arteFile;
-      bucket = clientPhoto ? 'order-photos' : 'order-files';
-    } else {
-      source = arteFile || clientPhoto;
-      bucket = arteFile ? 'order-files' : 'order-photos';
-    }
-
-    if (!source?.path) continue;
     const wrap = document.getElementById(`lv-gc-img-${o.id}`);
     if (!wrap) continue;
-    try {
-      const { data } = await sb.storage.from(bucket).createSignedUrl(source.path, 7200);
-      const w2 = document.getElementById(`lv-gc-img-${o.id}`);
-      if (data?.signedUrl && w2) {
-        const img = document.createElement('img');
-        img.alt = 'arte';
-        img.src = data.signedUrl;
-        w2.insertBefore(img, w2.firstChild);
+
+    // Monta lista de candidatos: todos os arquivos/fotos com path
+    const candidates = [];
+    for (const f of (o.files||[])) {
+      if (f?.path && isImgEntry(f)) {
+        candidates.push({ path: f.path, bucket: 'order-files' });
+        candidates.push({ path: f.path, bucket: 'order-photos' }); // fallback cross-bucket
       }
-    } catch(e) { /* mantém gradiente de fallback */ }
+    }
+    for (const f of (o.photos||[])) {
+      if (f?.path) {
+        candidates.push({ path: f.path, bucket: 'order-photos' });
+        candidates.push({ path: f.path, bucket: 'order-files' }); // fallback cross-bucket
+      }
+    }
+    // Cliente: prefere fotos próprias
+    if (currentRole === 'cliente') candidates.reverse();
+
+    if (!candidates.length) continue;
+    tryGridImg(wrap, candidates, 0);
   }
 }
 
