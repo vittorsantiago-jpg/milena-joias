@@ -92,9 +92,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 .np-mat.sel{border-color:var(--gold);background:var(--gold-f);color:var(--gold);}
 .np-divider{border:none;border-top:1px solid var(--border);margin:16px 0;}
 .np-row3{display:grid;grid-template-columns:1fr 1fr 90px;gap:8px;}
-/* ── Full-screen Novo Pedido page ── */
-#newOverlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:none;flex-direction:column;overflow:hidden;}
-#newOverlay.open{display:flex;}
+/* ── Full-screen pages (Novo Pedido + Enviar Pedido) ── */
+#newOverlay,#clientSubmitOverlay{position:fixed;inset:0;z-index:300;background:var(--bg);display:none;flex-direction:column;overflow:hidden;}
+#newOverlay.open,#clientSubmitOverlay.open{display:flex;}
 .np-page-head{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;flex-shrink:0;}
 .np-page-head-left{display:flex;align-items:center;gap:16px;}
 .np-page-eyebrow{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);}
@@ -631,44 +631,74 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
   </div>
 </div>
 
-<!-- ════════ CLIENT SUBMIT OVERLAY ════════ -->
-<div class="overlay" id="clientSubmitOverlay">
-  <div class="modal" style="width:640px">
-    <div class="modal-head">
-      <div class="minfo">
-        <div class="modal-eyebrow">NOVO PEDIDO</div>
-        <div class="modal-title">Enviar Pedido</div>
-      </div>
-      <button class="modal-close" onclick="closeClientSubmit()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body" style="max-height:65vh;overflow-y:auto">
-      <div class="input-mode-toggle">
+<!-- ════════ CLIENT SUBMIT — FULL-SCREEN PAGE ════════ -->
+<div id="clientSubmitOverlay">
+  <!-- Header -->
+  <div class="np-page-head">
+    <div class="np-page-head-left">
+      <span class="np-page-eyebrow">Novo Pedido</span>
+      <span class="np-page-title">Enviar Pedido</span>
+      <!-- Mode tabs inline in header -->
+      <div class="input-mode-toggle" style="margin-left:20px;margin-bottom:0">
         <button class="im-tab active" onclick="setInputMode('form',this)">Preencher formulário</button>
         <button class="im-tab" onclick="setInputMode('doc',this)">Enviar documento</button>
       </div>
-      <!-- FORM mode -->
+    </div>
+    <button class="modal-close" onclick="closeClientSubmit()" style="width:32px;height:32px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+
+  <!-- Two-column body -->
+  <div class="np-page-body">
+
+    <!-- LEFT COLUMN -->
+    <div class="np-col-left">
+
+      <!-- FORM MODE left -->
       <div id="modeForm">
-        <div class="form-row">
-          <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cId"></div>
-          <div class="fld"><label>Data</label><input type="date" id="cDate"></div>
+        <div class="np-col-head">Identificação</div>
+        <div class="form-row" style="margin-bottom:14px">
+          <div class="fld" style="margin-bottom:0"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cId"></div>
+          <div class="fld" style="margin-bottom:0"><label>Data</label><input type="date" id="cDate"></div>
         </div>
-        <div class="fld"><label>Nome do cliente final</label><input type="text" placeholder="Nome de quem comprou" id="cClientFinal"></div>
-        <div class="form-row">
-          <div class="fld"><label>Produto <span class="req">*</span></label>
-            <select id="cProd"><option>BROCHE</option><option>PIN</option><option>MEDALHA</option><option>PINGENTE</option><option>BRINCO</option><option>ANEL</option><option>PULSEIRA</option><option>COLAR</option><option>OUTRO</option></select>
+        <div class="fld" style="margin-bottom:20px"><label>Nome do cliente final</label><input type="text" placeholder="Nome de quem comprou" id="cClientFinal"></div>
+
+        <!-- Produto chips -->
+        <div class="np-section">
+          <div class="np-section-label">Produto</div>
+          <div class="np-prod-grid">
+            <div class="np-chip sel" data-val="BROCHE"   onclick="csSelProd(this)">BROCHE</div>
+            <div class="np-chip"     data-val="PIN"      onclick="csSelProd(this)">PIN</div>
+            <div class="np-chip"     data-val="MEDALHA"  onclick="csSelProd(this)">MEDALHA</div>
+            <div class="np-chip"     data-val="PINGENTE" onclick="csSelProd(this)">PINGENTE</div>
+            <div class="np-chip"     data-val="BRINCO"   onclick="csSelProd(this)">BRINCO</div>
+            <div class="np-chip"     data-val="ANEL"     onclick="csSelProd(this)">ANEL</div>
+            <div class="np-chip"     data-val="PULSEIRA" onclick="csSelProd(this)">PULSEIRA</div>
+            <div class="np-chip"     data-val="COLAR"    onclick="csSelProd(this)">COLAR</div>
+            <div class="np-chip"     data-val="OUTRO"    onclick="csSelProd(this)">OUTRO</div>
           </div>
-          <div class="fld"><label>Material</label>
-            <select id="cMat"><option>Ouro</option><option>Prata</option><option>Rose Gold</option><option>Prata Envelhecida</option><option>Bronze</option><option>Acrílico</option><option>Resina</option><option>Colorido</option></select>
+          <input type="hidden" id="cProd" value="BROCHE">
+        </div>
+
+        <!-- Material chips -->
+        <div class="np-section">
+          <div class="np-section-label">Material</div>
+          <div class="np-mat-row">
+            <div class="np-mat sel" data-val="Ouro"              onclick="csSelMat(this)">Ouro</div>
+            <div class="np-mat"     data-val="Prata"             onclick="csSelMat(this)">Prata</div>
+            <div class="np-mat"     data-val="Rose Gold"         onclick="csSelMat(this)">Rose Gold</div>
+            <div class="np-mat"     data-val="Prata Envelhecida" onclick="csSelMat(this)">Prata Envelhecida</div>
+            <div class="np-mat"     data-val="Bronze"            onclick="csSelMat(this)">Bronze</div>
+            <div class="np-mat"     data-val="Acrílico"          onclick="csSelMat(this)">Acrílico</div>
+            <div class="np-mat"     data-val="Resina"            onclick="csSelMat(this)">Resina</div>
+            <div class="np-mat"     data-val="Colorido"          onclick="csSelMat(this)">Colorido</div>
           </div>
+          <input type="hidden" id="cMat" value="Ouro">
         </div>
-        <div class="form-row">
-          <div class="fld"><label>Tamanho</label><input type="text" placeholder="ex: 4cm, 5×5cm" id="cSize"></div>
-          <div class="fld"><label>Quantidade</label><input type="number" min="1" value="1" id="cQty"></div>
-        </div>
-        <div class="fld"><label>Observações / detalhes do design</label><textarea placeholder="Tipo de fecho, cores específicas, variações…" id="cObs"></textarea></div>
       </div>
-      <!-- DOC mode -->
+
+      <!-- DOC MODE left -->
       <div id="modeDoc" style="display:none">
+        <div class="np-col-head">Envio de documento</div>
         <div class="fld"><label>Nº do pedido (loja)</label><input type="text" placeholder="ex: 146701" id="cIdDoc"></div>
         <div class="drop-zone" id="mainDropZone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
           <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.webp" multiple onchange="handleFiles(this.files)">
@@ -678,12 +708,32 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           <div class="drop-types"><span class="type-chip">PDF</span><span class="type-chip">Word</span><span class="type-chip">Excel</span><span class="type-chip">JPG/PNG</span></div>
         </div>
         <div id="uploadedFiles"></div>
-        <div class="fld" style="margin-top:4px"><label>Observações adicionais</label><textarea placeholder="Qualquer detalhe extra que não esteja no documento…" id="cObsDoc"></textarea></div>
       </div>
-      <!-- Referências visuais -->
-      <div style="margin-top:4px">
-        <div class="section-label" style="margin-bottom:8px">Referências visuais</div>
-        <div style="margin-bottom:10px">
+
+    </div><!-- /np-col-left -->
+
+    <!-- RIGHT COLUMN -->
+    <div class="np-col-right">
+      <div class="np-col-head">Detalhes &amp; Referências</div>
+
+      <!-- Form mode: Tamanho + Qty -->
+      <div id="modeFormRight">
+        <div class="form-row" style="margin-bottom:0">
+          <div class="fld" style="margin-bottom:0"><label>Tamanho</label><input type="text" placeholder="ex: 4cm, 5×5cm" id="cSize"></div>
+          <div class="fld" style="margin-bottom:0"><label>Quantidade</label><input type="number" min="1" value="1" id="cQty"></div>
+        </div>
+        <div class="fld" style="margin-bottom:0"><label>Observações / detalhes do design</label><textarea placeholder="Tipo de fecho, cores específicas, variações…" id="cObs" style="min-height:80px;resize:none"></textarea></div>
+      </div>
+
+      <!-- Doc mode: obs -->
+      <div id="modeDocRight" style="display:none">
+        <div class="fld" style="margin-bottom:0"><label>Observações adicionais</label><textarea placeholder="Qualquer detalhe extra que não esteja no documento…" id="cObsDoc" style="min-height:80px;resize:none"></textarea></div>
+      </div>
+
+      <!-- Referências visuais (sempre visível no modo formulário) -->
+      <div id="modeFormPhotos">
+        <div class="np-section-label" style="margin-top:4px">Referências visuais</div>
+        <div style="margin-bottom:12px">
           <div style="font-size:11px;font-weight:500;color:var(--t2);margin-bottom:6px">Foto do modelo / produto de referência</div>
           <div class="photo-slot photo-slot-main" onclick="triggerPhotoMain()" id="slotMain">
             <input type="file" id="fileMain" accept="image/*" style="display:none" onchange="previewMain(this)">
@@ -696,14 +746,17 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
           <div class="photo-grid" id="refGrid"></div>
         </div>
       </div>
-    </div>
-    <div class="modal-foot" style="justify-content:flex-end">
-      <button class="btn btn-outline" onclick="closeClientSubmit()">Cancelar</button>
-      <button class="btn btn-blue" id="submitBtn" onclick="submitClientOrder()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        Enviar para Milena Joias
-      </button>
-    </div>
+    </div><!-- /np-col-right -->
+
+  </div><!-- /np-page-body -->
+
+  <!-- Footer -->
+  <div class="np-page-foot">
+    <button class="btn btn-outline" onclick="closeClientSubmit()">Cancelar</button>
+    <button class="btn btn-blue" id="submitBtn" onclick="submitClientOrder()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      Enviar para Milena Joias
+    </button>
   </div>
 </div>
 
@@ -2116,14 +2169,24 @@ function autoCalcPrazo() {
   if (dateEl && dateEl.value) prazoEl.value = addBusinessDays(dateEl.value, 3);
 }
 function npSelProd(el) {
-  document.querySelectorAll('.np-chip').forEach(c => c.classList.remove('sel'));
+  document.querySelectorAll('#newOverlay .np-chip').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('mnProd').value = el.dataset.val;
 }
 function npSelMat(el) {
-  document.querySelectorAll('.np-mat').forEach(c => c.classList.remove('sel'));
+  document.querySelectorAll('#newOverlay .np-mat').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('mnMat').value = el.dataset.val;
+}
+function csSelProd(el) {
+  document.querySelectorAll('#clientSubmitOverlay .np-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('cProd').value = el.dataset.val;
+}
+function csSelMat(el) {
+  document.querySelectorAll('#clientSubmitOverlay .np-mat').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('cMat').value = el.dataset.val;
 }
 function openNew() {
   // Reset text fields
@@ -2251,8 +2314,12 @@ async function saveNew() {
 function setInputMode(mode, btn) {
   document.querySelectorAll('.im-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('modeForm').style.display = mode === 'form' ? 'block' : 'none';
-  document.getElementById('modeDoc').style.display  = mode === 'doc'  ? 'block' : 'none';
+  const isForm = mode === 'form';
+  document.getElementById('modeForm').style.display      = isForm ? 'block' : 'none';
+  document.getElementById('modeDoc').style.display       = isForm ? 'none'  : 'block';
+  document.getElementById('modeFormRight').style.display = isForm ? 'block' : 'none';
+  document.getElementById('modeDocRight').style.display  = isForm ? 'none'  : 'block';
+  document.getElementById('modeFormPhotos').style.display = isForm ? 'block' : 'none';
 }
 
 // ── File drag/drop ──
@@ -2427,6 +2494,11 @@ async function submitClientOrder() {
 
 function clearForm() {
   ['cId','cDate','cClientFinal','cSize','cQty','cObs','cIdDoc','cObsDoc'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  // Reset client chips to first option
+  document.querySelectorAll('#clientSubmitOverlay .np-chip').forEach((c,i) => c.classList.toggle('sel', i===0));
+  document.getElementById('cProd').value = 'BROCHE';
+  document.querySelectorAll('#clientSubmitOverlay .np-mat').forEach((c,i)  => c.classList.toggle('sel', i===0));
+  document.getElementById('cMat').value  = 'Ouro';
   uploadedFiles = []; renderUploadedFiles();
   removeMainPhoto();
   for (let i=0;i<6;i++) if (refPhotos[i]) removeRef(i);
