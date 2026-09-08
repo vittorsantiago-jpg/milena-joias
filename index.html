@@ -1830,15 +1830,21 @@ function closeLvLb() { document.getElementById('lvLb').classList.remove('open');
 // Carrega imagens reais nos cards do grid de forma assíncrona
 async function loadGridImages(sorted) {
   for (const o of sorted) {
-    // Prioridade: arte anexada pelo admin → qualquer imagem em files → foto do modelo do cliente
-    const arteFile = (o.files||[]).find(f => f.type === 'img' && f.role === 'arte')
-                  || (o.files||[]).find(f => f.type === 'img');
-    const clientPhoto = (o.photos||[]).find(f => f.path); // foto modelo ou ref do cliente
+    const arteFile    = (o.files||[]).find(f => f.type === 'img' && f.role === 'arte')
+                     || (o.files||[]).find(f => f.type === 'img');
+    const clientPhoto = (o.photos||[]).find(f => f.path);
 
-    const source = arteFile || clientPhoto;
+    // Admin: arte primeiro (order-files); Cliente: foto do cliente primeiro (order-photos — acesso garantido)
+    let source, bucket;
+    if (currentRole === 'cliente') {
+      source = clientPhoto || arteFile;
+      bucket = clientPhoto ? 'order-photos' : 'order-files';
+    } else {
+      source = arteFile || clientPhoto;
+      bucket = arteFile ? 'order-files' : 'order-photos';
+    }
+
     if (!source?.path) continue;
-
-    const bucket = arteFile ? 'order-files' : 'order-photos';
     const wrap = document.getElementById(`lv-gc-img-${o.id}`);
     if (!wrap) continue;
     try {
