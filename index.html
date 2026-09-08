@@ -1983,35 +1983,66 @@ async function openDetail(id) {
     ${otherFilesHtml}
   `;
 
-  // Sign arte URLs
+  // Sign arte URLs — tenta order-files primeiro, depois order-photos (fallback)
   if (arteFiles.length) {
     arteFiles.forEach(async (f, i) => {
       if (!f.path) return;
-      try {
-        const { data } = await sb.storage.from('order-files').createSignedUrl(f.path, 3600);
-        if (data?.signedUrl) {
-          arteSignedUrls[i] = data.signedUrl;
-          const el = document.getElementById(`arteImg${i}`);
-          if (el) el.innerHTML = `<img src="${data.signedUrl}" alt="arte" style="width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer" onclick="window.open('${data.signedUrl}','_blank')">`;
-        }
-      } catch(e) {}
+      const el = document.getElementById(`arteImg${i}`);
+      if (!el) return;
+      let signedUrl = null;
+      for (const bucket of ['order-files', 'order-photos']) {
+        try {
+          const { data } = await sb.storage.from(bucket).createSignedUrl(f.path, 3600);
+          if (data?.signedUrl) { signedUrl = data.signedUrl; break; }
+        } catch(e) {}
+      }
+      if (signedUrl) {
+        arteSignedUrls[i] = signedUrl;
+        // Insere img e usa onerror para tentar o bucket alternativo se falhar
+        const img = document.createElement('img');
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer';
+        img.onclick = () => window.open(signedUrl, '_blank');
+        img.alt = 'arte';
+        img.src = signedUrl;
+        img.onerror = async () => {
+          // URL gerada mas arquivo não carregou — tenta bucket alternativo diretamente
+          const altBucket = signedUrl.includes('/order-files/') ? 'order-photos' : 'order-files';
+          try {
+            const { data: alt } = await sb.storage.from(altBucket).createSignedUrl(f.path, 3600);
+            if (alt?.signedUrl) { img.onerror = null; img.src = alt.signedUrl; arteSignedUrls[i] = alt.signedUrl; img.onclick = () => window.open(alt.signedUrl, '_blank'); }
+          } catch(e) {}
+        };
+        el.innerHTML = '';
+        el.appendChild(img);
+      }
     });
   }
 
-  // Sign photo URLs (tenta order-photos, fallback order-files)
+  // Sign photo URLs — só tenta order-photos (bucket correto para fotos do cliente)
+  // Não faz fallback para order-files para evitar imagens quebradas
   if (photoEntries.length) {
     photoEntries.forEach(async (p, i) => {
-      try {
-        let signedUrl = null;
-        for (const bucket of ['order-photos', 'order-files']) {
+      const slot = document.getElementById(`mPhoto${i}`);
+      if (!slot) return;
+      let signedUrl = null;
+      for (const bucket of ['order-photos', 'order-files']) {
+        try {
           const { data } = await sb.storage.from(bucket).createSignedUrl(p.path, 3600);
           if (data?.signedUrl) { signedUrl = data.signedUrl; break; }
-        }
-        const slot = document.getElementById(`mPhoto${i}`);
-        if (slot && signedUrl) {
-          slot.innerHTML = `<img src="${signedUrl}" alt="${p.name||'foto'}" style="width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer" onclick="window.open('${signedUrl}','_blank')">`;
-        }
-      } catch(e) {}
+        } catch(e) {}
+      }
+      if (signedUrl) {
+        const img = document.createElement('img');
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:var(--rs);cursor:pointer';
+        img.alt = p.name || 'foto';
+        img.onclick = () => window.open(signedUrl, '_blank');
+        img.onerror = () => { img.remove(); slot.textContent = '⚠'; slot.title = 'Foto não disponível'; };
+        img.src = signedUrl;
+        slot.innerHTML = '';
+        slot.appendChild(img);
+      } else {
+        slot.textContent = '📷'; slot.title = 'Sem acesso à foto';
+      }
     });
   }
 
