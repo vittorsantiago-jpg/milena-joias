@@ -587,6 +587,8 @@ body.detail-open #detailBackdrop{display:none!important;}
       <div class="fld" id="fldName" style="display:none"><label>Nome completo</label><input type="text" id="loginName" placeholder="Seu nome" onkeydown="if(event.key==='Enter')doAuth()"></div>
       <div class="fld"><label>E-mail ou usuário</label><input type="text" id="loginEmail" placeholder="usuário ou email@exemplo.com" autocomplete="username" onkeydown="if(event.key==='Enter')doAuth()"></div>
       <div class="fld"><label>Senha</label><input type="password" id="loginPassword" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div id="fldForgot" style="margin-top:-4px;margin-bottom:4px"><button type="button" style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;padding:0;text-decoration:underline" onclick="doForgotPassword()">Esqueci minha senha</button></div>
+      <div id="forgotMsg" style="display:none;font-size:12px;color:#4ade80;margin-bottom:4px"></div>
     </div>
     <div class="modal-foot" style="justify-content:flex-end">
       <button class="btn btn-gold" id="loginBtn" onclick="doAuth()">Entrar</button>
@@ -1277,8 +1279,31 @@ function setLoginMode(mode, btn) {
   document.querySelectorAll('.ltab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('fldName').style.display = mode === 'register' ? 'flex' : 'none';
+  document.getElementById('fldForgot').style.display = mode === 'register' ? 'none' : 'block';
+  document.getElementById('forgotMsg').style.display = 'none';
   document.getElementById('loginBtn').textContent = mode === 'register' ? 'Criar conta' : 'Entrar';
   document.getElementById('loginError').style.display = 'none';
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const msgEl = document.getElementById('forgotMsg');
+  const errEl = document.getElementById('loginError');
+  if (!email || !email.includes('@')) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Digite seu e-mail no campo acima antes de redefinir a senha.';
+    return;
+  }
+  errEl.style.display = 'none';
+  msgEl.style.display = 'none';
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href });
+  if (error) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Erro: ' + error.message;
+  } else {
+    msgEl.style.display = 'block';
+    msgEl.textContent = '✓ E-mail de redefinição enviado. Verifique sua caixa de entrada.';
+  }
 }
 
 async function doAuth() {
@@ -2888,12 +2913,33 @@ async function pasteArteFromClipboard(orderId) {
 // ── Approve order (client) ──
 async function approveOrder() {
   if (!currentId) return;
-  const { error } = await sb.from('orders').update({ status: 'aprovado', from_client: false }).eq('id', currentId);
-  if (error) { alert('Erro: ' + error.message); return; }
+  // Temporarily pause realtime so the DB reload doesn't revert the local state
+  if (realtimeChannel) sb.removeChannel(realtimeChannel);
+
+  const { data, error } = await sb.from('orders')
+    .update({ status: 'aprovado', from_client: false })
+    .eq('id', currentId)
+    .select('id');
+
+  if (error) {
+    subscribeRealtime();
+    alert('Erro ao aprovar: ' + error.message);
+    return;
+  }
+  if (!data || data.length === 0) {
+    subscribeRealtime();
+    alert('Não foi possível aprovar o pedido. Verifique com o administrador se você tem permissão para esta ação.');
+    return;
+  }
+
+  // Update local state immediately so UI reflects the change
   const o = orders.find(x => x.id === currentId);
   if (o) { o.status = 'aprovado'; o.fromClient = false; }
   renderBoard();
   openDetail(currentId);
+
+  // Re-subscribe after a short delay so the echo of our own write is ignored
+  setTimeout(() => subscribeRealtime(), 1500);
 }
 
 // ── Request changes (client) ──
