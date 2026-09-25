@@ -1184,6 +1184,8 @@ body.detail-open #detailBackdrop{display:none!important;}
 const SUPABASE_URL  = 'https://sbwiuceyauophurcofxl.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNid2l1Y2V5YXVvcGh1cmNvZnhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc2NzkyNTQsImV4cCI6MjEwMzI1NTI1NH0.gYYS6_ANb4mp2mzAmbty3z6THtE814lgerYTWgJjo6A';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// ID da conta da cliente no sistema (usado para vincular pedidos criados pelo admin)
+const CLIENT_USER_ID = '2ece3d5b-5101-4da2-a080-56410ed50988';
 
 let currentUser    = null;
 let currentRole    = null; // 'admin' | 'cliente'
@@ -2631,6 +2633,7 @@ async function saveNew() {
     prioridade:   document.getElementById('mnPrioridade').value || 'normal',
     nome_peca:    document.getElementById('mnNomePeca').value.trim() || null,
     fotolito_ref: document.getElementById('mnFotolito').value.trim() || null,
+    user_id:      CLIENT_USER_ID,
   };
 
   // Upload attached files
