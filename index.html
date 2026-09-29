@@ -596,6 +596,34 @@ body.detail-open #detailBackdrop{display:none!important;}
 .sb-urg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
 .sb-urg-cnt{font-size:11px;font-weight:700;padding:1px 6px;border-radius:99px;font-variant-numeric:tabular-nums;}
 .sb-new-btn-wrap{padding:0 8px 6px;}
+
+/* ── Revisão badge (list row) ── */
+.lv-rev-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 6px;border-radius:99px;background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.25);vertical-align:middle;margin-left:2px;}
+
+/* ── Right column tabs (Arte / Alterações) ── */
+.rc-tabs{display:flex;gap:2px;padding:0 0 10px;border-bottom:1px solid #1E1E1E;margin-bottom:12px;}
+.rc-tab{padding:5px 12px;border-radius:4px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--t3);transition:all .14s;}
+.rc-tab:hover{background:#1A1A1A;color:var(--t2);}
+.rc-tab.active{background:#1E1E1E;color:var(--text);}
+.rc-tab-cnt{font-size:10px;font-weight:700;padding:1px 5px;border-radius:99px;background:rgba(59,130,246,.2);color:#60a5fa;margin-left:4px;display:inline-block;}
+
+/* ── Arte slot with delete button ── */
+.arte-slot-wrap{position:relative;width:160px;height:160px;flex-shrink:0;}
+.arte-slot-wrap .arte-del-btn{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.72);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;color:#fff;font-size:11px;z-index:3;transition:background .14s;line-height:1;}
+.arte-slot-wrap:hover .arte-del-btn{display:flex;}
+.arte-slot-wrap .arte-del-btn:hover{background:rgba(192,57,43,.9);}
+
+/* ── Alterações list ── */
+.alt-empty{font-size:12px;color:var(--t3);padding:20px 0;text-align:center;}
+.alt-item{padding:10px 12px;border-radius:var(--rs);border:1px solid var(--border);background:var(--s2);margin-bottom:6px;}
+.alt-item.resolved{opacity:.52;}
+.alt-item-text{font-size:12px;color:var(--text);line-height:1.4;margin-bottom:5px;white-space:pre-wrap;}
+.alt-item-meta{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t3);flex-wrap:wrap;}
+.alt-status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.alt-resolve-btn{margin-top:8px;padding:4px 10px;border-radius:4px;border:1px solid #1E3A5F;background:rgba(59,130,246,.08);color:#60a5fa;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .14s;display:block;}
+.alt-resolve-btn:hover{background:rgba(59,130,246,.2);}
+.alt-add-btn{width:100%;padding:8px;border-radius:var(--rs);border:1.5px dashed var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--t3);cursor:pointer;transition:all .14s;margin-top:6px;display:block;}
+.alt-add-btn:hover{border-color:var(--gold);color:var(--gold);}
 </style>
 </head>
 <body>
@@ -1604,6 +1632,8 @@ function dbToOrder(row) {
     valor:       row.valor   || null,
     fotolitoRef: row.fotolito_ref || '',
     nomePeca:    row.nome_peca    || '',
+    revisaoAtiva: row.revisao_ativa || false,
+    revisoes:     Array.isArray(row.revisoes) ? row.revisoes : [],
   };
 }
 
@@ -1803,6 +1833,7 @@ function renderBoard() {
   const cnts = {};
   mainStatuses.forEach(s => cnts[s.key] = 0);
   visible.forEach(o => { if (cnts[o.status] !== undefined) cnts[o.status]++; });
+  const revisaoOrders = visible.filter(o => o.revisaoAtiva);
 
   // ── New sidebar: O QUE FAZER AGORA + ETAPAS ──
   document.getElementById('lvSidebar').innerHTML = `
@@ -1822,6 +1853,10 @@ function renderBoard() {
     ${grpSoon.length ? `<button class="sb-urg-item${lvFilterPrazo==='warn'?' active':''}" onclick="setLvPrazo('warn');setLvStatus('all')" style="color:#f5b86b">
       <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:#B45309"></span>Vencem em 3 dias</span>
       <span class="sb-urg-cnt" style="background:rgba(202,138,4,.12);color:#B45309">${grpSoon.length}</span>
+    </button>` : ''}
+    ${revisaoOrders.length ? `<button class="sb-urg-item${lvFilterStatus==='revisao'?' active':''}" onclick="setLvStatus('revisao');setLvPrazo('all')" style="color:#60a5fa">
+      <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:#3B82F6"></span>Em revisão</span>
+      <span class="sb-urg-cnt" style="background:rgba(59,130,246,.15);color:#60a5fa">${revisaoOrders.length}</span>
     </button>` : ''}
     <hr class="lv-sb-hr">
     <div class="lv-sb-label">Etapas</div>
@@ -1849,7 +1884,10 @@ function renderBoard() {
   `;
 
   // Apply status + prazo filters for list
-  let filtered = lvFilterStatus === 'all' ? visible : visible.filter(o => o.status === lvFilterStatus);
+  let filtered;
+  if (lvFilterStatus === 'all') filtered = visible;
+  else if (lvFilterStatus === 'revisao') filtered = visible.filter(o => o.revisaoAtiva);
+  else filtered = visible.filter(o => o.status === lvFilterStatus);
   if (lvFilterPrazo === 'late')    filtered = filtered.filter(o => o.status !== 'enviado' && lvPrazoStatus(o.prazo) === 'late');
   else if (lvFilterPrazo === 'warn')    filtered = filtered.filter(o => { const d=(new Date(o.prazo)-new Date())/86400000; return o.prazo&&d>=0&&d<=3&&o.status!=='enviado'; });
   else if (lvFilterPrazo === 'ok')      filtered = filtered.filter(o => lvPrazoStatus(o.prazo) === 'ok');
@@ -1858,7 +1896,7 @@ function renderBoard() {
   const st = mainStatuses.find(s => s.key === lvFilterStatus);
   const prazoLabels = {late:'Atrasados', warn:'Vencem em breve', ok:'Em dia', urgente:'Urgentes', all:''};
   const prazoLbl = lvFilterPrazo !== 'all' ? prazoLabels[lvFilterPrazo] : '';
-  const baseTitle = st ? st.label : 'Todos os pedidos';
+  const baseTitle = lvFilterStatus === 'revisao' ? 'Em revisão' : st ? st.label : 'Todos os pedidos';
   document.getElementById('lvTitle').textContent = prazoLbl ? `${baseTitle} · ${prazoLbl}` : baseTitle;
   document.getElementById('lvCount').textContent = `${filtered.length} pedido${filtered.length !== 1 ? 's' : ''}`;
 
@@ -1928,6 +1966,7 @@ function renderBoard() {
           #${escHtml(refStr)}
           ${o.prioridade==='urgente'?'<span class="lv-urg-tag">urgente</span>':''}
           ${o.fromClient?'<span class="new-badge">novo</span>':''}
+          ${o.revisaoAtiva?'<span class="lv-rev-badge">⚡ revisão</span>':''}
         </div>
         ${nomePeca ? `<div class="lv-row-nome">${escHtml(nomePeca)}</div>` : ''}
         <div class="lv-row-meta">${escHtml(o.product)}${o.detail?' · '+escHtml(o.detail):''} · ${o.qty} un.</div>
@@ -2206,12 +2245,19 @@ async function openDetail(id) {
       </div>
     </div>` : '';
 
-  // Arte section (admin in aprovacao: upload; client in aprovacao: view; others: just list)
+  // Arte section (admin in aprovacao/desenhando: upload; others: view)
+  // Arte slots helper — includes delete button for admin
+  function arteSlotHtml(f, i) {
+    const slot = `<div id="arteImg${i}" style="width:100%;height:100%;border-radius:var(--rs);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>`;
+    const delBtn = isAdmin ? `<button class="arte-del-btn" onclick="event.stopPropagation();deleteArte(${i})" title="Remover arte">✕</button>` : '';
+    return `<div class="arte-slot-wrap">${slot}${delBtn}</div>`;
+  }
+
   let arteHtml = '';
   if (currentRole === 'admin' && (o.status === 'aprovacao' || o.status === 'desenhando')) {
     const existingArte = arteFiles.length ? `
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px" id="arteImgRow">
-        ${arteFiles.map((f,i) => `<div id="arteImg${i}" style="width:160px;height:160px;border-radius:var(--rs);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>`).join('')}
+        ${arteFiles.map((f,i) => arteSlotHtml(f,i)).join('')}
       </div>` : '';
     arteHtml = `<div class="mf full">
       <label>Arte para aprovação</label>
@@ -2230,7 +2276,7 @@ async function openDetail(id) {
     arteHtml = `<div class="mf full">
       <label>Arte${o.status==='aprovacao'?' — aguardando aprovação':''}</label>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px" id="arteImgRow">
-        ${arteFiles.map((f,i) => `<div id="arteImg${i}" style="width:160px;height:160px;border-radius:var(--rs);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:20px">⏳</div>`).join('')}
+        ${arteFiles.map((f,i) => arteSlotHtml(f,i)).join('')}
       </div>
       <button class="btn btn-outline" style="margin-top:8px;font-size:11px" onclick="copyArt()">📋 Copiar arte</button>
     </div>`;
@@ -2259,9 +2305,18 @@ async function openDetail(id) {
     ${o.prioridade === 'urgente' ? `<div class="mf"><label>Prioridade</label><div class="val"><span class="priority-urgente">Urgente</span></div></div>` : ''}
     ${o.obs ? `<div class="mf full"><div class="obs-note">${o.obs.replace(/\n/g,'<br>')}</div></div>` : ''}
   `;
-  // Right column: arte + photos + files
+  // Right column: arte + photos + files + Alterações tab
   const arteCol = document.getElementById('mArteCol');
-  if (arteCol) arteCol.innerHTML = `${arteHtml}${photosHtml}${otherFilesHtml}` || '<div style="color:var(--t3);font-size:12px;padding-top:8px">Sem arquivos</div>';
+  const arteContent = `${arteHtml}${photosHtml}${otherFilesHtml}` || '<div style="color:var(--t3);font-size:12px;padding-top:8px">Sem arquivos</div>';
+  const altCnt = (o.revisoes||[]).length;
+  if (arteCol) arteCol.innerHTML = `
+    <div class="rc-tabs">
+      <button class="rc-tab active" id="rcTabArte" onclick="openDetailTab('arte')">Arte / Arquivos</button>
+      <button class="rc-tab" id="rcTabAlt" onclick="openDetailTab('alt')">Alterações${altCnt?`<span class="rc-tab-cnt">${altCnt}</span>`:''}</button>
+    </div>
+    <div id="rcArtePanel">${arteContent}</div>
+    <div id="rcAltPanel" style="display:none">${buildAltPanel(o)}</div>
+  `;
 
   // Sign arte URLs — tenta order-files primeiro, depois order-photos (fallback)
   if (arteFiles.length) {
@@ -3047,12 +3102,112 @@ async function submitRequestChanges() {
   const note = document.getElementById('altNote')?.value.trim();
   if (!note) { const el = document.getElementById('altNote'); if(el) el.style.borderColor='#DC2626'; return; }
   const o = orders.find(x => x.id === currentId); if (!o) return;
-  const newObs = o.obs ? `${o.obs}\n\n✗ Alteração solicitada: ${note}` : `✗ Alteração solicitada: ${note}`;
-  const { error } = await sb.from('orders').update({ status:'desenhando', obs:newObs, from_client:true }).eq('id', currentId);
+  const newRevisao = { id: crypto.randomUUID(), texto: note, created_at: new Date().toISOString(), resolvida: false, por: 'cliente' };
+  const newRevisoes = [...(o.revisoes||[]), newRevisao];
+  const { error } = await sb.from('orders').update({ status:'desenhando', from_client:true, revisao_ativa:true, revisoes:newRevisoes }).eq('id', currentId);
   if (error) { alert('Erro: ' + error.message); return; }
-  o.status = 'desenhando'; o.obs = newObs; o.fromClient = true;
+  o.status = 'desenhando'; o.fromClient = true; o.revisaoAtiva = true; o.revisoes = newRevisoes;
   renderBoard();
   openDetail(currentId);
+}
+
+// ── Detail tab switcher (Arte / Alterações) ──
+function openDetailTab(tab) {
+  const arteP = document.getElementById('rcArtePanel');
+  const altP  = document.getElementById('rcAltPanel');
+  const tabA  = document.getElementById('rcTabArte');
+  const tabB  = document.getElementById('rcTabAlt');
+  if (!arteP || !altP) return;
+  arteP.style.display = tab === 'arte' ? '' : 'none';
+  altP.style.display  = tab === 'alt'  ? '' : 'none';
+  tabA?.classList.toggle('active', tab === 'arte');
+  tabB?.classList.toggle('active', tab === 'alt');
+}
+
+// ── Build alterações panel HTML ──
+function buildAltPanel(o) {
+  const isAdmin = currentRole === 'admin';
+  const revisoes = o.revisoes || [];
+  const fmtTs = ts => ts ? fmtDateBR(ts.slice(0,10)) + ' ' + ts.slice(11,16) : '—';
+  const items = revisoes.map(r => `
+    <div class="alt-item${r.resolvida?' resolved':''}" id="alt-item-${r.id}">
+      <div class="alt-item-text">${escHtml(r.texto)}</div>
+      <div class="alt-item-meta">
+        <span class="alt-status-dot" style="background:${r.resolvida?'#16A34A':'#3B82F6'}"></span>
+        <span>${r.resolvida?'Resolvida':'Pendente'}</span>
+        <span>·</span>
+        <span>${fmtTs(r.created_at)}</span>
+        ${r.por==='admin'?'<span>· adm</span>':'<span>· cliente</span>'}
+      </div>
+      ${!r.resolvida && isAdmin ? `<button class="alt-resolve-btn" onclick="resolverRevisao('${r.id}')">✓ Marcar como resolvida</button>` : ''}
+    </div>`).join('');
+  const addBtn = isAdmin ? `<button class="alt-add-btn" onclick="adminAddRevisao()">+ Adicionar nota de alteração</button>` : '';
+  if (!revisoes.length) return `<div class="alt-empty">Sem alterações registradas</div>${addBtn}`;
+  return items + addBtn;
+}
+
+// ── Resolver uma revisão (admin) ──
+async function resolverRevisao(revisaoId) {
+  const o = orders.find(x => x.id === currentId); if (!o) return;
+  const revisoes = (o.revisoes||[]).map(r => r.id === revisaoId ? {...r, resolvida:true} : r);
+  const revisaoAtiva = revisoes.some(r => !r.resolvida);
+  const { error } = await sb.from('orders').update({ revisoes, revisao_ativa: revisaoAtiva }).eq('id', currentId);
+  if (error) { alert('Erro: ' + error.message); return; }
+  o.revisoes = revisoes; o.revisaoAtiva = revisaoAtiva;
+  const altP = document.getElementById('rcAltPanel');
+  if (altP) altP.innerHTML = buildAltPanel(o);
+  // Update tab count
+  const tabB = document.getElementById('rcTabAlt');
+  if (tabB) tabB.innerHTML = `Alterações${revisoes.length?`<span class="rc-tab-cnt">${revisoes.length}</span>`:''}`;
+  renderBoard();
+  showToast(revisaoAtiva ? 'Alteração marcada como resolvida' : 'Todas as alterações resolvidas ✓');
+}
+
+// ── Delete uma arte (admin) ──
+async function deleteArte(fileIndex) {
+  if (!currentId || currentRole !== 'admin') return;
+  const o = orders.find(x => x.id === currentId); if (!o) return;
+  const arteFiles = (o.files||[]).filter(f => f.role === 'arte');
+  const file = arteFiles[fileIndex]; if (!file) return;
+  if (!confirm(`Remover a arte "${file.name||'arquivo'}"?\nEsta ação não pode ser desfeita.`)) return;
+  if (file.path) {
+    try { await sb.storage.from('order-files').remove([file.path]); } catch(e) { console.warn('Storage remove:', e); }
+  }
+  // Remove this specific arte by reference (arteFiles[fileIndex] is the same object from o.files)
+  const newFiles = (o.files||[]).filter(f => f !== file);
+  const { error } = await sb.from('orders').update({ files: newFiles }).eq('id', currentId);
+  if (error) { alert('Erro ao remover arte: ' + error.message); return; }
+  o.files = newFiles;
+  showToast('Arte removida');
+  openDetail(currentId);
+}
+
+// ── Admin: adicionar nota de alteração ──
+function adminAddRevisao() {
+  const panel = document.getElementById('rcAltPanel'); if (!panel) return;
+  if (document.getElementById('altAddForm')) { document.getElementById('altAddForm').remove(); return; }
+  panel.insertAdjacentHTML('beforeend', `<div id="altAddForm" style="margin-top:8px">
+    <textarea id="altAddText" placeholder="Descreva a alteração ou observação…" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rs);background:var(--s2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:70px;outline:none;box-sizing:border-box"></textarea>
+    <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end">
+      <button class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="document.getElementById('altAddForm').remove()">Cancelar</button>
+      <button class="btn btn-gold" style="font-size:11px;padding:4px 10px" onclick="submitAdminRevisao()">Salvar nota</button>
+    </div>
+  </div>`);
+  document.getElementById('altAddText')?.focus();
+}
+async function submitAdminRevisao() {
+  const text = document.getElementById('altAddText')?.value.trim();
+  if (!text) return;
+  const o = orders.find(x => x.id === currentId); if (!o) return;
+  const newRevisao = { id: crypto.randomUUID(), texto: text, created_at: new Date().toISOString(), resolvida: false, por: 'admin' };
+  const revisoes = [...(o.revisoes||[]), newRevisao];
+  const { error } = await sb.from('orders').update({ revisoes, revisao_ativa: true }).eq('id', currentId);
+  if (error) { alert('Erro: ' + error.message); return; }
+  o.revisoes = revisoes; o.revisaoAtiva = true;
+  renderBoard();
+  openDetail(currentId);
+  // Re-open on alt tab
+  setTimeout(() => openDetailTab('alt'), 50);
 }
 
 // ── Copy art to clipboard ──
