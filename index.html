@@ -1858,6 +1858,10 @@ function renderBoard() {
       <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:#3B82F6"></span>Em revisão</span>
       <span class="sb-urg-cnt" style="background:rgba(59,130,246,.15);color:#60a5fa">${revisaoOrders.length}</span>
     </button>` : ''}
+    ${!isAdmin ? `<button class="sb-urg-item${lvFilterStatus==='aprovacao'?' active':''}" onclick="setLvStatus('aprovacao');setLvPrazo('all')" style="${(cnts['aprovacao']||0)>0?'color:#B87820':''}">
+      <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:${(cnts['aprovacao']||0)>0?'#B87820':'#3A3A3A'}"></span>Em aprovação</span>
+      <span class="sb-urg-cnt" style="${(cnts['aprovacao']||0)>0?'background:rgba(184,120,32,.2);color:#B87820':''}">${cnts['aprovacao']||0}</span>
+    </button>` : ''}
     <hr class="lv-sb-hr">
     <div class="lv-sb-label">Etapas</div>
     <button class="sb-urg-item${lvFilterStatus==='all'&&lvFilterPrazo==='all'?' active':''}" onclick="setLvStatus('all');setLvPrazo('all')">
@@ -2223,9 +2227,12 @@ async function openDetail(id) {
   const si = mainStatuses.findIndex(x => x.key === o.status);
   document.getElementById('mPipeline').innerHTML = mainStatuses.map((st, i) => {
     const cls = i < si ? 'done' : i === si ? 'active' : '';
-    const clickable = isAdmin && cls !== 'active' ? ' clickable' : '';
-    const onclick   = isAdmin && cls !== 'active' ? ` onclick="jumpToStatus('${st.key}')"` : '';
-    const tip       = isAdmin && cls !== 'active' ? ` title="${i < si ? 'Reverter para' : 'Avançar para'} ${st.label}"` : '';
+    const clientCanApprove = !isAdmin && o.status === 'aprovacao' && st.key === 'aprovado';
+    const clickable = (isAdmin && cls !== 'active') || clientCanApprove ? ' clickable' : '';
+    const onclick   = isAdmin && cls !== 'active' ? ` onclick="jumpToStatus('${st.key}')"` :
+                      clientCanApprove ? ` onclick="approveOrder()"` : '';
+    const tip       = isAdmin && cls !== 'active' ? ` title="${i < si ? 'Reverter para' : 'Avançar para'} ${st.label}"` :
+                      clientCanApprove ? ` title="Clique para aprovar pedido"` : '';
     return `<div class="pipe-step ${cls}${clickable}"${onclick}${tip}><div class="pipe-dot"></div>${st.short}</div>`;
   }).join('');
 
