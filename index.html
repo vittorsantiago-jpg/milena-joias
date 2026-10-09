@@ -1858,6 +1858,13 @@ function renderBoard() {
       <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:#3B82F6"></span>Em revisão</span>
       <span class="sb-urg-cnt" style="background:rgba(59,130,246,.15);color:#60a5fa">${revisaoOrders.length}</span>
     </button>` : ''}
+    ${!isAdmin ? (() => {
+      const novaArteCnt = visible.filter(o => o.nova_arte).length;
+      return novaArteCnt > 0 ? `<button class="sb-urg-item${lvFilterStatus==='nova_arte'?' active':''}" onclick="setLvStatus('nova_arte');setLvPrazo('all')" style="color:#16A34A">
+        <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:#16A34A"></span>✨ Arte atualizada</span>
+        <span class="sb-urg-cnt" style="background:rgba(22,163,74,.18);color:#16A34A">${novaArteCnt}</span>
+      </button>` : '';
+    })() : ''}
     ${!isAdmin ? `<button class="sb-urg-item${lvFilterStatus==='aprovacao'?' active':''}" onclick="setLvStatus('aprovacao');setLvPrazo('all')" style="${(cnts['aprovacao']||0)>0?'color:#B87820':''}">
       <span class="sb-urg-item-left"><span class="sb-urg-dot" style="background:${(cnts['aprovacao']||0)>0?'#B87820':'#3A3A3A'}"></span>Em aprovação</span>
       <span class="sb-urg-cnt" style="${(cnts['aprovacao']||0)>0?'background:rgba(184,120,32,.2);color:#B87820':''}">${cnts['aprovacao']||0}</span>
@@ -1891,6 +1898,7 @@ function renderBoard() {
   let filtered;
   if (lvFilterStatus === 'all') filtered = visible;
   else if (lvFilterStatus === 'revisao') filtered = visible.filter(o => o.revisaoAtiva);
+  else if (lvFilterStatus === 'nova_arte') filtered = visible.filter(o => o.nova_arte === true);
   else filtered = visible.filter(o => o.status === lvFilterStatus);
   if (lvFilterPrazo === 'late')    filtered = filtered.filter(o => o.status !== 'enviado' && lvPrazoStatus(o.prazo) === 'late');
   else if (lvFilterPrazo === 'warn')    filtered = filtered.filter(o => { const d=(new Date(o.prazo)-new Date())/86400000; return o.prazo&&d>=0&&d<=3&&o.status!=='enviado'; });
@@ -1900,7 +1908,7 @@ function renderBoard() {
   const st = mainStatuses.find(s => s.key === lvFilterStatus);
   const prazoLabels = {late:'Atrasados', warn:'Vencem em breve', ok:'Em dia', urgente:'Urgentes', all:''};
   const prazoLbl = lvFilterPrazo !== 'all' ? prazoLabels[lvFilterPrazo] : '';
-  const baseTitle = lvFilterStatus === 'revisao' ? 'Em revisão' : st ? st.label : 'Todos os pedidos';
+  const baseTitle = lvFilterStatus === 'revisao' ? 'Em revisão' : lvFilterStatus === 'nova_arte' ? '✨ Arte atualizada' : st ? st.label : 'Todos os pedidos';
   document.getElementById('lvTitle').textContent = prazoLbl ? `${baseTitle} · ${prazoLbl}` : baseTitle;
   document.getElementById('lvCount').textContent = `${filtered.length} pedido${filtered.length !== 1 ? 's' : ''}`;
 
@@ -2235,6 +2243,13 @@ async function openDetail(id) {
                       clientCanApprove ? ` title="Clique para aprovar pedido"` : '';
     return `<div class="pipe-step ${cls}${clickable}"${onclick}${tip}><div class="pipe-dot"></div>${st.short}</div>`;
   }).join('');
+
+  // Se cliente abre pedido com nova_arte, limpar a flag
+  if (currentRole === 'cliente' && o.nova_arte) {
+    sb.from('orders').update({ nova_arte: false }).eq('id', o.id);
+    o.nova_arte = false;
+    renderBoard();
+  }
 
   // Separate arte files from other files
   const arteFiles  = (o.files || []).filter(f => f.role === 'arte');
@@ -3026,9 +3041,12 @@ async function uploadArtImages(files, orderId) {
     }
   }
   const updatedFiles = [...currentFiles, ...newArteFiles];
-  const { error } = await sb.from('orders').update({ files: updatedFiles }).eq('id', orderId);
+  const updatePayload = { files: updatedFiles };
+  if (o.status === 'aprovacao') updatePayload.nova_arte = true;
+  const { error } = await sb.from('orders').update(updatePayload).eq('id', orderId);
   if (error) { alert('Erro ao salvar arte: ' + error.message); return; }
   o.files = updatedFiles;
+  if (o.status === 'aprovacao') o.nova_arte = true;
   renderBoard();
   openDetail(orderId);
 }
