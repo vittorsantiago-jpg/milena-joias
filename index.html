@@ -2458,22 +2458,29 @@ async function openDetail(id) {
         ${o.status !== 'cancelado' ? `<button class="btn-danger" onclick="cancelOrder()">Cancelar</button>` : ''}
       `;
     }
-  } else if (currentRole === 'cliente' && o.status === 'aprovacao') {
-    if (arteFiles.length) {
+  } else if (currentRole === 'cliente') {
+    const clientActions = o.status === 'cancelado'
+      ? `<button class="btn btn-outline" style="color:#DC2626;border-color:#DC2626" onclick="deleteOrder()">🗑 Excluir permanentemente</button>`
+      : `<button class="btn btn-outline" style="color:#DC2626;border-color:#DC2626" onclick="deleteOrder()">🗑 Excluir</button>
+         <span style="flex:1"></span>
+         <button class="btn btn-outline" onclick="openEdit()">✏️ Editar</button>
+         <button class="btn-danger" onclick="cancelOrder()">Cancelar</button>`;
+
+    if (o.status === 'aprovacao') {
+      const arteSection = arteFiles.length
+        ? `<button class="btn btn-outline" onclick="copyArt()">📋 Copiar arte</button>
+           <button class="btn btn-gold" onclick="approveOrder()">✓ Aprovar arte</button>
+           <button class="btn btn-outline" style="color:#C0392B;border-color:#C0392B" onclick="openRequestChanges()">✗ Solicitar alteração</button>`
+        : `<span style="font-size:12px;color:var(--t3)">⏳ Aguardando envio da arte pela Milena Joias…</span>`;
       mFoot.innerHTML = `
-        <button class="btn btn-outline" onclick="copyArt()">📋 Copiar arte</button>
-        <button class="btn btn-gold" onclick="approveOrder()">✓ Aprovar arte</button>
-        <button class="btn btn-outline" style="color:#C0392B;border-color:#C0392B" onclick="openRequestChanges()">✗ Solicitar alteração</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;width:100%">${arteSection}</div>
+        <div style="display:flex;gap:8px;width:100%;padding-top:8px;border-top:1px solid var(--border);margin-top:4px">${clientActions}</div>
       `;
     } else {
-      mFoot.innerHTML = `<span style="font-size:12px;color:var(--t3)">⏳ Aguardando envio da arte pela Milena Joias…</span>`;
+      mFoot.innerHTML = clientActions;
     }
   } else {
-    if (currentRole === 'cliente') {
-      mFoot.innerHTML = `<button class="btn btn-outline" onclick="openEdit()">✏️ Editar pedido</button>`;
-    } else {
-      mFoot.innerHTML = '';
-    }
+    mFoot.innerHTML = '';
   }
 
   document.getElementById('detailOverlay').classList.add('open');
@@ -2538,7 +2545,7 @@ async function jumpToStatus(key) {
 }
 
 async function cancelOrder() {
-  if (!currentId || currentRole !== 'admin') return;
+  if (!currentId) return;
   if (!confirm('Cancelar este pedido?')) return;
   const { error } = await sb.from('orders').update({ status: 'cancelado' }).eq('id', currentId);
   if (error) { alert('Erro: ' + error.message); return; }
