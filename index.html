@@ -3727,21 +3727,34 @@ document.addEventListener('keydown', e => { if(e.key==='Escape') { closeImgViewe
 let xSelectedStatuses = new Set(STATUSES.map(s => s.key));
 let xSelectedPrio = 'all';
 
+// Parse any date string to 'YYYY-MM' key (handles DD/MM/YYYY and YYYY-MM-DD)
+function dateToYM(d) {
+  if (!d) return null;
+  if (d.includes('/')) {
+    // DD/MM/YYYY
+    const p = d.split('/');
+    if (p.length >= 3) return `${p[2].substring(0,4)}-${p[1].padStart(2,'0')}`;
+  }
+  if (d.includes('-') && d.indexOf('-') === 4) {
+    // YYYY-MM-DD[T...]
+    return d.substring(0, 7);
+  }
+  return null;
+}
+
 function openExportModal() {
-  // Build month selects from order dates (YYYY-MM derived from date field)
-  const monthSet = new Set(orders.map(o => o.date ? o.date.substring(0,7) : null).filter(Boolean));
-  const months = [...monthSet].sort();
+  const monthSet = new Set(orders.map(o => dateToYM(o.date)).filter(Boolean));
   const now = new Date();
   const nowKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   monthSet.add(nowKey);
-  const allMonths = [...new Set([...months, nowKey])].sort();
+  const allMonths = [...monthSet].sort();
   const firstMonth = allMonths[0];
   const lastMonth  = allMonths[allMonths.length - 1];
 
+  const MNAMES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   const toLabel = m => {
-    const [y,mn] = m.split('-');
-    const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    return `${names[parseInt(mn,10)-1]}/${y}`;
+    const [y, mn] = m.split('-');
+    return `${MNAMES[parseInt(mn,10)-1]}/${y}`;
   };
 
   ['xMonthFrom','xMonthTo'].forEach((id, idx) => {
@@ -3804,7 +3817,7 @@ function xGetFilteredOrders() {
   return orders.filter(o => {
     if (!xSelectedStatuses.has(o.status)) return false;
     if (xSelectedPrio !== 'all' && o.prioridade !== xSelectedPrio) return false;
-    const oMonth = o.date ? o.date.substring(0,7) : null;
+    const oMonth = dateToYM(o.date);
     if (fromVal && fromVal !== 'all' && oMonth && oMonth < fromVal) return false;
     if (toVal   && toVal   !== 'all' && oMonth && oMonth > toVal)   return false;
     return true;
@@ -3834,11 +3847,12 @@ function runExportXLSX() {
   // Priority label
   const prioLabel = p => p === 'urgente' ? '🔴 Urgente' : 'Normal';
 
-  // Date formatter — split manually to avoid timezone issues
+  // Date formatter — handles DD/MM/YYYY and YYYY-MM-DD
   const fmtDate = d => {
     if (!d) return '';
-    const parts = d.split('-');
-    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    if (d.includes('/')) return d.substring(0,10); // already DD/MM/YYYY
+    const p = d.split('-');
+    if (p.length >= 3) return `${p[2].substring(0,2)}/${p[1]}/${p[0]}`;
     return d;
   };
 
