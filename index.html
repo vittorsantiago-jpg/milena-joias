@@ -6,6 +6,7 @@
 <title>Milena Joias · Gestão de Pedidos</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 :root {
@@ -429,6 +430,24 @@ body.detail-open #detailBackdrop{display:none!important;}
 .print-brand-sub{font-size:11px;color:#6B6252;margin-top:1px;}
 .print-date{margin-left:auto;font-size:11px;color:#6B6252;text-align:right;}
 
+/* ── Export Modal ── */
+#exportOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1400;align-items:center;justify-content:center;}
+#exportOverlay.open{display:flex;}
+#exportModal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:480px;max-width:96vw;box-shadow:var(--sh-lg);display:flex;flex-direction:column;max-height:90vh;}
+#exportModal .xhead{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+#exportModal .xhead-title{font-family:'Syne',sans-serif;font-size:15px;color:var(--text);}
+#exportModal .xhead-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+#exportModal .xbody{padding:18px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
+#exportModal .xsec-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--t3);text-transform:uppercase;margin-bottom:8px;}
+#exportModal .xrow2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#exportModal .xfld label{font-size:11px;color:var(--t2);display:block;margin-bottom:4px;}
+#exportModal .xfld select{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-size:12px;padding:7px 10px;font-family:'DM Sans',sans-serif;}
+#exportModal .xstatuses{display:flex;flex-wrap:wrap;gap:6px;}
+#exportModal .xstbtn{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--rf);border:1.5px solid var(--border2);background:var(--s2);color:var(--t2);font-size:11px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+#exportModal .xstbtn.on{border-color:currentColor;}
+#exportModal .xcount{font-size:11px;color:var(--t2);text-align:center;}
+#exportModal .xfoot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+
 @media print {
   .app-sidebar,.toolbar,.client-header,
   #loginOverlay,#detailOverlay,#detailBackdrop,#newOverlay,#clientsOverlay,
@@ -731,6 +750,10 @@ body.detail-open #detailBackdrop{display:none!important;}
       <button id="showCanceladosBtn" onclick="showCancelados()" style="display:none;font-size:11px;color:var(--t3);background:none;border:1px solid #2A2A2A;border-radius:4px;padding:4px 10px;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif">Ver cancelados</button>
       <!-- count chip -->
       <span id="lvToolbarCount" style="margin-left:auto;font-size:11px;color:var(--t3);font-variant-numeric:tabular-nums;background:#1A1A1A;padding:2px 9px;border-radius:var(--rf)"></span>
+      <button onclick="openExportModal()" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gold);background:none;border:1px solid rgba(201,151,60,.35);border-radius:4px;padding:4px 11px;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:border-color .2s" onmouseenter="this.style.borderColor='rgba(201,151,60,.7)'" onmouseleave="this.style.borderColor='rgba(201,151,60,.35)'">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Exportar Excel
+      </button>
     </div>
 
     <!-- Cancelados section (admin only) -->
@@ -3655,7 +3678,228 @@ async function copyImgViewerArt() {
     showToast('Imagem copiada!');
   } catch(e) { showToast('Não foi possível copiar'); }
 }
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeImgViewer(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') { closeImgViewer(); closeExportModal(); } });
+</script>
+
+<!-- ── Export Excel Modal ── -->
+<div id="exportOverlay" onclick="if(event.target===this)closeExportModal()">
+  <div id="exportModal">
+    <div class="xhead">
+      <div>
+        <div class="xhead-title">📊 Exportar Excel</div>
+        <div class="xhead-sub" id="exportCountLabel">Calculando…</div>
+      </div>
+      <button class="modal-close" onclick="closeExportModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="xbody">
+      <div>
+        <div class="xsec-label">Período</div>
+        <div class="xrow2">
+          <div class="xfld"><label>De (mês/ano)</label><select id="xMonthFrom"></select></div>
+          <div class="xfld"><label>Até (mês/ano)</label><select id="xMonthTo"></select></div>
+        </div>
+      </div>
+      <div>
+        <div class="xsec-label">Status</div>
+        <div class="xstatuses" id="xStatusBtns"></div>
+      </div>
+      <div>
+        <div class="xsec-label">Prioridade</div>
+        <div class="xstatuses">
+          <button class="xstbtn on" id="xPrioAll" onclick="xPrioSelect('all')" style="color:var(--t2)">Todas</button>
+          <button class="xstbtn" id="xPrioUrgente" onclick="xPrioSelect('urgente')" style="color:#DC2626">🔴 Urgente</button>
+          <button class="xstbtn" id="xPrioNormal" onclick="xPrioSelect('normal')" style="color:var(--t2)">Normal</button>
+        </div>
+      </div>
+    </div>
+    <div class="xfoot">
+      <button class="btn btn-outline" onclick="closeExportModal()">Cancelar</button>
+      <button class="btn btn-gold" onclick="runExportXLSX()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar .xlsx
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Excel Export ──
+let xSelectedStatuses = new Set(STATUSES.map(s => s.key));
+let xSelectedPrio = 'all';
+
+function openExportModal() {
+  // Build month selects from available orders
+  const months = [...new Set(orders.map(o => o.month).filter(Boolean))].sort();
+  const allMonths = months.length > 0 ? months : [currentMonthKey()];
+  const firstMonth = allMonths[0];
+  const lastMonth  = allMonths[allMonths.length - 1];
+
+  const toLabel = m => {
+    const [y,mn] = m.split('-');
+    const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${names[parseInt(mn,10)-1]}/${y}`;
+  };
+
+  ['xMonthFrom','xMonthTo'].forEach((id, idx) => {
+    const sel = document.getElementById(id);
+    sel.innerHTML = '<option value="all">Todos os meses</option>' +
+      allMonths.map(m => `<option value="${m}">${toLabel(m)}</option>`).join('');
+    sel.value = idx === 0 ? firstMonth : lastMonth;
+  });
+
+  // Build status buttons
+  const container = document.getElementById('xStatusBtns');
+  container.innerHTML = STATUSES.map(s => `
+    <button class="xstbtn on" id="xst-${s.key}" onclick="xToggleStatus('${s.key}')"
+      style="color:${s.color};border-color:${s.color}20">
+      <span style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></span>
+      ${s.label}
+    </button>`).join('');
+  xSelectedStatuses = new Set(STATUSES.map(s => s.key));
+
+  document.getElementById('xMonthFrom').addEventListener('change', updateExportCount);
+  document.getElementById('xMonthTo').addEventListener('change', updateExportCount);
+
+  document.getElementById('exportOverlay').classList.add('open');
+  updateExportCount();
+}
+
+function closeExportModal() {
+  document.getElementById('exportOverlay').classList.remove('open');
+}
+
+function xToggleStatus(key) {
+  const btn = document.getElementById(`xst-${key}`);
+  const st  = STATUSES.find(s => s.key === key);
+  if (xSelectedStatuses.has(key)) {
+    xSelectedStatuses.delete(key);
+    btn.classList.remove('on');
+    btn.style.borderColor = 'var(--border2)';
+    btn.style.color = 'var(--t3)';
+  } else {
+    xSelectedStatuses.add(key);
+    btn.classList.add('on');
+    btn.style.borderColor = st.color + '40';
+    btn.style.color = st.color;
+  }
+  updateExportCount();
+}
+
+function xPrioSelect(v) {
+  xSelectedPrio = v;
+  ['all','urgente','normal'].forEach(p => {
+    const el = document.getElementById('xPrio' + p.charAt(0).toUpperCase() + p.slice(1));
+    if (el) el.classList.toggle('on', p === v);
+  });
+  updateExportCount();
+}
+
+function xGetFilteredOrders() {
+  const fromVal = document.getElementById('xMonthFrom')?.value;
+  const toVal   = document.getElementById('xMonthTo')?.value;
+  return orders.filter(o => {
+    if (!xSelectedStatuses.has(o.status)) return false;
+    if (xSelectedPrio !== 'all' && o.prioridade !== xSelectedPrio) return false;
+    if (fromVal && fromVal !== 'all' && o.month && o.month < fromVal) return false;
+    if (toVal   && toVal   !== 'all' && o.month && o.month > toVal)   return false;
+    return true;
+  });
+}
+
+function updateExportCount() {
+  const n = xGetFilteredOrders().length;
+  document.getElementById('exportCountLabel').textContent =
+    `${n} pedido${n !== 1 ? 's' : ''} serão exportados`;
+}
+
+function currentMonthKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function runExportXLSX() {
+  if (typeof XLSX === 'undefined') { showToast('Biblioteca XLSX não carregada'); return; }
+  const rows = xGetFilteredOrders();
+  if (!rows.length) { showToast('Nenhum pedido para exportar'); return; }
+
+  // Status label + colors
+  const stMap = {};
+  STATUSES.forEach(s => { stMap[s.key] = s; });
+
+  // Priority label
+  const prioLabel = p => p === 'urgente' ? '🔴 Urgente' : 'Normal';
+
+  // Date formatter
+  const fmtDate = d => {
+    if (!d) return '';
+    const dt = new Date(d + 'T12:00:00');
+    return dt.toLocaleDateString('pt-BR');
+  };
+
+  // Build rows
+  const header = ['Ref','Data','Prazo','Produto','Material/Tamanho','Qtd','Status','Observação','Prioridade','Ref. Fotolito','Nome da Peça'];
+  const data = [header, ...rows.map(o => [
+    o.ref || '',
+    fmtDate(o.date),
+    fmtDate(o.prazo),
+    o.product || '',
+    o.detail || '',
+    o.qty ?? '',
+    stMap[o.status]?.label || o.status || '',
+    o.obs || '',
+    prioLabel(o.prioridade),
+    o.fotolitoRef || '',
+    o.nomePeca || '',
+  ])];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Column widths
+  const colWidths = [10,12,12,14,20,6,16,30,12,14,20];
+  ws['!cols'] = colWidths.map(w => ({wch: w}));
+
+  // Style header row (gold bold)
+  const goldFill = { patternType:'solid', fgColor:{rgb:'C9973C'} };
+  const headerFont = { bold:true, color:{rgb:'1E180A'}, sz:11 };
+  header.forEach((_, ci) => {
+    const cell = XLSX.utils.encode_cell({r:0, c:ci});
+    if (!ws[cell]) return;
+    ws[cell].s = { fill: goldFill, font: headerFont, alignment:{horizontal:'center',vertical:'center'} };
+  });
+
+  // Status color rows
+  const statusColors = {
+    recebido:   {bg:'EFF6FF', fg:'2563EB'},
+    desenhando: {bg:'F5F0FF', fg:'7C3AED'},
+    aprovacao:  {bg:'FEF3D7', fg:'B87820'},
+    aprovado:   {bg:'ECFDF5', fg:'059669'},
+    fotolito:   {bg:'FFFBEB', fg:'9B5E00'},
+    enviado:    {bg:'E1EFFC', fg:'1A5E9A'},
+    cancelado:  {bg:'F0EDE9', fg:'7A7268'},
+  };
+  rows.forEach((o, ri) => {
+    const sc = statusColors[o.status];
+    if (!sc) return;
+    const statusColIdx = 6; // "Status" column
+    const cell = XLSX.utils.encode_cell({r: ri + 1, c: statusColIdx});
+    if (!ws[cell]) return;
+    ws[cell].s = {
+      fill:{ patternType:'solid', fgColor:{rgb: sc.bg} },
+      font:{ bold:true, color:{rgb: sc.fg}, sz:10 },
+      alignment:{horizontal:'center'},
+    };
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
+
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  XLSX.writeFile(wb, `milena-joias-pedidos-${stamp}.xlsx`);
+
+  showToast(`✅ ${rows.length} pedidos exportados!`);
+  closeExportModal();
+}
 </script>
 
 </body>
