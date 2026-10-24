@@ -3728,9 +3728,13 @@ let xSelectedStatuses = new Set(STATUSES.map(s => s.key));
 let xSelectedPrio = 'all';
 
 function openExportModal() {
-  // Build month selects from available orders
-  const months = [...new Set(orders.map(o => o.month).filter(Boolean))].sort();
-  const allMonths = months.length > 0 ? months : [currentMonthKey()];
+  // Build month selects from order dates (YYYY-MM derived from date field)
+  const monthSet = new Set(orders.map(o => o.date ? o.date.substring(0,7) : null).filter(Boolean));
+  const months = [...monthSet].sort();
+  const now = new Date();
+  const nowKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  monthSet.add(nowKey);
+  const allMonths = [...new Set([...months, nowKey])].sort();
   const firstMonth = allMonths[0];
   const lastMonth  = allMonths[allMonths.length - 1];
 
@@ -3800,8 +3804,9 @@ function xGetFilteredOrders() {
   return orders.filter(o => {
     if (!xSelectedStatuses.has(o.status)) return false;
     if (xSelectedPrio !== 'all' && o.prioridade !== xSelectedPrio) return false;
-    if (fromVal && fromVal !== 'all' && o.month && o.month < fromVal) return false;
-    if (toVal   && toVal   !== 'all' && o.month && o.month > toVal)   return false;
+    const oMonth = o.date ? o.date.substring(0,7) : null;
+    if (fromVal && fromVal !== 'all' && oMonth && oMonth < fromVal) return false;
+    if (toVal   && toVal   !== 'all' && oMonth && oMonth > toVal)   return false;
     return true;
   });
 }
@@ -3829,11 +3834,12 @@ function runExportXLSX() {
   // Priority label
   const prioLabel = p => p === 'urgente' ? '🔴 Urgente' : 'Normal';
 
-  // Date formatter
+  // Date formatter — split manually to avoid timezone issues
   const fmtDate = d => {
     if (!d) return '';
-    const dt = new Date(d + 'T12:00:00');
-    return dt.toLocaleDateString('pt-BR');
+    const parts = d.split('-');
+    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return d;
   };
 
   // Build rows
