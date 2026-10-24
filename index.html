@@ -3954,6 +3954,71 @@ async function runExportXLSX() {
     }
   });
 
+  // ── Aba 2: Resumo por Fotolito ──
+  const wsF = wb.addWorksheet('Resumo Fotolitos', { views: [{ state:'frozen', ySplit:1 }] });
+  wsF.columns = [
+    { header:'Ref. Fotolito', key:'ref',      width:18 },
+    { header:'Qtd Pedidos',   key:'pedidos',  width:14 },
+    { header:'Total Peças',   key:'pecas',    width:13 },
+    { header:'Produtos',      key:'produtos', width:32 },
+    { header:'Pedidos (Ref)', key:'refs',     width:40 },
+  ];
+
+  // Style header
+  const fhRow = wsF.getRow(1);
+  fhRow.height = 24;
+  fhRow.eachCell(cell => {
+    cell.fill      = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFC9973C' } };
+    cell.font      = { bold:true, color:{ argb:'FF1E180A' }, size:11, name:'Calibri' };
+    cell.alignment = { horizontal:'center', vertical:'middle' };
+    cell.border    = { bottom:{ style:'medium', color:{ argb:'FF8A6020' } } };
+  });
+  wsF.autoFilter = { from:'A1', to:'E1' };
+
+  // Group all exported rows by fotolito ref
+  const fotoMap = {};
+  rows.forEach(o => {
+    const key = (o.fotolitoRef || '').trim() || '—';
+    if (!fotoMap[key]) fotoMap[key] = { pedidos:0, pecas:0, produtos:new Set(), refs:[] };
+    fotoMap[key].pedidos++;
+    fotoMap[key].pecas += Number(o.qty) || 0;
+    if (o.product) fotoMap[key].produtos.add(o.product);
+    if (o.ref) fotoMap[key].refs.push(o.ref);
+  });
+
+  // Sort: refs with value first, then '—'
+  const fotoKeys = Object.keys(fotoMap).sort((a,b) => {
+    if (a === '—') return 1;
+    if (b === '—') return -1;
+    return a.localeCompare(b);
+  });
+
+  fotoKeys.forEach((key, i) => {
+    const g   = fotoMap[key];
+    const row = wsF.addRow({
+      ref:      key,
+      pedidos:  g.pedidos,
+      pecas:    g.pecas,
+      produtos: [...g.produtos].join(', '),
+      refs:     g.refs.join(', '),
+    });
+    row.height = 18;
+    row.getCell(2).alignment = { horizontal:'center' };
+    row.getCell(3).alignment = { horizontal:'center' };
+    if (key === '—') {
+      row.getCell(1).font = { italic:true, color:{ argb:'FF888888' }, name:'Calibri' };
+    } else {
+      row.getCell(1).font = { bold:true, name:'Calibri' };
+    }
+    if (i % 2 === 1) {
+      row.eachCell({ includeEmpty:true }, cell => {
+        if (!cell.fill || !cell.fill.fgColor) {
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF7F4EF' } };
+        }
+      });
+    }
+  });
+
   // Download
   const buffer = await wb.xlsx.writeBuffer();
   const blob   = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
