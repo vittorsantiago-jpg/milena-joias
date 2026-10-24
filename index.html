@@ -6,7 +6,7 @@
 <title>Milena Joias · Gestão de Pedidos</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 
 <style>
 :root {
@@ -3835,87 +3835,138 @@ function currentMonthKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 }
 
-function runExportXLSX() {
-  if (typeof XLSX === 'undefined') { showToast('Biblioteca XLSX não carregada'); return; }
+async function runExportXLSX() {
+  if (typeof ExcelJS === 'undefined') { showToast('Biblioteca ExcelJS não carregada'); return; }
   const rows = xGetFilteredOrders();
   if (!rows.length) { showToast('Nenhum pedido para exportar'); return; }
 
-  // Status label + colors
+  // Status map
   const stMap = {};
   STATUSES.forEach(s => { stMap[s.key] = s; });
 
-  // Priority label
-  const prioLabel = p => p === 'urgente' ? '🔴 Urgente' : 'Normal';
+  // Status ARGB colors (FF prefix = fully opaque)
+  const statusARGB = {
+    recebido:   { bg:'FFEFF6FF', fg:'FF2563EB' },
+    desenhando: { bg:'FFF5F0FF', fg:'FF7C3AED' },
+    aprovacao:  { bg:'FFFEF3D7', fg:'FFB87820' },
+    aprovado:   { bg:'FFECFDF5', fg:'FF059669' },
+    fotolito:   { bg:'FFFFFBEB', fg:'FF9B5E00' },
+    enviado:    { bg:'FFE1EFFC', fg:'FF1A5E9A' },
+    cancelado:  { bg:'FFF0EDE9', fg:'FF7A7268' },
+  };
 
-  // Date formatter — handles DD/MM/YYYY and YYYY-MM-DD
-  const fmtDate = d => {
+  // Date formatters
+  // date field: DD/MM/YYYY → use as-is
+  // prazo field: YYYY-MM-DD → convert to DD/MM/YYYY
+  const fmtDateDMY = d => {
     if (!d) return '';
-    if (d.includes('/')) return d.substring(0,10); // already DD/MM/YYYY
+    if (d.includes('/')) return d.substring(0,10);
     const p = d.split('-');
     if (p.length >= 3) return `${p[2].substring(0,2)}/${p[1]}/${p[0]}`;
     return d;
   };
 
-  // Build rows
-  const header = ['Ref','Data','Prazo','Produto','Material/Tamanho','Qtd','Status','Observação','Prioridade','Ref. Fotolito','Nome da Peça'];
-  const data = [header, ...rows.map(o => [
-    o.ref || '',
-    fmtDate(o.date),
-    fmtDate(o.prazo),
-    o.product || '',
-    o.detail || '',
-    o.qty ?? '',
-    stMap[o.status]?.label || o.status || '',
-    o.obs || '',
-    prioLabel(o.prioridade),
-    o.fotolitoRef || '',
-    o.nomePeca || '',
-  ])];
+  const prioLabel = p => p === 'urgente' ? '🔴 Urgente' : 'Normal';
 
-  const ws = XLSX.utils.aoa_to_sheet(data);
+  // ── ExcelJS workbook ──
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Milena Joias';
+  wb.created = new Date();
+  const ws = wb.addWorksheet('Pedidos', { views: [{ state: 'frozen', ySplit: 1 }] });
 
-  // Column widths
-  const colWidths = [10,12,12,14,20,6,16,30,12,14,20];
-  ws['!cols'] = colWidths.map(w => ({wch: w}));
+  // Column definitions
+  ws.columns = [
+    { header: 'Ref',            key: 'ref',       width: 11 },
+    { header: 'Data',           key: 'date',      width: 13 },
+    { header: 'Prazo',          key: 'prazo',     width: 13 },
+    { header: 'Produto',        key: 'product',   width: 15 },
+    { header: 'Material/Tamanho', key: 'detail',  width: 22 },
+    { header: 'Qtd',            key: 'qty',       width: 7  },
+    { header: 'Status',         key: 'status',    width: 16 },
+    { header: 'Observação',     key: 'obs',       width: 32 },
+    { header: 'Prioridade',     key: 'prio',      width: 13 },
+    { header: 'Ref. Fotolito',  key: 'fotolito',  width: 15 },
+    { header: 'Nome da Peça',   key: 'nomePeca',  width: 22 },
+  ];
 
-  // Style header row (gold bold)
-  const goldFill = { patternType:'solid', fgColor:{rgb:'C9973C'} };
-  const headerFont = { bold:true, color:{rgb:'1E180A'}, sz:11 };
-  header.forEach((_, ci) => {
-    const cell = XLSX.utils.encode_cell({r:0, c:ci});
-    if (!ws[cell]) return;
-    ws[cell].s = { fill: goldFill, font: headerFont, alignment:{horizontal:'center',vertical:'center'} };
-  });
-
-  // Status color rows
-  const statusColors = {
-    recebido:   {bg:'EFF6FF', fg:'2563EB'},
-    desenhando: {bg:'F5F0FF', fg:'7C3AED'},
-    aprovacao:  {bg:'FEF3D7', fg:'B87820'},
-    aprovado:   {bg:'ECFDF5', fg:'059669'},
-    fotolito:   {bg:'FFFBEB', fg:'9B5E00'},
-    enviado:    {bg:'E1EFFC', fg:'1A5E9A'},
-    cancelado:  {bg:'F0EDE9', fg:'7A7268'},
-  };
-  rows.forEach((o, ri) => {
-    const sc = statusColors[o.status];
-    if (!sc) return;
-    const statusColIdx = 6; // "Status" column
-    const cell = XLSX.utils.encode_cell({r: ri + 1, c: statusColIdx});
-    if (!ws[cell]) return;
-    ws[cell].s = {
-      fill:{ patternType:'solid', fgColor:{rgb: sc.bg} },
-      font:{ bold:true, color:{rgb: sc.fg}, sz:10 },
-      alignment:{horizontal:'center'},
+  // Style header row
+  const headerRow = ws.getRow(1);
+  headerRow.height = 24;
+  headerRow.eachCell(cell => {
+    cell.fill   = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFC9973C' } };
+    cell.font   = { bold:true, color:{ argb:'FF1E180A' }, size:11, name:'Calibri' };
+    cell.alignment = { horizontal:'center', vertical:'middle', wrapText:false };
+    cell.border = {
+      bottom: { style:'medium', color:{ argb:'FF8A6020' } },
     };
   });
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Pedidos');
+  // AutoFilter on header
+  ws.autoFilter = { from: 'A1', to: 'K1' };
 
-  const now = new Date();
-  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
-  XLSX.writeFile(wb, `milena-joias-pedidos-${stamp}.xlsx`);
+  // Add data rows
+  rows.forEach(o => {
+    const st    = stMap[o.status];
+    const sc    = statusARGB[o.status] || { bg:'FFFFFFFF', fg:'FF000000' };
+    const isUrgente = o.prioridade === 'urgente';
+
+    const row = ws.addRow({
+      ref:      o.ref      || '—',
+      date:     fmtDateDMY(o.date),
+      prazo:    fmtDateDMY(o.prazo),
+      product:  o.product  || '',
+      detail:   o.detail   || '',
+      qty:      o.qty      ?? '',
+      status:   st?.label  || o.status || '',
+      obs:      o.obs      || '',
+      prio:     prioLabel(o.prioridade),
+      fotolito: o.fotolitoRef || '',
+      nomePeca: o.nomePeca || '',
+    });
+
+    row.height = 18;
+
+    // Style status cell (col 7)
+    const statusCell = row.getCell(7);
+    statusCell.fill      = { type:'pattern', pattern:'solid', fgColor:{ argb: sc.bg } };
+    statusCell.font      = { bold:true, color:{ argb: sc.fg }, size:10, name:'Calibri' };
+    statusCell.alignment = { horizontal:'center', vertical:'middle' };
+
+    // Style Qtd cell — centered
+    row.getCell(6).alignment = { horizontal:'center', vertical:'middle' };
+
+    // Urgente row — tint the ref and prio cells
+    if (isUrgente) {
+      row.getCell(1).font = { bold:true, color:{ argb:'FFDC2626' }, size:10, name:'Calibri' };
+      row.getCell(9).fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFFFF0F0' } };
+      row.getCell(9).font = { bold:true, color:{ argb:'FFDC2626' }, size:10, name:'Calibri' };
+    }
+
+    // Alternating row background
+    const rowIdx = row.number;
+    if (rowIdx % 2 === 0) {
+      row.eachCell({ includeEmpty: true }, (cell, col) => {
+        if (col === 7) return; // keep status color
+        if (!cell.fill || cell.fill.fgColor?.argb === 'FFFFFFFF' || !cell.fill.fgColor) {
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{ argb:'FFF7F4EF' } };
+        }
+      });
+    }
+  });
+
+  // Download
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement('a');
+  a.href       = url;
+  const now    = new Date();
+  const stamp  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  a.download   = `milena-joias-pedidos-${stamp}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 
   showToast(`✅ ${rows.length} pedidos exportados!`);
   closeExportModal();
